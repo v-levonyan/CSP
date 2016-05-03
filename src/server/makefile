@@ -1,4 +1,4 @@
-IDIR=../headers
+IDIR=../../headers
 CC=gcc
 CFLAGS=-I$(IDIR)
 
