@@ -1,0 +1,10 @@
+#!python
+
+env = Environment()
+env.Append(CPPPATH = ['../headers/'])
+server_sources = ['server/server.c', 'server/server_init.c']
+client_sources = ['client/client.c', 'client/client_main.c']
+env.Program(target=['server.out'], source = server_sources)
+env.Program(target=['client.out'], source = client_sources)
+
+
