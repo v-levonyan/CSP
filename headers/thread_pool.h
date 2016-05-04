@@ -1,16 +1,9 @@
 #ifndef THREAD_POOL
 #define THREAD_POOL
 
-struct job_t {
-    struct job_t *next;
-    int socket_fd;
-    char* buf;
-};
-
-typedef struct job_t job_t;
 void initialize_jobs();
 
-//void create_pool(int);
+void create_pool();
 
 void add_job(job_t* job);
 
@@ -25,7 +18,5 @@ void process_job(job_t* job);
 void* producer(void*);
 
 void* consumer(void*);
-
-//void* accept_jobs(void*);
 
 #endif

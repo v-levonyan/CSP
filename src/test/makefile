@@ -7,10 +7,10 @@ LDIR = ../lib
 
 LIBS=-lpthread
 
-_DEPS = thread_pool.h
+_DEPS = thread_pool.h server.h
 DEPS= $(patsubst %, $(IDIR)/%, $(_DEPS))
 
-_OBJ = testpool.o  thread_pool.o
+_OBJ = testpool.o  thread_pool.o server.o
 OBJ = $(patsubst %, $(ODIR)/%, $(_OBJ))
 
 $(ODIR)/%.o: %.c $(DEPS)

@@ -4,7 +4,8 @@
 #include <semaphore.h>
 #include <stdlib.h>
 #include <stdio.h>
-#define THREAD_NUM 10
+#include <unistd.h>
+#include <string.h>
 
 
 
@@ -13,24 +14,24 @@ pthread_mutex_t mutex;
 job_t *jobs;
 sem_t jobs_count;
 sem_t jobs_slots;
-pthread_t threads[THREAD_NUM];
 
 void initialize_jobs()
 {
     jobs = NULL;
     pthread_mutex_init(&mutex, NULL);
     sem_init(&jobs_count, 0, 0);
-    sem_init(&jobs_slots, 0, THREAD_NUM);
+    sem_init(&jobs_slots, 0, 10);
 }
 
-void create_pool()
+/*void create_pool(int socket_desc)
 {
     int i;
     for(i = 0; i < THREAD_NUM; ++i)
     {
-	pthread_create(&threads[i], NULL, producer, NULL);
+	pthread_create(&threads[i], NULL, accept_jobs, &socket_desc);
     }
 }
+*/
 
 void add_job(job_t* job)
 {
@@ -54,6 +55,13 @@ job_t* get_job(int socket_fd)
     job_t* job;
     char ibuf[100];
 
+    int read_size;
+    char *message , client_message[2000];
+     
+    //Send some messages to the client
+    message = "Greetings! I am your connection handler\n";
+    write(socket_fd , message , strlen(message));
+
     read(socket_fd, ibuf, 50);
     if(strcmp(ibuf, "End") == 0)
     {
@@ -69,26 +77,33 @@ job_t* get_job(int socket_fd)
 
 void process_job(job_t* job)
 {
-    int sock = job->;
+    int sock = job->socket_fd;
+    char *message;
+
+    write(sock , message , strlen(message));
+
+    message = "Process job...";
+    write(sock , message , strlen(message));
     free (job);
 }
     
-void producer(int socket_fd)
+void* producer(void* socket_desc)
 {
     job_t *job;
+    int socket_fd = *((int*) socket_desc);
     while(1)
     {
 	job = get_job(socket_fd);
-	if (job == NULL) {
+/*	if (job == NULL) {
 	    return;
 	}
-
+*/
 	sem_wait(&jobs_slots);
 	add_job(job);
 	sem_post(&jobs_count);
     }
 }
-
+/*
 void* accept_jobs(void *socket_desc)
 {
     int socket_fd = *((int*) socket_desc);
@@ -97,7 +112,7 @@ void* accept_jobs(void *socket_desc)
     close(socket_fd);
     pthread_exit(NULL);
 }
-
+*/
 
 void* consumer(void* arg)
 {
@@ -110,8 +125,3 @@ void* consumer(void* arg)
 	sem_post(&jobs_slots);
     }
 }
-
-
-
-
-
