@@ -1,10 +1,17 @@
 #!python
 
-env = Environment()
-env.Append(CPPPATH = ['../headers/'])
-server_sources = ['server/server.c', 'server/server_init.c']
-client_sources = ['client/client.c', 'client/client_main.c']
-env.Program(target=['server.out'], source = server_sources)
-env.Program(target=['client.out'], source = client_sources)
+import os
+
+#export LD_LIBRARY_PATH=/usr/local/lib
+
+#set env variable
+env = Environment(ENV = os.environ)
+env.AppendENVPath('LD_LIBRARY_PATH', '/usr/local/lib')
 
 
+env.Append(CPPPATH = ['../headers'], LIBS=['-lconfig'])
+
+server = env.Object('server/server.c')
+server_init = env.Object('server/server_init.c')
+env.Program(target = 'server/server.out', source = server + server_init)
+                 

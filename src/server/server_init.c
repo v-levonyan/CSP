@@ -6,6 +6,7 @@ int main(int argc, char *argv[])
     struct sockaddr_in server, client;
 
     create_socket(&socket_desc);
+    configure();
 
     initialize_server(&server);
 
@@ -13,6 +14,7 @@ int main(int argc, char *argv[])
     {
 	printf("bind failed\n");
     }
+
 
     listen(socket_desc, 3);
 
