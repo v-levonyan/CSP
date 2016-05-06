@@ -9,13 +9,13 @@
 #include <errno.h>
 
 #define FAIL 1 
+#define SUCCESS 0
 
-int sock_create(struct sockaddr_in* serv_addr, const char* serv_port, const char* serv_ip, int sock)
+int sock_create(struct sockaddr_in* serv_addr, const char* serv_port, const char* serv_ip, int* sock)
 {
-    int sockfd = 0;
     int port = 0;
 
-    if( (sockfd = socket(AF_INET, SOCK_STREAM, 0) ) < 0)
+    if( (*sock = socket(AF_INET, SOCK_STREAM, 0) ) < 0)
     {
 	return FAIL;
     }
@@ -27,11 +27,11 @@ int sock_create(struct sockaddr_in* serv_addr, const char* serv_port, const char
     serv_addr->sin_port = htons(port);
     serv_addr->sin_addr.s_addr = inet_addr(serv_ip);
 
-    if( connect(sockfd, (struct sockaddr*) serv_addr, sizeof(*serv_addr)) < 0)
+    if( connect(*sock, (struct sockaddr*) serv_addr, sizeof(*serv_addr)) < 0)
     {
 	return FAIL;
     }
 
-    return sockfd;
+    return SUCCESS;
 }
 

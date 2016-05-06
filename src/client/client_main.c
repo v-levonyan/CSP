@@ -7,6 +7,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <openssl/sha.h>
+
 #include "client.h"
 
 #define DATA_SIZE 100
@@ -23,7 +25,7 @@ int main(int argc, char* argv[])
 	 exit(EXIT_FAILURE);
      }
 
-     if( sock_create( &serv_addr, argv[1], argv[2], sock_fd) == 1)
+     if( sock_create( &serv_addr, argv[1], argv[2], &sock_fd) == 1)
      {
 	 fprintf(stderr, "Connection failed");
 	 return 1;
@@ -47,13 +49,21 @@ int main(int argc, char* argv[])
 
      unsigned char hash[SHA_DIGEST_LENGTH];
 
-     if ( read(sock_fd, hash, SHA_DIGEST_LENGTH) != SHA_DIGEST_LENGTH )
+     if ( read(sock_fd, hash, SHA_DIGEST_LENGTH) < 0 )
      {
 	 fprintf(stderr, strerror(errno));
 	 return 1;
      }
 
-     print_sha(hash);
+     close(sock_fd);
+
+     
+     for(int i = 0; i<SHA_DIGEST_LENGTH; ++i)
+     {
+	 printf("%02x", hash[i]);
+     }
+
+     printf("\n");
 
      return 0;
 }
