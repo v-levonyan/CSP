@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 	exit(EXIT_FAILURE);
     }
 
-    printf("Connection accepted");
+    printf("Connection accepted\n");
 
     char data[DATA_SIZE] = { 0 };
 
@@ -54,11 +54,11 @@ int main(int argc, char *argv[])
 
     unsigned char hash[SHA_DIGEST_LENGTH];
 
-    SHA1( (unsigned char*)data, strlen(data) - 1, hash) );
+    SHA1((unsigned char*)data, strlen(data) - 1, hash);
 
     if ( write(new_socket, data, strlen(data)) == -1)
     {
-	fprintf(stderr, strerror(errno));
+	fprintf(stderr, "%s\n", strerror(errno));
 	exit(EXIT_FAILURE);
     }
 

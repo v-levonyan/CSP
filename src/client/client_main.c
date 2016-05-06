@@ -21,13 +21,13 @@ int main(int argc, char* argv[])
 
      if(argc < 3)
      {
-	 fprintf(stderr, "No specified address");
+	 fprintf(stderr, "%s\n", "No specified address");
 	 exit(EXIT_FAILURE);
      }
 
      if( sock_create( &serv_addr, argv[1], argv[2], &sock_fd) == 1)
      {
-	 fprintf(stderr, "Connection failed");
+	 fprintf(stderr, "%s\n", "Connection failed");
 	 return 1;
      }
 
@@ -37,13 +37,13 @@ int main(int argc, char* argv[])
 
      if(errno != 0)
      {
-	 fprintf(stderr, strerror(errno));
+	 fprintf(stderr, "%s\n", strerror(errno));
 	 return 1;
      }
 
      if( write(sock_fd, data_string, strlen(data_string)) == -1 )
      {
-	 fprintf(stderr, strerror(errno));
+	 fprintf(stderr, "%s\n", strerror(errno));
 	 return 1;
      }
 
@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 
      if ( read(sock_fd, hash, SHA_DIGEST_LENGTH) < 0 )
      {
-	 fprintf(stderr, strerror(errno));
+	 fprintf(stderr, "%s\n", strerror(errno));
 	 return 1;
      }
 

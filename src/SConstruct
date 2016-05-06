@@ -1,17 +1,16 @@
 #!python
 
-import os
-
 #export LD_LIBRARY_PATH=/usr/local/lib
 
-#set env variable
-env = Environment(ENV = os.environ)
-env.AppendENVPath('LD_LIBRARY_PATH', '/usr/local/lib')
-
-
-env.Append(CPPPATH = ['../headers'], LIBS=['-lconfig'])
+env = Environment()
+env.Append(CPPPATH = ['../headers'], LIBS=['-lconfig', '-lcrypto', '-lssl'])
 
 server = env.Object('server/server.c')
 server_init = env.Object('server/server_init.c')
-env.Program(target = 'server/server.out', source = server + server_init)
-                 
+
+client = env.Object('client/client.c')
+client_main = env.Object('client/client_main.c')
+
+
+env.Program(target = ['server/server.out'], source = server + server_init)
+env.Program(target = ['client/client.out'], source = client + client_main)
