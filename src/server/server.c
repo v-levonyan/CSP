@@ -21,6 +21,9 @@ void create_socket(int *socket_desc)
 	printf("Colud not create socket");
 	exit(0);
     }
+    int enable = 1;
+    if (setsockopt((*socket_desc), SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+	fprintf(stderr, "setsockopt(SO_REUSEADDR) failed");
 }
 
 void configure()
