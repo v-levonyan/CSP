@@ -12,5 +12,5 @@ client = env.Object('client/client.c')
 client_main = env.Object('client/client_main.c')
 
 
-env.Program(target = ['server/server.out'], source = server + server_init)
-env.Program(target = ['client/client.out'], source = client + client_main)
+env.Program(target = ['server.out'], source = server + server_init)
+env.Program(target = ['client.out'], source = client + client_main)
