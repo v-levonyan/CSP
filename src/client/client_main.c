@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 
      //connection established
 
-     fgets(data_string,DATA_SIZE,stdin);
+     fgets(data_string, (DATA_SIZE - 1), stdin);
 
      if(errno != 0)
      {
@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
 
      unsigned char hash[SHA_DIGEST_LENGTH];
 
-     if ( read(sock_fd, hash, SHA_DIGEST_LENGTH) < 0 )
+     if ( read(sock_fd, hash, (SHA_DIGEST_LENGTH - 1)) < 0 )
      {
 	 fprintf(stderr, "%s\n", strerror(errno));
 	 return 1;

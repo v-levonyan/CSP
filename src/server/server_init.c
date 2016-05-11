@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 
     char data[DATA_SIZE] = { 0 };
 
-    if(read(new_socket, data, DATA_SIZE) < 0)
+    if(read(new_socket, data, (DATA_SIZE - 1)) < 0)
     {
 	fprintf(stderr, "data wasn't read");
         exit(EXIT_FAILURE);
@@ -54,15 +54,16 @@ int main(int argc, char *argv[])
 
     unsigned char hash[SHA_DIGEST_LENGTH];
 
-    SHA1((unsigned char*)data, strlen(data) - 1, hash);
+    SHA1((unsigned char*)data, strlen(data), hash);
 
-    if ( write(new_socket, data, strlen(data)) == -1)
+    if ( write(new_socket, hash, strlen(hash)) == -1)
     {
 	fprintf(stderr, "%s\n", strerror(errno));
 	exit(EXIT_FAILURE);
     }
 
     close(new_socket);
+    close(socket_desc);
     return 0;
 }
 
