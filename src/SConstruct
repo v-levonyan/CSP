@@ -3,7 +3,7 @@
 #export LD_LIBRARY_PATH=/usr/local/lib
 
 env = Environment()
-env.Append(CPPPATH = ['../headers'], LIBS=['-lconfig', '-lcrypto', '-lssl'])
+env.Append(CPPPATH = ['../headers'], LIBS=['-lconfig', '-lcrypto', '-lssl', '-lpthread'])
 
 server = env.Object('server/server.c')
 server_init = env.Object('server/server_init.c')

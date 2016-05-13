@@ -9,8 +9,12 @@
 #include <errno.h>
 #include "server.h"
 #include <openssl/sha.h>
+#include <pthread.h>
 
 #define DATA_SIZE 100
+#define LISTEN_BACKLOG 50
+
+void* connection_handler(void*);
 
 int main(int argc, char *argv[])
 {
@@ -22,44 +26,42 @@ int main(int argc, char *argv[])
 
     initialize_server(&server);
 
-    if(bind(socket_desc, (struct sockaddr*)&server, sizeof(server)) < 0)
+    if(bind(socket_desc, (struct sockaddr*)&server, sizeof(server)) == -1)
     {
-	printf("bind failed\n");
+	handle_error("bind failed");
     }
 
 
-    listen(socket_desc, 3);
+    if (listen(socket_desc, LISTEN_BACKLOG) == -1)
+    {
+	handle_error("listen failed");
+    }
 
     printf("Waiting for incoming connection...\n");
 
-    size_t address_len = sizeof(struct sockaddr_in);
-
-    new_socket = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&address_len);
+    socklen_t address_len = sizeof(struct sockaddr_in);
     
-    if(new_socket < 0)
+    const char* hello_message = "Hello, enter some text and I'll compute the hash for it...";
+
+    while(1)
     {
-	perror("accept failed");
-	exit(EXIT_FAILURE);
-    }
+	new_socket = accept(socket_desc, (struct sockaddr *)&client, &address_len);
+	if(new_socket == -1)
+	{
+	    handle_error("accept failed");
+	}
 
-    printf("Connection accepted\n");
+	printf("Connection accepted\n");
 
-    char data[DATA_SIZE] = { 0 };
+	write(new_socket, hello_message, strlen(hello_message));
 
-    if(read(new_socket, data, (DATA_SIZE - 1)) < 0)
-    {
-	fprintf(stderr, "data wasn't read");
-        exit(EXIT_FAILURE);
-    }
+	pthread_t helper_thread;
+	if (pthread_create(&helper_thread, NULL, connection_handler, &new_socket) != 0)
+	{
+	    handle_error("Could not create thread");
+	}
 
-    unsigned char hash[SHA_DIGEST_LENGTH];
-
-    SHA1((unsigned char*)data, strlen(data), hash);
-
-    if ( write(new_socket, hash, strlen(hash)) == -1)
-    {
-	fprintf(stderr, "%s\n", strerror(errno));
-	exit(EXIT_FAILURE);
+	pthread_join(helper_thread, NULL);
     }
 
     close(new_socket);
@@ -67,5 +69,27 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+void* connection_handler(void* sock_desc)
+{
+    int socket = *( (int*)sock_desc );
 
+    char data[DATA_SIZE];
+
+    while(1)
+    {
+	if(read(socket, data, (DATA_SIZE - 1)) == -1)
+	{
+	    handle_error("data wasn't read");
+	}
+
+	unsigned char hash[SHA_DIGEST_LENGTH];
+
+	SHA1((unsigned char*)data, strlen(data), hash);
+
+	write(socket, hash, SHA_DIGEST_LENGTH);
+
+    }
+
+    return NULL;
+}
 
