@@ -10,14 +10,23 @@
 #include "server.h"
 #include <openssl/sha.h>
 #include <pthread.h>
+#include <signal.h>
 
 #define DATA_SIZE 100
 #define LISTEN_BACKLOG 50
+#define THREAD_COUNT 5
 
 void* connection_handler(void*);
+void handler(int signal_number);
 
 int main(int argc, char *argv[])
 {
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+
+    sa.sa_handler = &handler;
+    sigaction(SIGPIPE, &sa, NULL);
+
     int socket_desc, new_socket;
     struct sockaddr_in server, client;
 
@@ -43,7 +52,9 @@ int main(int argc, char *argv[])
     
     const char* hello_message = "Hello, enter some text and I'll compute the hash for it...";
 
-    while(1)
+    pthread_t helper_thread[THREAD_COUNT];
+    
+    for(int i = 0; i < THREAD_COUNT; ++i)
     {
 	new_socket = accept(socket_desc, (struct sockaddr *)&client, &address_len);
 	if(new_socket == -1)
@@ -55,15 +66,17 @@ int main(int argc, char *argv[])
 
 	write(new_socket, hello_message, strlen(hello_message));
 
-	pthread_t helper_thread;
-	if (pthread_create(&helper_thread, NULL, connection_handler, &new_socket) != 0)
+	if (pthread_create(&helper_thread[i], NULL, connection_handler, &new_socket) != 0)
 	{
 	    handle_error("Could not create thread");
 	}
-
-	pthread_join(helper_thread, NULL);
+	
     }
-
+    
+    for(int i = 0; i < THREAD_COUNT; ++i)
+    {
+	pthread_join(helper_thread[i], NULL);
+    }
     close(new_socket);
     close(socket_desc);
     return 0;
@@ -92,4 +105,7 @@ void* connection_handler(void* sock_desc)
 
     return NULL;
 }
-
+void handler(int sig_num)
+{
+    return;
+}
