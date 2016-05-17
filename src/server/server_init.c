@@ -86,25 +86,34 @@ void* connection_handler(void* sock_desc)
 {
     int socket = *( (int*)sock_desc );
 
-    char data[DATA_SIZE];
 
-    while(1)
+    SHA_CTX ctx;
+    SHA1_Init(&ctx);
+
+    ssize_t bytes_read = 0;
+    char data[DATA_SIZE] = { 0 };
+
+    while( (bytes_read = read(socket, data, (DATA_SIZE - 1))) )
     {
-	if(read(socket, data, (DATA_SIZE - 1)) == -1)
+	printf("%s\n", data);
+
+	if(bytes_read == -1)
 	{
 	    handle_error("data wasn't read");
 	}
 
-	unsigned char hash[SHA_DIGEST_LENGTH];
-
-	SHA1((unsigned char*)data, strlen(data), hash);
-
-	write(socket, hash, SHA_DIGEST_LENGTH);
-
+	SHA1_Update(&ctx, data, strlen(data) - 1);
+	memset(data, 0, DATA_SIZE);
     }
 
+    unsigned char hash[SHA_DIGEST_LENGTH];
+    SHA1_Final(hash, &ctx);
+
+    //	SHA1((unsigned char*)data, strlen(data) - 1, hash);
+    write(socket, hash, SHA_DIGEST_LENGTH);
     return NULL;
 }
+
 void handler(int sig_num)
 {
     return;
