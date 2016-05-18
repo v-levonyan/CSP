@@ -17,6 +17,7 @@
 
 
 int sha1_of_a_file(int, unsigned char*);
+void print_sha1(const unsigned char*);
 
 int main(int argc, char* argv[])
 {
@@ -40,6 +41,7 @@ int main(int argc, char* argv[])
 
     char server_reply[BUFFER_SIZE];
     memset(server_reply, 0, BUFFER_SIZE);
+    
     if (read(sock_fd, server_reply, BUFFER_SIZE) < 0 )
     {
 	fprintf(stderr, "%s\n", strerror(errno));
@@ -49,29 +51,20 @@ int main(int argc, char* argv[])
 
     while(1)
     {
-	//fgets(data_string, (DATA_SIZE - 1), stdin);
-
 	unsigned char hash[SHA_DIGEST_LENGTH] = {0};
 
-	int err = sha1_of_a_file(sock_fd, hash);
-
-	if(err == 1)
+	if( sha1_of_a_file(sock_fd, hash) == 1)
 	{
-	    fprintf(stderr, "%s\n", "err");
 	    return 1;
 	}
 
-	for(int i = 0; i<SHA_DIGEST_LENGTH; ++i)
-	{
-	    printf("%02x", hash[i]);
-	}
-
-	printf("\n");
+	print_sha1(hash);
     }
 
     close(sock_fd);
     return 0;
 }
+
 int sha1_of_a_file(int sock_fd, unsigned char* hash)
 {
     int fd;
@@ -84,6 +77,7 @@ int sha1_of_a_file(int sock_fd, unsigned char* hash)
     fprintf(stderr, "%s\n", path);
 
     path[strlen(path) - 1] = '\0';
+
     if( (fd = open(path, O_RDONLY)) < 0 )
     {
 	fprintf(stderr, "%s\n", strerror(errno));
@@ -124,16 +118,24 @@ int sha1_of_a_file(int sock_fd, unsigned char* hash)
 	memset(buf, 0, DATA_SIZE); 
     }
     
-   // fprintf(stderr, "%s\n", "writing EOF");
-   // fprintf(stderr, "%s\n", "-----------");
     write(sock_fd, "EOF", 4);
-   // fprintf(stderr, "%s\n", "-----------");
 	
     if ( read(sock_fd, hash, SHA_DIGEST_LENGTH) < 0 )
     {
 	fprintf(stderr, "%s\n", strerror(errno));
 	return 1;
     }
-    
+
+    close(fd);
     return 0;
+}
+
+void print_sha1(const unsigned char* hash)
+{
+    for(int i = 0; i<SHA_DIGEST_LENGTH; ++i)
+    {
+	printf("%02x", hash[i]);
+    } 
+    
+    printf("\n");
 }
