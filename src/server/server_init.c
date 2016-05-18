@@ -49,11 +49,11 @@ int main(int argc, char *argv[])
     printf("Waiting for incoming connection...\n");
 
     socklen_t address_len = sizeof(struct sockaddr_in);
-    
+
     const char* hello_message = "Hello, enter some text and I'll compute the hash for it...";
 
     pthread_t helper_thread[THREAD_COUNT];
-    
+
     for(int i = 0; i < THREAD_COUNT; ++i)
     {
 	new_socket = accept(socket_desc, (struct sockaddr *)&client, &address_len);
@@ -70,9 +70,9 @@ int main(int argc, char *argv[])
 	{
 	    handle_error("Could not create thread");
 	}
-	
+
     }
-    
+
     for(int i = 0; i < THREAD_COUNT; ++i)
     {
 	pthread_join(helper_thread[i], NULL);
@@ -87,31 +87,55 @@ void* connection_handler(void* sock_desc)
     int socket = *( (int*)sock_desc );
 
 
-    SHA_CTX ctx;
-    SHA1_Init(&ctx);
 
-    ssize_t bytes_read = 0;
-    char data[DATA_SIZE] = { 0 };
-
-    while( (bytes_read = read(socket, data, (DATA_SIZE - 1))) )
+    while (1)
     {
-	printf("%s\n", data);
-
-	if(bytes_read == -1)
+	ssize_t bytes_read = 0;
+	char data[DATA_SIZE] = { 0 };
+	SHA_CTX ctx;
+	SHA1_Init(&ctx);
+	printf("reading buffer...\n");
+	while( (bytes_read = read(socket, data, DATA_SIZE - 1)) )
 	{
-	    handle_error("data wasn't read");
+	    if(bytes_read == -1)
+	    {
+		handle_error("data wasn't read");
+	    }
+
+	    char* end_string;
+
+	    end_string = strstr(data, "EOF");
+
+	    if(end_string)
+	    {
+		if(strcmp(data, "EOF") == 0)
+		{
+		    printf("meet end\n");
+		}
+		else
+		{
+		    *end_string = 0;
+		    SHA1_Update(&ctx, data, strlen(data));
+		}
+		break;
+	    }
+
+	    SHA1_Update(&ctx, data, strlen(data));
+	    memset(data, 0, DATA_SIZE);
 	}
+	if(!bytes_read) 
+	{
+	    break;
+	}
+	    printf("Computing final hash...\n");
 
-	SHA1_Update(&ctx, data, strlen(data) - 1);
-	memset(data, 0, DATA_SIZE);
+	    unsigned char hash[SHA_DIGEST_LENGTH];
+	    SHA1_Final(hash, &ctx);
+
+	    write(socket, hash, SHA_DIGEST_LENGTH);
     }
-
-    unsigned char hash[SHA_DIGEST_LENGTH];
-    SHA1_Final(hash, &ctx);
-
-    //	SHA1((unsigned char*)data, strlen(data) - 1, hash);
-    write(socket, hash, SHA_DIGEST_LENGTH);
     return NULL;
+
 }
 
 void handler(int sig_num)
