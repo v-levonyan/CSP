@@ -38,10 +38,6 @@ int main(int argc, char *argv[])
     {
 	next_option = getopt_long(argc, argv, short_options, long_options, NULL);
 
-	if(optarg == NULL)
-	{
-	    print_usage(stderr, 1);
-	}
 	switch(next_option)
 	{
 	    case 'h':
@@ -59,6 +55,12 @@ int main(int argc, char *argv[])
 	}
     }
     while(next_option != -1);
+
+    if(optind == 1)
+    {
+	fprintf(stderr, "No options specified\n");
+	print_usage(stderr, 1);
+    }
 // Let's do the main job...
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
