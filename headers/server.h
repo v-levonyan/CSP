@@ -8,7 +8,7 @@
 
 void create_socket(int *socket_desc); 
 void initialize_server(struct sockaddr_in* server);
-void configure();
+void configure(char* file_path);
 
 void compute_hash_file(size_t filesize, int* socket, unsigned char* hash);
 

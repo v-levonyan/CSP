@@ -11,15 +11,55 @@
 #include <openssl/sha.h>
 #include <pthread.h>
 #include <signal.h>
+#include <getopt.h>
 
 #define LISTEN_BACKLOG 50
 #define THREAD_COUNT 5
 
 void* connection_handler(void*);
 void handler(int signal_number);
+void print_usage(FILE* stream, int exit_code);
+const char* program_name;
 
 int main(int argc, char *argv[])
 {
+    int next_option;
+    const char* const short_options = "hc:";
+    const struct option long_options[] = {
+	{ "help", 0, NULL, 'h' },
+	{ "conf", 1, NULL, 'c' },
+	{ NULL,   0, NULL,  0  }
+    };
+
+    const char* conf_file = NULL;
+    program_name = argv[0];
+
+    do
+    {
+	next_option = getopt_long(argc, argv, short_options, long_options, NULL);
+
+	if(optarg == NULL)
+	{
+	    print_usage(stderr, 1);
+	}
+	switch(next_option)
+	{
+	    case 'h':
+		print_usage(stdout, 0);
+		
+	    case 'c':
+		conf_file = optarg;
+		break;
+	    case '?':
+		print_usage(stderr, 1);
+	    case -1:
+		break;
+	    default:
+		abort();
+	}
+    }
+    while(next_option != -1);
+// Let's do the main job...
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
 
@@ -30,7 +70,7 @@ int main(int argc, char *argv[])
     struct sockaddr_in server, client;
 
     create_socket(&socket_desc);
-    configure();
+    configure(conf_file);
 
     initialize_server(&server);
 
@@ -118,4 +158,14 @@ void* connection_handler(void* sock_desc)
 void handler(int sig_num)
 {
     return;
+}
+
+void print_usage(FILE* stream, int exit_code)
+{
+    fprintf (stream, "Usage: %s options [ inputfile .... ]\n", program_name);
+    fprintf (stream,
+	    " -h --help	    Display this usage information.\n"
+	    " -c --conf	    filepath read parameters from file.\n"
+	    );
+    exit (exit_code);
 }
