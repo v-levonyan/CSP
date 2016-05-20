@@ -30,13 +30,13 @@ void create_socket(int *socket_desc)
 	fprintf(stderr, "setsockopt(SO_REUSEADDR) failed");
 }
 
-void configure()
+void configure(char* file_path)
 {
     config_t cfg;
     config_setting_t *setting;
 
     config_init(&cfg);
-    if(! config_read_file(&cfg, "server.cfg"))
+    if(! config_read_file(&cfg, file_path))
     {
 	fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
 		config_error_line(&cfg), config_error_text(&cfg));
