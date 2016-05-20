@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <libconfig.h>
+#include <openssl/sha.h>
+#include <unistd.h>
+
+#define DATA_SIZE 100
 
 struct params_t {
     int port;
@@ -71,6 +75,31 @@ void initialize_server(struct sockaddr_in* server)
     free(params);
 }
 
+void compute_hash_file(size_t filesize, int* socket, unsigned char* hash)
+{
+    ssize_t bytes_read = 0;
+    size_t remain_data = filesize;
+    char data[DATA_SIZE] = { 0 };
+    SHA_CTX ctx;
+    SHA1_Init(&ctx);
+    printf("reading buffer...\n");
+    printf("filesize: %u\n", filesize);
+    while( remain_data > 0 && (bytes_read = read(*socket, data, DATA_SIZE - 1)) )
+    {
+	remain_data -= bytes_read;
+	fprintf(stderr, "%u\n", remain_data);
+	if(bytes_read == -1)
+	{
+	    handle_error("data wasn't read");
+	}
+
+	SHA1_Update(&ctx, data, strlen(data));
+	memset(data, 0, DATA_SIZE);
+    }
+    printf("Computing final hash...\n");
+
+    SHA1_Final(hash, &ctx);
+}
 
 
 

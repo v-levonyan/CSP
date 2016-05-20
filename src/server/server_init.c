@@ -12,7 +12,6 @@
 #include <pthread.h>
 #include <signal.h>
 
-#define DATA_SIZE 100
 #define LISTEN_BACKLOG 50
 #define THREAD_COUNT 5
 
@@ -85,55 +84,33 @@ int main(int argc, char *argv[])
 void* connection_handler(void* sock_desc)
 {
     int socket = *( (int*)sock_desc );
+    
+    unsigned char hash[SHA_DIGEST_LENGTH];
 
+    char order[100] = {0};
+    
+    read(socket, order, sizeof(order));
+    printf("order: %s\n", order);
 
+    char* token = strtok(order, " ");
+    char function[30] = {0};
+    strcpy(function, token) ;
+    token = strtok(NULL, " ");
 
-    while (1)
+    char size_str[20] = {0};
+    strcpy(size_str, token) ;
+
+    printf("function: %s\n", function);
+    size_t size = atoi(size_str);
+    printf("size: %u\n", size);
+    if (strcmp(function, "compute_file_hash") == 0)
     {
-	ssize_t bytes_read = 0;
-	char data[DATA_SIZE] = { 0 };
-	SHA_CTX ctx;
-	SHA1_Init(&ctx);
-	printf("reading buffer...\n");
-	while( (bytes_read = read(socket, data, DATA_SIZE - 1)) )
-	{
-	    if(bytes_read == -1)
-	    {
-		handle_error("data wasn't read");
-	    }
-
-	    char* end_string;
-
-	    end_string = strstr(data, "EOF");
-
-	    if(end_string)
-	    {
-		if(strcmp(data, "EOF") == 0)
-		{
-		    printf("meet end\n");
-		}
-		else
-		{
-		    *end_string = 0;
-		    SHA1_Update(&ctx, data, strlen(data));
-		}
-		break;
-	    }
-
-	    SHA1_Update(&ctx, data, strlen(data));
-	    memset(data, 0, DATA_SIZE);
-	}
-	if(!bytes_read) 
-	{
-	    break;
-	}
-	    printf("Computing final hash...\n");
-
-	    unsigned char hash[SHA_DIGEST_LENGTH];
-	    SHA1_Final(hash, &ctx);
-
-	    write(socket, hash, SHA_DIGEST_LENGTH);
+	printf("received order to compute hash of a file...\n");
+	compute_hash_file(size, &socket, hash);
     }
+
+    printf("write to socket\n");
+    write(socket, hash, SHA_DIGEST_LENGTH);
     return NULL;
 
 }
