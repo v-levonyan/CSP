@@ -7,13 +7,20 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include "server.h"
 #include <openssl/sha.h>
 #include <pthread.h>
 #include <signal.h>
 
+#include "server.h"
+#include "hashtable.h"
+
 #define LISTEN_BACKLOG 50
 #define THREAD_COUNT 5
+#define HTABLE_SIZE 10
+
+typedef void (*fptr)(size_t, int*, unsigned char* );
+
+struct hashTable* ht;
 
 void* connection_handler(void*);
 void handler(int signal_number);
@@ -70,7 +77,7 @@ int main(int argc, char *argv[])
 	    handle_error("Could not create thread");
 	}
 
-    }
+     }
 
     for(int i = 0; i < THREAD_COUNT; ++i)
     {
@@ -81,35 +88,62 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+int order_parser(const char* order, char* command, size_t* size)
+{
+    char* spl = strchr(order, ' ');
+    char size_buf [20] = {0};
+    if(spl == NULL)
+    {
+	return 1;
+    }
+
+    strncpy(size_buf, spl+1, 19);
+
+    *size = atoi(size_buf);
+    int i = 0;
+    for(char* p_ind = order; p_ind != spl && i != 19; ++p_ind, ++i)
+    {
+	command[i] = *p_ind;
+    }
+
+    return 0;
+}
+
 void* connection_handler(void* sock_desc)
 {
     int socket = *( (int*)sock_desc );
-    
     unsigned char hash[SHA_DIGEST_LENGTH];
 
+    fptr func;
+
+    createHashTable(HTABLE_SIZE, &ht);
+
     char order[100] = {0};
-    
+    char command[20] = {0};
+    size_t size;
+
     read(socket, order, sizeof(order));
-    printf("order: %s\n", order);
+   // printf("order: %s\n", order);
+    fprintf(stderr, "ord : /n %s  :ord/n", order);
 
-    char* token = strtok(order, " ");
-    char function[30] = {0};
-    strcpy(function, token) ;
-    token = strtok(NULL, " ");
-
-    char size_str[20] = {0};
-    strcpy(size_str, token) ;
-
-    printf("function: %s\n", function);
-    size_t size = atoi(size_str);
-    printf("size: %u\n", size);
-    if (strcmp(function, "compute_file_hash") == 0)
+    if(order_parser(order, command, &size) == 1)
     {
-	printf("received order to compute hash of a file...\n");
-	compute_hash_file(size, &socket, hash);
+	return 1;
     }
 
-    printf("write to socket\n");
+    fprintf(stderr, "command %s \nsize %ld \n", command, size);
+    write(socket, "I received order", 30);
+    // printf("write to socket\n");
+    
+    addToHashTable(ht,command,compute_hash_file);
+    if( valueForKeyInHashTable(ht, command, &func) == 0)
+    {
+	return 1;
+    }
+
+    func(size,&socket, hash);
+
+  //  compute_hash_file(size, &socket, hash);
     write(socket, hash, SHA_DIGEST_LENGTH);
     return NULL;
 

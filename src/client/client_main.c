@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <openssl/sha.h>
 #include <fcntl.h>
-
+#include <sys/stat.h>
 #include "client.h"
 
 #define DATA_SIZE 100
@@ -18,6 +18,8 @@
 
 int sha1_of_a_file(int, unsigned char*);
 void print_sha1(const unsigned char*);
+
+char server_reply[BUFFER_SIZE];
 
 int main(int argc, char* argv[])
 {
@@ -39,7 +41,6 @@ int main(int argc, char* argv[])
 
     //connection established
 
-    char server_reply[BUFFER_SIZE];
     memset(server_reply, 0, BUFFER_SIZE);
     
     if (read(sock_fd, server_reply, BUFFER_SIZE) < 0 )
@@ -68,13 +69,16 @@ int main(int argc, char* argv[])
 int sha1_of_a_file(int sock_fd, unsigned char* hash)
 {
     int fd;
+    size_t file_size;
     char path[255] = { 0 };
     char buf[DATA_SIZE] = {0};
-    
+    struct stat st;
+    char f_size_str[40];
+
     puts("Enter the path of a file");
     
     fgets(path, 254, stdin);
-    fprintf(stderr, "%s\n", path);
+ //   fprintf(stderr, "%s\n", path);
 
     path[strlen(path) - 1] = '\0';
 
@@ -83,14 +87,33 @@ int sha1_of_a_file(int sock_fd, unsigned char* hash)
 	fprintf(stderr, "%s\n", strerror(errno));
 	return 1;
     }
-	 
+
+    if(stat(path, &st) == -1)
+    {
+	fprintf(stderr, "%s\n", strerror(errno));
+	return 1;
+    }
+
+    file_size = st.st_size;
+    memset(f_size_str, 0, 40);
+
+    sprintf(f_size_str, "%s %ld","compute_file_hash", file_size);
+    fprintf(stderr, "%s\n", f_size_str);
+
+    memset(server_reply, 0, BUFFER_SIZE);
+    write(sock_fd, f_size_str, strlen(f_size_str));
+    read(sock_fd, server_reply, BUFFER_SIZE-1);
+
+    fprintf(stderr, "%s\n", server_reply);
+
     while(1)
     {
 	int num_read;
 	char* p = buf;
 	    
 	num_read = read(fd, buf, DATA_SIZE - 1);
-	 
+//	fprintf(stderr, "%s", buf);
+
 	if(num_read < 0)
 	{
 	    fprintf(stderr, "%s\n", strerror(errno));
@@ -118,7 +141,6 @@ int sha1_of_a_file(int sock_fd, unsigned char* hash)
 	memset(buf, 0, DATA_SIZE); 
     }
     
-    write(sock_fd, "EOF", 4);
 	
     if ( read(sock_fd, hash, SHA_DIGEST_LENGTH) < 0 )
     {
