@@ -68,6 +68,13 @@ int main(int argc, char *argv[])
 	fprintf(stderr, "No options specified\n");
 	print_usage(stderr, 1);
     }
+
+    if(access(conf_file, F_OK) == -1)
+    {
+	fprintf(stderr, "No such file\n");
+	print_usage(stderr, 1);
+    }
+
 // Let's do the main job...
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
@@ -79,7 +86,11 @@ int main(int argc, char *argv[])
     struct sockaddr_in server, client;
 
     create_socket(&socket_desc);
-    configure(conf_file);
+    if( !configure(conf_file) )
+    {
+	handle_error("invalid conf file");
+    }
+
 
     initialize_server(&server);
 
@@ -143,7 +154,8 @@ int order_parser(const char* order, char* command, size_t* size)
 
     *size = atoi(size_buf);
     int i = 0;
-    for(char* p_ind = order; p_ind != spl && i != 19; ++p_ind, ++i)
+    const char* p_ind;
+    for(p_ind = order; p_ind != spl && i != 19; ++p_ind, ++i)
     {
 	command[i] = *p_ind;
     }
@@ -170,7 +182,7 @@ void* connection_handler(void* sock_desc)
 
     if(order_parser(order, command, &size) == 1)
     {
-	return 1;
+	return NULL;
     }
 
     fprintf(stderr, "command %s \nsize %ld \n", command, size);
@@ -180,7 +192,7 @@ void* connection_handler(void* sock_desc)
     addToHashTable(ht,command,compute_hash_file);
     if( valueForKeyInHashTable(ht, command, &func) == 0)
     {
-	return 1;
+	return NULL;
     }
 
     func(size,&socket, hash);

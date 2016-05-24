@@ -30,7 +30,7 @@ void create_socket(int *socket_desc)
 	fprintf(stderr, "setsockopt(SO_REUSEADDR) failed");
 }
 
-void configure(char* file_path)
+int configure(const char* file_path)
 {
     config_t cfg;
     config_setting_t *setting;
@@ -41,7 +41,7 @@ void configure(char* file_path)
 	fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
 		config_error_line(&cfg), config_error_text(&cfg));
 	config_destroy(&cfg);
-	return;
+	return 0;
     }
     
     params = (params_t*) malloc( sizeof(params_t) );
@@ -51,6 +51,7 @@ void configure(char* file_path)
     {
 	params->port = config_setting_get_int(setting);
     }
+    return 1;
 }
 
 
@@ -83,11 +84,11 @@ void compute_hash_file(size_t filesize, int* socket, unsigned char* hash)
     SHA_CTX ctx;
     SHA1_Init(&ctx);
     printf("reading buffer...\n");
-    printf("filesize: %u\n", filesize);
+    printf("filesize: %zu\n", filesize);
     while( remain_data > 0 && (bytes_read = read(*socket, data, DATA_SIZE - 1)) )
     {
 	remain_data -= bytes_read;
-	fprintf(stderr, "%u\n", remain_data);
+	fprintf(stderr, "%zu\n", remain_data);
 	if(bytes_read == -1)
 	{
 	    handle_error("data wasn't read");
