@@ -22,58 +22,17 @@
 typedef void (*fptr)(size_t, int*, unsigned char* );
 
 struct hashTable* ht;
+const char* conf_file = NULL;
 
 void* connection_handler(void*);
 void handler(int signal_number);
 void print_usage(FILE* stream, int exit_code);
 const char* program_name;
+void parse_args(int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
-    int next_option;
-    const char* const short_options = "hc:";
-    const struct option long_options[] = {
-	{ "help", 0, NULL, 'h' },
-	{ "conf", 1, NULL, 'c' },
-	{ NULL,   0, NULL,  0  }
-    };
-
-    const char* conf_file = NULL;
-    program_name = argv[0];
-
-    do
-    {
-	next_option = getopt_long(argc, argv, short_options, long_options, NULL);
-
-	switch(next_option)
-	{
-	    case 'h':
-		print_usage(stdout, 0);
-		
-	    case 'c':
-		conf_file = optarg;
-		break;
-	    case '?':
-		print_usage(stderr, 1);
-	    case -1:
-		break;
-	    default:
-		abort();
-	}
-    }
-    while(next_option != -1);
-
-    if(optind == 1)
-    {
-	fprintf(stderr, "No options specified\n");
-	print_usage(stderr, 1);
-    }
-
-    if(access(conf_file, F_OK) == -1)
-    {
-	fprintf(stderr, "No such file\n");
-	print_usage(stderr, 1);
-    }
+    parse_args(argc, argv);
 
 // Let's do the main job...
     struct sigaction sa;
@@ -216,4 +175,51 @@ void print_usage(FILE* stream, int exit_code)
 	    " -c --conf	    filepath read parameters from file.\n"
 	    );
     exit (exit_code);
+}
+
+void parse_args(int argc, char *argv[])
+{
+    int next_option;
+    const char* const short_options = "hc:";
+    const struct option long_options[] = {
+	{ "help", 0, NULL, 'h' },
+	{ "conf", 1, NULL, 'c' },
+	{ NULL,   0, NULL,  0  }
+    };
+
+    program_name = argv[0];
+
+    do
+    {
+	next_option = getopt_long(argc, argv, short_options, long_options, NULL);
+
+	switch(next_option)
+	{
+	    case 'h':
+		print_usage(stdout, 0);
+		
+	    case 'c':
+		conf_file = optarg;
+		break;
+	    case '?':
+		print_usage(stderr, 1);
+	    case -1:
+		break;
+	    default:
+		abort();
+	}
+    }
+    while(next_option != -1);
+
+    if(optind == 1)
+    {
+	fprintf(stderr, "No options specified\n");
+	print_usage(stderr, 1);
+    }
+
+    if(access(conf_file, F_OK) == -1)
+    {
+	fprintf(stderr, "No such file\n");
+	print_usage(stderr, 1);
+    }
 }
