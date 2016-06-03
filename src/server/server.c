@@ -6,12 +6,72 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <getopt.h>
+#include <errno.h>
+#include <fcntl.h>
 #include "hashtable.h"
 #include "server.h"
 
 #define DATA_SIZE 1024
 #define HTABLE_SIZE 10
 
+int send_file(int file_fd, int sock_fd)
+{
+     char buf[DATA_SIZE] = { 0 };
+
+     while(1)
+     {
+	int num_read;
+	char* p = buf;
+			        
+	num_read = read(file_fd, buf, DATA_SIZE - 1);
+	
+	if(num_read < 0)
+	{ 
+	    fprintf(stderr,"%s\n",strerror(errno));
+	    return 1;
+	}
+									     
+	if(num_read == 0)
+	{
+	    break;
+	}
+	
+	while(num_read > 0)
+	{
+	    int num_write =  write(sock_fd, p, num_read);
+	    
+	    if(num_write < 0)
+	    {
+		fprintf(stderr, "%s\n", strerror(errno));
+		return 1;
+	    }
+
+	    num_read -= num_write;
+	    p += num_write;
+	}
+    }
+
+    return 0;
+}
+
+int send_services(int sock_fd)
+{
+    int file_fd;
+    
+    if( (file_fd = open("server/services.txt", O_RDONLY)) < 0)
+    {
+	fprintf(stderr, "%s", "couldn't open services.txt file");
+	strerror(errno);
+	return 1;
+    }   
+
+    if( send_file(file_fd, sock_fd) == 1)
+    {
+	return 1;
+    }
+
+    return 0;
+}
 void create_socket(int *socket_desc) 
 {
     *socket_desc = socket(AF_INET, SOCK_STREAM, 0);
@@ -90,33 +150,47 @@ void compute_hash_file(size_t filesize, int* socket, unsigned char* hash)
 	memset(data, 0, DATA_SIZE);
     }
 
-
     if( SHA1_Final(hash, &ctx) == 0)
     {
 	fprintf(stderr,"%s", "SHA final exits");
 	pthread_exit(NULL);
     }
 }
-int order_parser(const char* order, char* command, size_t* size)
+
+int order_parser(const char* order, int* command, int* size)
 {
-    char* spl = strchr(order, ' ');
-    char size_buf [20] = {0};
+    int i = 0; 
+    char* p_ind; 
+    char size_buf[5] = { 0 };
+    char command_number[5] = { 0 };
+
+    char* spl = strchr(order, ':');
     
     if(spl == NULL)
     {
 	return 1;
     }
 
-    strncpy(size_buf, spl+1, 19);
+    char* tmp = spl;
 
-    *size = atoi(size_buf);
-    int i = 0;
-    const char* p_ind;
-    for(p_ind = order; p_ind != spl && i != 49; ++p_ind, ++i)
+    while(*tmp)
     {
-	command[i] = *p_ind;
+	static int i = 0;
+	size_buf[i] = *tmp;
+	++tmp;
+	++i;
     }
 
+    //strncpy(size_buf, spl, sizeof(order) - (spl-order));
+    
+    *size = atoi(size_buf);
+
+    for(p_ind = order; p_ind != spl && i != 5; ++p_ind, ++i)
+    {
+	command_number[i] = *p_ind;
+    }
+
+    *command = atoi(command_number);
     return 0;
 }
 
@@ -128,34 +202,75 @@ void set_hash_table()
 
 void* connection_handler(void* sock_desc)
 {
+    char request_message[DATA_SIZE] = { 0 };
     int socket = *( (int*)sock_desc );
-    unsigned char hash[SHA_DIGEST_LENGTH];
+
+    if( read(socket, request_message, DATA_SIZE) < 0)
+    {
+	fprintf(stderr, "%s\n", request_message);
+	pthread_exit(NULL);
+    }
+
+    printf("%s\n", request_message);
+    
+    if( send_services(socket) == 1 )
+    {   
+	fprintf(stderr, "%s\n", strerror(errno));
+	pthread_exit(NULL);
+    }
 
     fptr func;
 
-    char order[100] = {0};
-    char command[50] = {0};
-    size_t size;
+    char order[10]  = { 0 };
+    int number;
+    int size;
 
     read(socket, order, sizeof(order));
+    char* tmp = "1:31";
 
-    if(order_parser(order, command, &size) == 1)
+    order_parser(tmp, &number, &size);
+
+    fprintf(stdout,"\n%s %d %d", "after parsing number and size : ", number, size);
+    fflush(stdout);
+
+    if( number == 1 )
     {
-	return NULL;
-    }
+	char file_size[5] = { 0 };
+	int size;
+	char* command = "compute_file_hash";
+	unsigned char hash[SHA_DIGEST_LENGTH] = { 0 };
 
-    write(socket, "I received order", 30);
+	fprintf(stdout, "The client chose %s", "SHA1 of a file");
+	fflush(stdout);
+
+	/*if(order_parser(order, command, &size) == 1)
+	{
+	    return NULL;
+	}
+
+	write(socket, "I received order", 30);
     
-    if( valueForKeyInHashTable(ht, command, &func) == 0)
-    {
+	write(socket, "mention the size of a file", 25);
+        read(socket, file_size, sizeof(file_size));
+	
+	size = atoi(file_size);
+	*/
+	if( valueForKeyInHashTable(ht, command, &func) == 0)
+	{
+	    return NULL;
+	}
+
+	func(size,&socket, hash);
+
+	write(socket, hash, SHA_DIGEST_LENGTH);
 	return NULL;
     }
 
-    func(size,&socket, hash);
-
-    write(socket, hash, SHA_DIGEST_LENGTH);
-    return NULL;
-
+    else
+    {
+	fprintf(stderr,"%s", "bad order\n");
+	pthread_exit(NULL);
+    }
 }
 
 void print_usage(FILE* stream, int exit_code)

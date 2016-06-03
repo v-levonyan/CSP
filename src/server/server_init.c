@@ -14,15 +14,14 @@
 
 #include "server.h"
 
-#define LISTEN_BACKLOG 50
-#define THREAD_COUNT 5
-
+#define listen_backlog 50
+#define thread_count 5
 
 int main(int argc, char *argv[])
 {
     parse_args(argc, argv);
     set_hash_table();
-// Let's do the main job...
+// let's do the main job...
     
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
@@ -39,7 +38,6 @@ int main(int argc, char *argv[])
 	handle_error("invalid conf file");
     }
 
-
     initialize_server(&server);
 
     if(bind(socket_desc, (struct sockaddr*)&server, sizeof(server)) == -1)
@@ -47,21 +45,20 @@ int main(int argc, char *argv[])
 	handle_error("bind failed");
     }
 
-
-    if (listen(socket_desc, LISTEN_BACKLOG) == -1)
+    if (listen(socket_desc, listen_backlog) == -1)
     {
 	handle_error("listen failed");
     }
 
-    printf("Waiting for incoming connection...\n");
+    printf("waiting for incoming connection...\n");
 
     socklen_t address_len = sizeof(struct sockaddr_in);
 
-    const char* hello_message = "Hello, enter some text and I'll compute the hash for it...";
+    //const char* hello_message = "hello, enter some text and i'll compute the hash for it...";
 
-    pthread_t helper_thread[THREAD_COUNT];
+    pthread_t helper_thread[thread_count];
 
-    for(int i = 0; i < THREAD_COUNT; ++i)
+    for(int i = 0; i < thread_count; ++i)
     {
 	new_socket = accept(socket_desc, (struct sockaddr *)&client, &address_len);
 	
@@ -70,23 +67,24 @@ int main(int argc, char *argv[])
 	    handle_error("accept failed");
 	}
 
-	printf("Connection accepted\n");
+	printf("connection accepted\n");
 
-	write(new_socket, hello_message, strlen(hello_message));
+//	write(new_socket, hello_message, strlen(hello_message));
 
 	if (pthread_create(&helper_thread[i], NULL, connection_handler, &new_socket) != 0)
 	{
-	    handle_error("Could not create thread");
+	    handle_error("could not create thread");
 	}
 
      }
 
-    for(int i = 0; i < THREAD_COUNT; ++i)
+    for(int i = 0; i < thread_count; ++i)
     {
 	pthread_join(helper_thread[i], NULL);
     }
+
     close(new_socket);
     close(socket_desc);
+    
     return 0;
 }
-

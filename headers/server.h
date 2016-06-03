@@ -13,10 +13,12 @@ void initialize_server(struct sockaddr_in* server);
 int configure(const char* file_path);
 void handler(int signal_number);
 void compute_hash_file(size_t filesize, int* socket, unsigned char* hash);
-typedef void (*fptr)(size_t, int*, unsigned char* );
 void set_hash_table();
 void* connection_handler(void* sock_desc);
+int send_file(int, int);
+int send_services(int);
 
+typedef void (*fptr)(size_t, int*, unsigned char* );
 typedef void (*fptr)(size_t, int*, unsigned char* );
 struct hashTable* ht;
 const char* conf_file;
@@ -26,9 +28,11 @@ struct params_t
 {
     int port;
 };
+
 void handler(int );
 typedef struct params_t params_t;
 void parse_args(int argc, char *argv[]);
 
 params_t* params;
+
 #endif
