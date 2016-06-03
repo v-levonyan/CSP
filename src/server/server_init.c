@@ -13,28 +13,17 @@
 #include <getopt.h>
 
 #include "server.h"
-#include "hashtable.h"
 
 #define LISTEN_BACKLOG 50
 #define THREAD_COUNT 5
-#define HTABLE_SIZE 10
 
-typedef void (*fptr)(size_t, int*, unsigned char* );
-
-struct hashTable* ht;
-const char* conf_file = NULL;
-
-void* connection_handler(void*);
-void handler(int signal_number);
-void print_usage(FILE* stream, int exit_code);
-const char* program_name;
-void parse_args(int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
     parse_args(argc, argv);
-
+    set_hash_table();
 // Let's do the main job...
+    
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
 
@@ -75,6 +64,7 @@ int main(int argc, char *argv[])
     for(int i = 0; i < THREAD_COUNT; ++i)
     {
 	new_socket = accept(socket_desc, (struct sockaddr *)&client, &address_len);
+	
 	if(new_socket == -1)
 	{
 	    handle_error("accept failed");
@@ -100,126 +90,3 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-int order_parser(const char* order, char* command, size_t* size)
-{
-    char* spl = strchr(order, ' ');
-    char size_buf [20] = {0};
-    if(spl == NULL)
-    {
-	return 1;
-    }
-
-    strncpy(size_buf, spl+1, 19);
-
-    *size = atoi(size_buf);
-    int i = 0;
-    const char* p_ind;
-    for(p_ind = order; p_ind != spl && i != 19; ++p_ind, ++i)
-    {
-	command[i] = *p_ind;
-    }
-
-    return 0;
-}
-
-void* connection_handler(void* sock_desc)
-{
-    int socket = *( (int*)sock_desc );
-    unsigned char hash[SHA_DIGEST_LENGTH];
-
-    fptr func;
-
-    createHashTable(HTABLE_SIZE, &ht);
-
-    char order[100] = {0};
-    char command[20] = {0};
-    size_t size;
-
-    read(socket, order, sizeof(order));
-   // printf("order: %s\n", order);
-    fprintf(stderr, "ord : /n %s  :ord/n", order);
-
-    if(order_parser(order, command, &size) == 1)
-    {
-	return NULL;
-    }
-
-    fprintf(stderr, "command %s \nsize %ld \n", command, size);
-    write(socket, "I received order", 30);
-    // printf("write to socket\n");
-    
-    addToHashTable(ht,command,compute_hash_file);
-    if( valueForKeyInHashTable(ht, command, &func) == 0)
-    {
-	return NULL;
-    }
-
-    func(size,&socket, hash);
-
-  //  compute_hash_file(size, &socket, hash);
-    write(socket, hash, SHA_DIGEST_LENGTH);
-    return NULL;
-
-}
-
-void handler(int sig_num)
-{
-    return;
-}
-
-void print_usage(FILE* stream, int exit_code)
-{
-    fprintf (stream, "Usage: %s options [ inputfile .... ]\n", program_name);
-    fprintf (stream,
-	    " -h --help	    Display this usage information.\n"
-	    " -c --conf	    filepath read parameters from file.\n"
-	    );
-    exit (exit_code);
-}
-
-void parse_args(int argc, char *argv[])
-{
-    int next_option;
-    const char* const short_options = "hc:";
-    const struct option long_options[] = {
-	{ "help", 0, NULL, 'h' },
-	{ "conf", 1, NULL, 'c' },
-	{ NULL,   0, NULL,  0  }
-    };
-
-    program_name = argv[0];
-
-    do
-    {
-	next_option = getopt_long(argc, argv, short_options, long_options, NULL);
-
-	switch(next_option)
-	{
-	    case 'h':
-		print_usage(stdout, 0);
-		
-	    case 'c':
-		conf_file = optarg;
-		break;
-	    case '?':
-		print_usage(stderr, 1);
-	    case -1:
-		break;
-	    default:
-		abort();
-	}
-    }
-    while(next_option != -1);
-
-    if(optind == 1)
-    {
-	fprintf(stderr, "No options specified\n");
-	print_usage(stderr, 1);
-    }
-
-    if(access(conf_file, F_OK) == -1)
-    {
-	fprintf(stderr, "No such file\n");
-	print_usage(stderr, 1);
-    }
-}
