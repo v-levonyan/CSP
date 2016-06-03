@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import socket
+import os
 
 class clientSocket:
 
@@ -17,9 +18,11 @@ class clientSocket:
         self.sock.connect((host, port))
 
     def sendMessage(self, msg):
+        print "enter sendMessage"
         totalsent = 0
         while totalsent < len(msg):
             sent = self.sock.send(msg[totalsent:])
+            print "sending", sent, "bytes"
             if sent == 0:
                 raise RuntimeError(self.errorMessage)
             totalsent = totalsent + sent
@@ -38,23 +41,42 @@ class clientSocket:
         for piece in self.readInChunks(f):
             self.sendMessage(piece)
 
+    def getFile(self):        
+        inputFile = raw_input("Enter the path of the file: ")
+        return inputFile
+            
+    def getSHA1File(self):
+        f = self.getFile()
+        fileSize = os.path.getsize(f)
 
+        seq = ("1", str(fileSize))
 
+        params = ':'.join(seq)
+        
+        print "sending parameters: ", params
+
+        self.sendMessage(params)
+        self.sendFile(f)
+        result = self.recieveMessage()
+        return result
 
 
     def recieveMessage(self):
-        print "enter recv"
-        chunks = []
-        bytes_recd = 0
-        while bytes_recd < self.MSGLEN:
-            chunk = self.sock.recv(min(self.MSGLEN - bytes_recd, 2048))
-            if chunk == '':
-                raise RuntimeError(errorMessage)
-            chunks.append(chunk)
-            bytes_recd = bytes_recd + len(chunk)
-            print "return message"
-            receivedMessage = ''.join(chunks)
-            print receivedMessage
+#        print "enter recv"
+#        chunks = []
+#        bytes_recd = 0
+#        while bytes_recd < self.MSGLEN:
+#            print "loop"
+#            chunk = self.sock.recv(min(self.MSGLEN - bytes_recd, 2048))
+#            print "chunk: ", chunk
+#            if chunk == '':
+#                raise RuntimeError(errorMessage)
+#            chunks.append(chunk)
+#            bytes_recd = bytes_recd + len(chunk)
+#            print "return message"
+#            receivedMessage = ''.join(chunks)
+#            print receivedMessage
+        receivedMessage = self.sock.recv(self.MSGLEN)
         return receivedMessage 
 
 if __name__ == "__main__":

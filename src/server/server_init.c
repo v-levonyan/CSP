@@ -19,72 +19,72 @@
 
 int main(int argc, char *argv[])
 {
-    parse_args(argc, argv);
-    set_hash_table();
-// let's do the main job...
-    
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
+	parse_args(argc, argv);
+	set_hash_table();
+	// let's do the main job...
 
-    sa.sa_handler = &handler;
-    sigaction(SIGPIPE, &sa, NULL);
+	struct sigaction sa;
+	memset(&sa, 0, sizeof(sa));
 
-    int socket_desc, new_socket;
-    struct sockaddr_in server, client;
+	sa.sa_handler = &handler;
+	sigaction(SIGPIPE, &sa, NULL);
 
-    create_socket(&socket_desc);
-    if( !configure(conf_file) )
-    {
-	handle_error("invalid conf file");
-    }
+	int socket_desc, new_socket;
+	struct sockaddr_in server, client;
 
-    initialize_server(&server);
-
-    if(bind(socket_desc, (struct sockaddr*)&server, sizeof(server)) == -1)
-    {
-	handle_error("bind failed");
-    }
-
-    if (listen(socket_desc, listen_backlog) == -1)
-    {
-	handle_error("listen failed");
-    }
-
-    printf("waiting for incoming connection...\n");
-
-    socklen_t address_len = sizeof(struct sockaddr_in);
-
-    //const char* hello_message = "hello, enter some text and i'll compute the hash for it...";
-
-    pthread_t helper_thread[thread_count];
-
-    for(int i = 0; i < thread_count; ++i)
-    {
-	new_socket = accept(socket_desc, (struct sockaddr *)&client, &address_len);
-	
-	if(new_socket == -1)
+	create_socket(&socket_desc);
+	if( !configure(conf_file) )
 	{
-	    handle_error("accept failed");
+		handle_error("invalid conf file");
 	}
 
-	printf("connection accepted\n");
+	initialize_server(&server);
 
-//	write(new_socket, hello_message, strlen(hello_message));
-
-	if (pthread_create(&helper_thread[i], NULL, connection_handler, &new_socket) != 0)
+	if(bind(socket_desc, (struct sockaddr*)&server, sizeof(server)) == -1)
 	{
-	    handle_error("could not create thread");
+		handle_error("bind failed");
 	}
 
-     }
+	if (listen(socket_desc, listen_backlog) == -1)
+	{
+		handle_error("listen failed");
+	}
 
-    for(int i = 0; i < thread_count; ++i)
-    {
-	pthread_join(helper_thread[i], NULL);
-    }
+	printf("waiting for incoming connection...\n");
 
-    close(new_socket);
-    close(socket_desc);
-    
-    return 0;
+	socklen_t address_len = sizeof(struct sockaddr_in);
+
+	//const char* hello_message = "hello, enter some text and i'll compute the hash for it...";
+
+	pthread_t helper_thread[thread_count];
+
+	for(int i = 0; i < thread_count; ++i)
+	{
+		new_socket = accept(socket_desc, (struct sockaddr *)&client, &address_len);
+
+		if(new_socket == -1)
+		{
+			handle_error("accept failed");
+		}
+
+		printf("connection accepted\n");
+
+		//	write(new_socket, hello_message, strlen(hello_message));
+
+		if (pthread_create(&helper_thread[i], NULL, connection_handler, &new_socket) != 0)
+		{
+			handle_error("could not create thread");
+		}
+
+	}
+
+	for(int i = 0; i < thread_count; ++i)
+	{
+		pthread_join(helper_thread[i], NULL);
+	}
+
+	close(new_socket);
+	close(socket_desc);
+
+	return 0;
 }
