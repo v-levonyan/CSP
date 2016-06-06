@@ -2,6 +2,7 @@
 
 from client import clientSocket
 import argparse
+import hashlib
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--host", help="specify the host to connect with", default="127.0.0.1")
@@ -11,18 +12,21 @@ args = parser.parse_args()
 
 clientSock = clientSocket()
 clientSock.connect(args.host, args.port)
+print "connected socket"
+
 
 options = {
         1 : clientSock.getSHA1File
         }
 
 clientSock.sendMessage("CSP1.0://Get Services")
-
+print "before loop"
 while 1:
     print "loop"
     services = clientSock.recieveMessage()
     print services
     serviceId = input("Choose service: ")
     result = options.get(serviceId)()
-    print result
+    pretty = clientSock.byteToHex(result) 
+    print pretty
     

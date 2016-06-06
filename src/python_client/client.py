@@ -48,8 +48,7 @@ class clientSocket:
     def getSHA1File(self):
         f = self.getFile()
         fileSize = os.path.getsize(f)
-
-        seq = ("1", str(fileSize))
+        seq = ("compute_file_hash", str(fileSize))
 
         params = ':'.join(seq)
         
@@ -78,6 +77,9 @@ class clientSocket:
 #            print receivedMessage
         receivedMessage = self.sock.recv(self.MSGLEN)
         return receivedMessage 
+
+    def byteToHex(self, byteStr):
+        return ''.join( [ "%02X " % ord( x ) for x in byteStr ] ).strip()
 
 if __name__ == "__main__":
     clientSock = clientSocket()

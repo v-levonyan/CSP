@@ -21,7 +21,7 @@
 
 // linked list
 
-typedef void (*f)(size_t, int*, unsigned char* );
+typedef void (*f)(size_t, int*);
 
 struct hLinkedList
 {

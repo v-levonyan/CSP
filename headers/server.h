@@ -12,14 +12,13 @@ void create_socket(int *socket_desc);
 void initialize_server(struct sockaddr_in* server);
 int configure(const char* file_path);
 void handler(int signal_number);
-void compute_hash_file(size_t filesize, int* socket, unsigned char* hash);
+void compute_hash_file(size_t filesize, int* socket);
 void set_hash_table();
 void* connection_handler(void* sock_desc);
 int send_file(int, int);
 int send_services(int);
 
-typedef void (*fptr)(size_t, int*, unsigned char* );
-typedef void (*fptr)(size_t, int*, unsigned char* );
+typedef void (*fptr)(size_t, int*);
 struct hashTable* ht;
 const char* conf_file;
 char* program_name;

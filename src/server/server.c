@@ -129,8 +129,10 @@ void initialize_server(struct sockaddr_in* server)
 	free(params);
 }
 
-void compute_hash_file(size_t filesize, int* socket, unsigned char* hash)
+void compute_hash_file(size_t filesize, int* socket)
 {
+	fprintf(stderr, "entering compute hash.........\n");
+	unsigned char hash[SHA_DIGEST_LENGTH] = { 0 };
 	ssize_t bytes_read = 0;
 	size_t remain_data = filesize;
 	char data[DATA_SIZE] = { 0 };
@@ -158,20 +160,21 @@ void compute_hash_file(size_t filesize, int* socket, unsigned char* hash)
 		fprintf(stderr,"%s", "SHA final exits");
 		pthread_exit(NULL);
 	}
-	fprintf(stderr,"hassssssssssssssssssssh : %s", hash);
-
+	write(*socket, hash, SHA_DIGEST_LENGTH);
 }
 
-int* order_parser(char* order)
-{
-	int* result = (int*) malloc(2*sizeof(int));
+struct request_t {
+	char query[30];
+	int filesize;
+};
 
+void order_parser(char* order, struct request_t* request)
+{
 	char* token;
 	token = strtok(order, ":");
-	result[0] = atoi(token);
+	strncpy(request->query, token, sizeof(request->query));
 	token = strtok(NULL, ":");
-	result[1] = atoi(token);
-	return result;
+	request->filesize = atoi(token);
 }
 
 
@@ -181,16 +184,23 @@ void set_hash_table()
 	addToHashTable(ht,"compute_file_hash",compute_hash_file);
 }
 
-void* connection_handler(void* sock_desc)
+void read_request(int* socket, char request[DATA_SIZE])
 {
-	char request_message[DATA_SIZE] = { 0 };
-	int socket = *( (int*)sock_desc );
-
-	if( read(socket, request_message, DATA_SIZE) < 0)
+	memset(request, 0, DATA_SIZE);
+	if( read(*socket, request, DATA_SIZE) < 0)
 	{
-		fprintf(stderr, "%s\n", request_message);
+		fprintf(stderr, "%s\n", request);
 		pthread_exit(NULL);
 	}
+}
+
+
+void* connection_handler(void* sock_desc)
+{
+	char request_message[DATA_SIZE];
+	int socket = *( (int*)sock_desc );
+
+	read_request(&socket, request_message);
 
 	printf("%s\n", request_message);
 
@@ -202,41 +212,23 @@ void* connection_handler(void* sock_desc)
 
 	fptr func;
 
-	char order[10]  = { 0 };
-	int* params;
+	struct request_t request;
 
-	read(socket, order, sizeof(order));
+	read_request(&socket, request_message);
 
-	params = order_parser(order);
+	order_parser(request_message, &request);
 
-	fprintf(stdout,"\n%s %d %d", "after parsing number and size : ", params[0], params[1]);
-	fflush(stdout);
+	fprintf(stderr,"\nquery: %s, filesize: %d\n", request.query, request.filesize);
 
-	if( params[0] == 1 )
+
+	if( valueForKeyInHashTable(ht, request.query, &func) == 0)
 	{
-		char* command = "compute_file_hash";
-		unsigned char hash[SHA_DIGEST_LENGTH] = { 0 };
-
-		fprintf(stdout, "The client chose %s", "SHA1 of a file");
-		fflush(stdout);
-
-		if( valueForKeyInHashTable(ht, command, &func) == 0)
-		{
-			return NULL;
-		}
-
-		func(params[1], &socket, hash);
-		fprintf(stderr, "%s\n", hash);
-
-		write(socket, hash, SHA_DIGEST_LENGTH);
 		return NULL;
 	}
 
-	else
-	{
-		fprintf(stderr,"%s", "bad order\n");
-		pthread_exit(NULL);
-	}
+	func(request.filesize, &socket);
+
+	return NULL;
 }
 
 void print_usage(FILE* stream, int exit_code)
