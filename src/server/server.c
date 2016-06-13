@@ -77,7 +77,7 @@ void create_socket(int *socket_desc)
 	*socket_desc = socket(AF_INET, SOCK_STREAM, 0);
 	if((*socket_desc) == -1)
 	{
-		handle_error("Colud not create socket");
+		handle_error("Could not create socket");
 	}
 	int enable = 1;
 	if (setsockopt((*socket_desc), SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
@@ -184,14 +184,19 @@ void set_hash_table()
 	addToHashTable(ht,"compute_file_hash",compute_hash_file);
 }
 
-void read_request(int* socket, char request[DATA_SIZE])
+int read_request(int* socket, char request[DATA_SIZE])
 {
 	memset(request, 0, DATA_SIZE);
-	if( read(*socket, request, DATA_SIZE) < 0)
+	int read_size;
+	read_size = read(*socket, request, DATA_SIZE);
+	if(read_size < 0)
 	{
-		fprintf(stderr, "%s\n", request);
-		pthread_exit(NULL);
+		handle_error("Could not read from socket");
+	//	fprintf(stderr, "%s\n", request);
+	//	pthread_exit(NULL);
 	}
+	fprintf(stderr, "reading request: %s\n", request);
+	return read_size;
 }
 
 
@@ -199,36 +204,52 @@ void* connection_handler(void* sock_desc)
 {
 	char request_message[DATA_SIZE];
 	int socket = *( (int*)sock_desc );
+	int bytes_read;
 
-	read_request(&socket, request_message);
+	while ( (bytes_read = read_request(&socket, request_message)) > 0 )
+	{
+		printf("%s\n", request_message);
 
-	printf("%s\n", request_message);
+		if( send_services(socket) == 1 )
+		{   
+			fprintf(stderr, "%s\n", strerror(errno));
+			pthread_exit(NULL);
+		}
 
-	if( send_services(socket) == 1 )
-	{   
-		fprintf(stderr, "%s\n", strerror(errno));
+		fptr func;
+
+		struct request_t request;
+
+		bytes_read = read_request(&socket, request_message);
+		if (bytes_read == 0)
+		{
+			fprintf(stdout, "Client disconnected");
+			pthread_exit(NULL);
+		}
+
+		order_parser(request_message, &request);
+
+		fprintf(stderr,"\nquery: %s, filesize: %d\n", request.query, request.filesize);
+
+
+		if( valueForKeyInHashTable(ht, request.query, &func) == 0)
+		{
+			fprintf(stdout, "Could not find request: %s\n", request.query);
+			pthread_exit(NULL);
+		}
+
+		func(request.filesize, &socket);
+	}
+
+	pthread_exit(NULL);
+
+/*
+	if (bytes_read == 0)
+	{
+		fprintf(stdout, "Client disconnected");
 		pthread_exit(NULL);
 	}
-
-	fptr func;
-
-	struct request_t request;
-
-	read_request(&socket, request_message);
-
-	order_parser(request_message, &request);
-
-	fprintf(stderr,"\nquery: %s, filesize: %d\n", request.query, request.filesize);
-
-
-	if( valueForKeyInHashTable(ht, request.query, &func) == 0)
-	{
-		return NULL;
-	}
-
-	func(request.filesize, &socket);
-
-	return NULL;
+	*/
 }
 
 void print_usage(FILE* stream, int exit_code)
