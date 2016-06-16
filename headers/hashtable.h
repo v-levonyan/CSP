@@ -15,13 +15,14 @@
 //
 
 #include <stdbool.h>
-
+#include "openssl/ssl.h"
+#include "openssl/err.h"
 #ifndef Practice_MyHashTable_h
 #define Practice_MyHashTable_h
 
 // linked list
 
-typedef void (*f)(size_t, int*);
+typedef void (*f)(size_t, SSL*);
 
 struct hLinkedList
 {

@@ -8,17 +8,27 @@
 #define handle_error(msg) \
     do { perror(msg); exit(EXIT_FAILURE); } while (0)
 
+struct handler_args
+{
+    int socket;
+    SSL_CTX* ctx;
+};
+
 void create_socket(int *socket_desc); 
 void initialize_server(struct sockaddr_in* server);
 int configure(const char* file_path);
 void handler(int signal_number);
-void compute_hash_file(size_t filesize, int* socket);
+void compute_hash_file(size_t filesize, SSL* ssl);
 void set_hash_table();
-void* connection_handler(void* sock_desc);
-int send_file(int, int);
-int send_services(int);
+void* connection_handler(void*);
+int send_file(int,SSL*);
+int send_services(SSL*);
+SSL_CTX* InitServerCTX();
+int isRoot();
+void ShowCerts(SSL* ssl);
+void LoadCertificates(SSL_CTX* ctx, char* CertFile, char* KeyFile);
 
-typedef void (*fptr)(size_t, int*);
+typedef void (*fptr)(size_t, SSL*);
 struct hashTable* ht;
 const char* conf_file;
 char* program_name;

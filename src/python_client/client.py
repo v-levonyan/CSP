@@ -2,15 +2,16 @@
 
 import socket
 import os
+from OpenSSL import SSL, crypto
 
 class clientSocket:
 
     errorMessage = "socket connection broken"
     MSGLEN = 100
-
-    def __init__(self, sock=None):
+    
+    def __init__(self, ctx, sock=None):
         if sock is None:
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	    self.sock = SSL.Connection(ctx, socket.socket(socket.AF_INET, socket.SOCK_STREAM))
         else:
             self.sock = sock
 
@@ -18,15 +19,14 @@ class clientSocket:
         self.sock.connect((host, port))
 
     def sendMessage(self, msg):
-        print "enter sendMessage"
         totalsent = 0
         while totalsent < len(msg):
             sent = self.sock.send(msg[totalsent:])
-            print "sending", sent, "bytes"
+           # print "sending", sent, "bytes"
             if sent == 0:
                 raise RuntimeError(self.errorMessage)
             totalsent = totalsent + sent
-            print "totalsent",totalsent
+            # print "totalsent",totalsent
 
 
     def readInChunks(self, inputFile, chunkSize=100):
@@ -48,7 +48,8 @@ class clientSocket:
     def getSHA1File(self):
         f = self.getFile()
         fileSize = os.path.getsize(f)
-        seq = ("compute_file_hash", str(fileSize))
+
+        seq = ("1", str(fileSize))
 
         params = ':'.join(seq)
         
@@ -61,6 +62,7 @@ class clientSocket:
 
 
     def recieveMessage(self):
+
 #        print "enter recv"
 #        chunks = []
 #        bytes_recd = 0
@@ -75,18 +77,22 @@ class clientSocket:
 #            print "return message"
 #            receivedMessage = ''.join(chunks)
 #            print receivedMessage
-        receivedMessage = self.sock.recv(self.MSGLEN)
-        return receivedMessage 
+	             
+	try:
+            receivedMessage = self.sock.recv(self.MSGLEN)
+	except SSL.ZeroReturnError:
+	    print 'Received message '
+	
+	return receivedMessage 
+
+    def shutDownAndClose(self):
+        self.sock.shutdown()
+	self.sock.close()
 
     def byteToHex(self, byteStr):
-        return ''.join( [ "%02X " % ord( x ) for x in byteStr ] ).strip()
+	return ''.join( [ "%02X " % ord( x ) for x in byteStr ] ).strip()
 
-if __name__ == "__main__":
-    clientSock = clientSocket()
-    clientSock.connect("127.0.0.1", 8888)
-
-
-
-
-
+#if __name__ == "__main__":
+#   clientSock = clientSocket()
+#    clientSock.connect("127.0.0.1", 8888)
 

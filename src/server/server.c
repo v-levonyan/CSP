@@ -8,13 +8,17 @@
 #include <getopt.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <resolv.h>
+#include "openssl/ssl.h"
+#include "openssl/err.h"
 #include "hashtable.h"
 #include "server.h"
 
+#define FAIL -1
 #define DATA_SIZE 1024
 #define HTABLE_SIZE 10
 
-int send_file(int file_fd, int sock_fd)
+int send_file(int file_fd, SSL* ssl)
 {
 	char buf[DATA_SIZE] = { 0 };
 
@@ -38,7 +42,7 @@ int send_file(int file_fd, int sock_fd)
 
 		while(num_read > 0)
 		{
-			int num_write =  write(sock_fd, p, num_read);
+			int num_write =  SSL_write(ssl, p, num_read);
 
 			if(num_write < 0)
 			{
@@ -54,7 +58,7 @@ int send_file(int file_fd, int sock_fd)
 	return 0;
 }
 
-int send_services(int sock_fd)
+int send_services(SSL* ssl)
 {
 	int file_fd;
 
@@ -65,7 +69,7 @@ int send_services(int sock_fd)
 		return 1;
 	}   
 
-	if( send_file(file_fd, sock_fd) == 1)
+	if( send_file(file_fd, ssl) == 1)
 	{
 		return 1;
 	}
@@ -129,17 +133,16 @@ void initialize_server(struct sockaddr_in* server)
 	free(params);
 }
 
-void compute_hash_file(size_t filesize, int* socket)
+void compute_hash_file(size_t filesize, SSL* ssl)
 {
-	fprintf(stderr, "entering compute hash.........\n");
 	unsigned char hash[SHA_DIGEST_LENGTH] = { 0 };
 	ssize_t bytes_read = 0;
 	size_t remain_data = filesize;
 	char data[DATA_SIZE] = { 0 };
 	SHA_CTX ctx;
 	SHA1_Init(&ctx);
-
-	while( remain_data > 0 && (bytes_read = read(*socket, data, DATA_SIZE - 1)) )
+	printf("%s\n", "Receiving the file ... \n");
+	while( remain_data > 0 && (bytes_read = SSL_read(ssl, data, DATA_SIZE - 1)) )
 	{
 		remain_data -= bytes_read;
 
@@ -148,19 +151,18 @@ void compute_hash_file(size_t filesize, int* socket)
 			handle_error("data wasn't read");
 		}
 
-		fprintf(stderr, "received file content: %s\n", data);
-
 		SHA1_Update(&ctx, data, strlen(data));
 		memset(data, 0, DATA_SIZE);
 	}
-	fprintf(stderr,"generating final hash");
+	printf("%s\n","Generating final hash\n");
 	if( SHA1_Final(hash, &ctx) == 0)
 	{		
 
 		fprintf(stderr,"%s", "SHA final exits");
 		pthread_exit(NULL);
 	}
-	write(*socket, hash, SHA_DIGEST_LENGTH);
+	SSL_write(ssl, hash, SHA_DIGEST_LENGTH);
+	printf("%s\n", "Final hash sent to the client\n");
 }
 
 struct request_t {
@@ -184,33 +186,46 @@ void set_hash_table()
 	addToHashTable(ht,"compute_file_hash",compute_hash_file);
 }
 
-int read_request(int* socket, char request[DATA_SIZE])
+int read_request(SSL* ssl, char request[DATA_SIZE])
 {
 	memset(request, 0, DATA_SIZE);
 	int read_size;
-	read_size = read(*socket, request, DATA_SIZE);
+	read_size = SSL_read(ssl, request, DATA_SIZE);
 	if(read_size < 0)
 	{
 		handle_error("Could not read from socket");
-	//	fprintf(stderr, "%s\n", request);
-	//	pthread_exit(NULL);
 	}
-	fprintf(stderr, "reading request: %s\n", request);
+
 	return read_size;
 }
 
-
-void* connection_handler(void* sock_desc)
+void* connection_handler(void* cl_args)
 {
+	struct handler_args* args = (struct handler_args*) cl_args;
 	char request_message[DATA_SIZE];
-	int socket = *( (int*)sock_desc );
 	int bytes_read;
 
-	while ( (bytes_read = read_request(&socket, request_message)) > 0 )
-	{
-		printf("%s\n", request_message);
+	SSL* ssl;
 
-		if( send_services(socket) == 1 )
+	ssl = SSL_new(args->ctx);
+	SSL_set_fd(ssl,args->socket);
+
+	if( SSL_accept(ssl) == FAIL )
+	{
+	    ERR_print_errors_fp(stderr);
+	}
+
+	else
+	{
+	   // ShowCerts(ssl);
+	    printf("\n%s\n","SSL connection established with the client");
+	    
+	    while ( (bytes_read = read_request(ssl, request_message)) > 0 )
+	    {
+		printf("The client's request : %s\n", request_message);
+		memset(request_message, 0, DATA_SIZE);
+
+		if( send_services(ssl) == 1 )
 		{   
 			fprintf(stderr, "%s\n", strerror(errno));
 			pthread_exit(NULL);
@@ -220,7 +235,7 @@ void* connection_handler(void* sock_desc)
 
 		struct request_t request;
 
-		bytes_read = read_request(&socket, request_message);
+		bytes_read = read_request(ssl, request_message);
 		if (bytes_read == 0)
 		{
 			fprintf(stdout, "Client disconnected");
@@ -229,8 +244,18 @@ void* connection_handler(void* sock_desc)
 
 		order_parser(request_message, &request);
 
-		fprintf(stderr,"\nquery: %s, filesize: %d\n", request.query, request.filesize);
+		fprintf(stderr,"\nThe client responsed\nquery: %s , filesize: %d\n", request.query, request.filesize);
+		
+		if( atoi(request.query) == 1 )
+		{
+		    strcpy(request.query, "compute_file_hash");
+		}
 
+		else
+		{
+		    fprintf(stderr, "%s\n", "Wrong order from the client");
+		    pthread_exit(NULL);
+		}
 
 		if( valueForKeyInHashTable(ht, request.query, &func) == 0)
 		{
@@ -238,18 +263,12 @@ void* connection_handler(void* sock_desc)
 			pthread_exit(NULL);
 		}
 
-		func(request.filesize, &socket);
-	}
+		func(request.filesize, ssl);
+	    }
 
-	pthread_exit(NULL);
+	    pthread_exit(NULL);
 
-/*
-	if (bytes_read == 0)
-	{
-		fprintf(stdout, "Client disconnected");
-		pthread_exit(NULL);
-	}
-	*/
+	} 
 }
 
 void print_usage(FILE* stream, int exit_code)
@@ -313,4 +332,105 @@ void parse_args(int argc, char *argv[])
 		fprintf(stderr, "No such file\n");
 		print_usage(stderr, 1);
 	}
+}
+
+SSL_CTX* InitServerCTX()
+{
+    SSL_METHOD* method;
+    SSL_CTX* ctx;
+
+    OpenSSL_add_all_algorithms();
+    SSL_load_error_strings();
+    method = SSLv23_server_method();
+    ctx = SSL_CTX_new(method);
+
+    if ( ctx == NULL )
+	{
+		ERR_print_errors_fp(stderr);
+		abort();
+	}
+    
+    return ctx;
+}
+
+void LoadCertificates(SSL_CTX* ctx, char* CertFile, char* KeyFile)
+{
+    if ( SSL_CTX_use_certificate_file(ctx, CertFile, SSL_FILETYPE_PEM) <= 0 )
+	{
+		ERR_print_errors_fp(stderr);
+		abort();
+	}
+
+    if ( SSL_CTX_use_PrivateKey_file(ctx, KeyFile, SSL_FILETYPE_PEM) <= 0 )
+    {
+	ERR_print_errors_fp(stderr);
+	abort();
+    }
+    if ( !SSL_CTX_check_private_key(ctx) )
+    {
+	fprintf(stderr, "Private key does not match the public certificate\n");
+	abort();
+    }
+}
+
+void ShowCerts(SSL* ssl)
+{
+    X509* cert;
+    char* line;
+
+    cert = SSL_get_peer_certificate(ssl); /* Get certificates (if available) */
+    if( cert != NULL )
+    {
+	printf("Server certificates:\n");
+	line = X509_NAME_oneline(X509_get_subject_name(cert), 0, 0);
+	printf("Subject: %s\n",line);
+	line = X509_NAME_oneline(X509_get_issuer_name(cert), 0, 0);
+	printf("Issuer: %s\n", line);
+	X509_free(cert);
+    }
+    else
+	printf("No certificates.\n");
+}
+
+void Servlet(SSL* ssl) /* Serve the connection */
+{
+    char buf[1024];
+    char reply[1024];
+    int sd, bytes;
+    const char* HTMLecho="<html><body><pre>%s</pre></body></html>\n\n";
+
+    if( SSL_accept(ssl) == FAIL)
+    {
+	ERR_print_errors_fp(stderr);
+    }
+    else
+    {
+	ShowCerts(ssl);
+	bytes = SSL_read(ssl, buf, sizeof(buf));
+	if ( bytes > 0 )
+	{
+	    buf[bytes] = 0;
+	    printf("Client msg: \"%s\"\n", buf);
+	    sprintf(reply, HTMLecho, buf);
+	    /* construct reply */
+	    SSL_write(ssl, reply, strlen(reply)); /*send reply */
+	}
+	else
+	    ERR_print_errors_fp(stderr);
+    }
+    sd = SSL_get_fd(ssl);       /* get socket connection */
+    SSL_free(ssl);         /* release SSL state */
+    close(sd);          /* close connection */
+}
+
+int isRoot()
+{
+    if (getuid() != 0)
+    {
+	return 0;
+    }
+    else
+    {
+	return 1;
+    }							     
 }

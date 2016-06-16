@@ -11,7 +11,9 @@
 #include <pthread.h>
 #include <signal.h>
 #include <getopt.h>
-
+#include <resolv.h>
+#include "openssl/ssl.h"
+#include "openssl/err.h"
 #include "server.h"
 
 #define listen_backlog 50
@@ -19,72 +21,82 @@
 
 int main(int argc, char *argv[])
 {
-	parse_args(argc, argv);
-	set_hash_table();
-	// let's do the main job...
+    parse_args(argc, argv);
+    set_hash_table();
+    // let's do the main job...
 
-	struct sigaction sa;
-	memset(&sa, 0, sizeof(sa));
+    if(!isRoot())
+    {
+	printf("This program must be run as root/sudo user!!");
+	return 1;
+    }
 
-	sa.sa_handler = &handler;
-	sigaction(SIGPIPE, &sa, NULL);
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
 
-	int socket_desc, new_socket;
-	struct sockaddr_in server, client;
+    sa.sa_handler = &handler;
+    sigaction(SIGPIPE, &sa, NULL);
 
-	create_socket(&socket_desc);
-	if( !configure(conf_file) )
+    int socket_desc;
+    struct sockaddr_in server, client;
+    
+    create_socket(&socket_desc);
+    
+    if( !configure(conf_file) )
+    {
+	handle_error("invalid conf file");
+    }
+
+    initialize_server(&server);
+
+    if(bind(socket_desc, (struct sockaddr*)&server, sizeof(server)) == -1)
+    {
+	handle_error("bind failed");
+    }
+
+    if (listen(socket_desc, listen_backlog) == -1)
+    {
+	handle_error("listen failed");
+    }
+
+    printf("waiting for incoming connection...\n");
+
+    socklen_t address_len = sizeof(struct sockaddr_in);
+
+    pthread_t helper_thread[thread_count];
+
+    for(int i = 0; i < thread_count; ++i)
+    {
+	struct handler_args args;
+
+	SSL_library_init();
+	args.ctx = InitServerCTX();
+	LoadCertificates(args.ctx,"mycert.pem","mycert.pem");
+
+	SSL* ssl;
+
+	args.socket = accept(socket_desc, (struct sockaddr *)&client, &address_len);
+
+	if(args.socket == -1)
 	{
-		handle_error("invalid conf file");
+	    handle_error("accept failed");
 	}
 
-	initialize_server(&server);
+	printf("connection accepted: %s:%d\n",inet_ntoa(client.sin_addr),
+	ntohs(client.sin_port));
 
-	if(bind(socket_desc, (struct sockaddr*)&server, sizeof(server)) == -1)
+	if (pthread_create(&helper_thread[i], NULL, connection_handler, (void*)&args) != 0)
 	{
-		handle_error("bind failed");
+	    handle_error("could not create thread");
 	}
+    }
 
-	if (listen(socket_desc, listen_backlog) == -1)
-	{
-		handle_error("listen failed");
-	}
+    for(int i = 0; i < thread_count; ++i)
+    {
+	pthread_join(helper_thread[i], NULL);
+    }
 
-	printf("waiting for incoming connection...\n");
+    close(socket_desc);
 
-	socklen_t address_len = sizeof(struct sockaddr_in);
-
-	//const char* hello_message = "hello, enter some text and i'll compute the hash for it...";
-
-	pthread_t helper_thread[thread_count];
-
-	for(int i = 0; i < thread_count; ++i)
-	{
-		new_socket = accept(socket_desc, (struct sockaddr *)&client, &address_len);
-
-		if(new_socket == -1)
-		{
-			handle_error("accept failed");
-		}
-
-		printf("connection accepted\n");
-
-		//	write(new_socket, hello_message, strlen(hello_message));
-
-		if (pthread_create(&helper_thread[i], NULL, connection_handler, &new_socket) != 0)
-		{
-			handle_error("could not create thread");
-		}
-
-	}
-
-	for(int i = 0; i < thread_count; ++i)
-	{
-		pthread_join(helper_thread[i], NULL);
-	}
-
-	close(new_socket);
-	close(socket_desc);
-
-	return 0;
+    return 0;
 }
