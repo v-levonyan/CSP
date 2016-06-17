@@ -26,19 +26,19 @@ options = {
         1 : clientSock.getSHA1File
         }
 
-clientSock.sendMessage("CSP1.0://Get Services")
+while 1:
+    clientSock.sendMessage("CSP1.0://Get Services")
+    services = clientSock.recieveMessage()
+    print services
+    serviceId = input("Choose service: ")
 
-services = clientSock.recieveMessage()
-print services
-serviceId = input("Choose service: ")
+    if serviceId == 2:
+	print ' Your specified order now is not available, it will available soon'
+	exit(1)
+    if serviceId != 1:
+	print 'wrong order'
+	exit(1)
 
-if serviceId == 2:
-    print ' Your specified order now is not available, it will available soon'
-    exit(1)
-if serviceId != 1:
-    print 'wrong order'
-    exit(1)
-
-result = options.get(serviceId)()
-pretty = clientSock.byteToHex(result) 
-print 'SHA 1 : ', pretty
+    result = options.get(serviceId)()
+    pretty = clientSock.byteToHex(result) 
+    print 'SHA 1 : ', pretty

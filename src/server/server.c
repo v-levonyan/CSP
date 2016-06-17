@@ -179,7 +179,6 @@ void order_parser(char* order, struct request_t* request)
 	request->filesize = atoi(token);
 }
 
-
 void set_hash_table()
 {
 	createHashTable(HTABLE_SIZE, &ht);
@@ -222,7 +221,7 @@ void* connection_handler(void* cl_args)
 	    
 	    while ( (bytes_read = read_request(ssl, request_message)) > 0 )
 	    {
-		printf("The client's request : %s\n", request_message);
+		printf("Client's request : %s\n", request_message);
 		memset(request_message, 0, DATA_SIZE);
 
 		if( send_services(ssl) == 1 )
@@ -244,7 +243,7 @@ void* connection_handler(void* cl_args)
 
 		order_parser(request_message, &request);
 
-		fprintf(stderr,"\nThe client responsed\nquery: %s , filesize: %d\n", request.query, request.filesize);
+		fprintf(stderr,"\nClient responsed\nquery: %s , filesize: %d\n", request.query, request.filesize);
 		
 		if( atoi(request.query) == 1 )
 		{
@@ -264,10 +263,15 @@ void* connection_handler(void* cl_args)
 		}
 
 		func(request.filesize, ssl);
+		
+		bytes_read = 0;
+		memset(request_message,0,DATA_SIZE);
 	    }
 
-	    pthread_exit(NULL);
+	    fprintf(stdout, "Client disconnected\n");
 
+	    pthread_exit(NULL);
+	    
 	} 
 }
 
@@ -390,37 +394,6 @@ void ShowCerts(SSL* ssl)
     }
     else
 	printf("No certificates.\n");
-}
-
-void Servlet(SSL* ssl) /* Serve the connection */
-{
-    char buf[1024];
-    char reply[1024];
-    int sd, bytes;
-    const char* HTMLecho="<html><body><pre>%s</pre></body></html>\n\n";
-
-    if( SSL_accept(ssl) == FAIL)
-    {
-	ERR_print_errors_fp(stderr);
-    }
-    else
-    {
-	ShowCerts(ssl);
-	bytes = SSL_read(ssl, buf, sizeof(buf));
-	if ( bytes > 0 )
-	{
-	    buf[bytes] = 0;
-	    printf("Client msg: \"%s\"\n", buf);
-	    sprintf(reply, HTMLecho, buf);
-	    /* construct reply */
-	    SSL_write(ssl, reply, strlen(reply)); /*send reply */
-	}
-	else
-	    ERR_print_errors_fp(stderr);
-    }
-    sd = SSL_get_fd(ssl);       /* get socket connection */
-    SSL_free(ssl);         /* release SSL state */
-    close(sd);          /* close connection */
 }
 
 int isRoot()
