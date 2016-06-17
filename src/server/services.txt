@@ -1,0 +1,7 @@
+
+-----CSP 1.0-----
+
+Enter the corresponding number
+
+1 - SHA1 of a file 
+2 - SHA1 of a string

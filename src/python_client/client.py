@@ -4,6 +4,28 @@ import socket
 import os
 from OpenSSL import SSL, crypto
 
+dir = os.curdir
+
+def verify_cb(conn, cert, errnum, depth, ok):
+    certsubject = crypto.X509Name(cert.get_subject())
+    commonname = certsubject.commonName
+    print('Got certificate\n: Certificate`s owner name ' + commonname + '\n')
+   # issuer = crypto.X509Name(cert.get_issuer)
+   # print'Issuer: ', issuer
+    return ok
+
+class context:
+
+   def __init__(self, method = SSL.SSLv23_METHOD, pr_key_file = 'mycert.pem', cert_file =
+   'mycert.pem', CA_cert = 'CA.pem', call_back = verify_cb):
+       self.ctx = SSL.Context(method)
+       self.ctx.set_options(SSL.OP_NO_SSLv2)
+       self.ctx.set_options(SSL.OP_NO_SSLv3)
+       self.ctx.set_verify(SSL.VERIFY_PEER, call_back) # Demand a certificate
+       self.ctx.use_privatekey_file(os.path.join(dir, pr_key_file))
+       self.ctx.use_certificate_file(os.path.join(dir, cert_file))
+       self.ctx.load_verify_locations(os.path.join(dir, CA_cert))
+
 class clientSocket:
 
     errorMessage = "socket connection broken"
@@ -11,7 +33,7 @@ class clientSocket:
     
     def __init__(self, ctx, sock=None):
         if sock is None:
-	    self.sock = SSL.Connection(ctx, socket.socket(socket.AF_INET, socket.SOCK_STREAM))
+	    self.sock = SSL.Connection(ctx.ctx, socket.socket(socket.AF_INET, socket.SOCK_STREAM))
         else:
             self.sock = sock
 

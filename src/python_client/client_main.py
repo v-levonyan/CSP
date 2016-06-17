@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from client import clientSocket
+import client
 import argparse
 import hashlib
 import os
@@ -13,24 +13,10 @@ parser.add_argument("--port", help="specify the port of the host", type=int, def
 
 args = parser.parse_args()
 
-def verify_cb(conn, cert, errnum, depth, ok):
-    certsubject = crypto.X509Name(cert.get_subject())
-    commonname = certsubject.commonName
-    print('Got certificate\n: Certificates owner name' + commonname + '\n')
-    return ok
-
-dir = os.curdir
-
 # Initialize context
-ctx = SSL.Context(SSL.SSLv23_METHOD)
-ctx.set_options(SSL.OP_NO_SSLv2)
-ctx.set_options(SSL.OP_NO_SSLv3)
-ctx.set_verify(SSL.VERIFY_PEER, verify_cb) # Demand a certificate
-ctx.use_privatekey_file(os.path.join(dir, 'mycert.pem'))
-ctx.use_certificate_file(os.path.join(dir,'mycert.pem'))
-ctx.load_verify_locations(os.path.join(dir, 'CA.pem'))
+ctx = client.context()
 
-clientSock = clientSocket(ctx)
+clientSock = client.clientSocket(ctx)
 
 clientSock.connect(args.host, args.port)
 
@@ -52,8 +38,7 @@ if serviceId == 2:
 if serviceId != 1:
     print 'wrong order'
     exit(1)
+
 result = options.get(serviceId)()
 pretty = clientSock.byteToHex(result) 
 print 'SHA 1 : ', pretty
-
-
