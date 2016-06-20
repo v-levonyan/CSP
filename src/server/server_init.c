@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
 {
     parse_args(argc, argv);
     set_hash_table();
+
     // let's do the main job
 
     struct sigaction sa;
