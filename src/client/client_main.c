@@ -24,7 +24,6 @@ char server_reply[BUFFER_SIZE];
 int main(int argc, char* argv[])
 {
     int sock_fd = 0;
-    char data_string[DATA_SIZE] = {0};
     struct sockaddr_in serv_addr;
 
     if(argc < 3)
@@ -42,7 +41,7 @@ int main(int argc, char* argv[])
     //connection established
 
     memset(server_reply, 0, BUFFER_SIZE);
-    
+
     if (read(sock_fd, server_reply, BUFFER_SIZE) < 0 )
     {
 	fprintf(stderr, "%s\n", strerror(errno));
@@ -76,7 +75,7 @@ int sha1_of_a_file(int sock_fd, unsigned char* hash)
     char f_size_str[40];
 
     puts("Enter the path of a file");
-    
+
     fgets(path, 254, stdin);
  //   fprintf(stderr, "%s\n", path);
 
@@ -110,7 +109,7 @@ int sha1_of_a_file(int sock_fd, unsigned char* hash)
     {
 	int num_read;
 	char* p = buf;
-	    
+
 	num_read = read(fd, buf, DATA_SIZE - 1);
 //	fprintf(stderr, "%s", buf);
 
@@ -119,12 +118,12 @@ int sha1_of_a_file(int sock_fd, unsigned char* hash)
 	    fprintf(stderr, "%s\n", strerror(errno));
 	    return 1;
 	}
-		
+
 	if(num_read == 0)
 	{
 	    break;
 	}
-		    
+
 	while(num_read > 0)
 	{
 	    int num_write =  write(sock_fd, p, num_read);
@@ -133,15 +132,15 @@ int sha1_of_a_file(int sock_fd, unsigned char* hash)
 		fprintf(stderr, "%s\n", strerror(errno));
 		return 1;
 	    }
-	    
+
 	    num_read -= num_write;
 	    p += num_write;
-	}	
+	}
 
-	memset(buf, 0, DATA_SIZE); 
+	memset(buf, 0, DATA_SIZE);
     }
-    
-	
+
+
     if ( read(sock_fd, hash, SHA_DIGEST_LENGTH) < 0 )
     {
 	fprintf(stderr, "%s\n", strerror(errno));
@@ -157,7 +156,7 @@ void print_sha1(const unsigned char* hash)
     for(int i = 0; i<SHA_DIGEST_LENGTH; ++i)
     {
 	printf("%02x", hash[i]);
-    } 
-    
+    }
+
     printf("\n");
 }

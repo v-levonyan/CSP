@@ -30,7 +30,7 @@ int send_file(int file_fd, SSL* ssl)
 		num_read = read(file_fd, buf, DATA_SIZE - 1);
 
 		if(num_read < 0)
-		{ 
+		{
 			fprintf(stderr,"%s\n",strerror(errno));
 			return 1;
 		}
@@ -60,29 +60,27 @@ int send_file(int file_fd, SSL* ssl)
 
 int send_services(SSL* ssl)
 {
-	int file_fd;
+	int file_fd = open("server/services.txt", O_RDONLY);
 
-	if( (file_fd = open("server/services.txt", O_RDONLY)) < 0)
+	if ( file_fd < 0 )
 	{
 		fprintf(stderr, "%s", "couldn't open services.txt file");
 		strerror(errno);
 		return 1;
-	}   
-
-	if( send_file(file_fd, ssl) == 1)
-	{
-		return 1;
 	}
+
+	if( 1 == send_file(file_fd, ssl) )
+		return 1;
 
 	return 0;
 }
-void create_socket(int *socket_desc) 
+
+void create_socket(int *socket_desc)
 {
 	*socket_desc = socket(AF_INET, SOCK_STREAM, 0);
 	if((*socket_desc) == -1)
-	{
 		handle_error("Could not create socket");
-	}
+
 	int enable = 1;
 	if (setsockopt((*socket_desc), SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
 		fprintf(stderr, "setsockopt(SO_REUSEADDR) failed");
@@ -156,7 +154,7 @@ void compute_hash_file(size_t filesize, SSL* ssl)
 	}
 	printf("%s\n","Generating final hash\n");
 	if( SHA1_Final(hash, &ctx) == 0)
-	{		
+	{
 
 		fprintf(stderr,"%s", "SHA final exits");
 		pthread_exit(NULL);
@@ -218,61 +216,60 @@ void* connection_handler(void* cl_args)
 	{
 	   // ShowCerts(ssl);
 	    printf("\n%s\n","SSL connection established with the client");
-	    
+
 	    while ( (bytes_read = read_request(ssl, request_message)) > 0 )
 	    {
-		printf("Client's request : %s\n", request_message);
-		memset(request_message, 0, DATA_SIZE);
+			printf("Client's request : %s\n", request_message);
+			memset(request_message, 0, DATA_SIZE);
 
-		if( send_services(ssl) == 1 )
-		{   
-			fprintf(stderr, "%s\n", strerror(errno));
-			pthread_exit(NULL);
-		}
+			if( send_services(ssl) == 1 )
+			{
+				fprintf(stderr, "%s\n", strerror(errno));
+				pthread_exit(NULL);
+			}
 
-		fptr func;
+			fptr func;
 
-		struct request_t request;
+			struct request_t request;
 
-		bytes_read = read_request(ssl, request_message);
-		if (bytes_read == 0)
-		{
-			fprintf(stdout, "Client disconnected");
-			pthread_exit(NULL);
-		}
+			bytes_read = read_request(ssl, request_message);
+			if (bytes_read == 0)
+			{
+				fprintf(stdout, "Client disconnected");
+				pthread_exit(NULL);
+			}
 
-		order_parser(request_message, &request);
+			order_parser(request_message, &request);
 
-		fprintf(stderr,"\nClient responsed\nquery: %s , filesize: %d\n", request.query, request.filesize);
-		
-		if( atoi(request.query) == 1 )
-		{
-		    strcpy(request.query, "compute_file_hash");
-		}
+			fprintf(stderr,"\nClient responsed\nquery: %s , filesize: %d\n", request.query, request.filesize);
 
-		else
-		{
-		    fprintf(stderr, "%s\n", "Wrong order from the client");
-		    pthread_exit(NULL);
-		}
+			if( atoi(request.query) == 1 )
+			{
+				strcpy(request.query, "compute_file_hash");
+			}
 
-		if( valueForKeyInHashTable(ht, request.query, &func) == 0)
-		{
-			fprintf(stdout, "Could not find request: %s\n", request.query);
-			pthread_exit(NULL);
-		}
+			else
+			{
+				fprintf(stderr, "%s\n", "Wrong order from the client");
+				pthread_exit(NULL);
+			}
 
-		func(request.filesize, ssl);
-		
-		bytes_read = 0;
-		memset(request_message,0,DATA_SIZE);
+			if( valueForKeyInHashTable(ht, request.query, &func) == 0)
+			{
+				fprintf(stdout, "Could not find request: %s\n", request.query);
+				pthread_exit(NULL);
+			}
+
+			func(request.filesize, ssl);
+
+			memset(request_message, 0, DATA_SIZE);
 	    }
 
 	    fprintf(stdout, "Client disconnected\n");
 
 	    pthread_exit(NULL);
-	    
-	} 
+
+	}
 }
 
 void print_usage(FILE* stream, int exit_code)
@@ -289,8 +286,8 @@ void handler(int signum)
 {
 	printf("%s\n","Recevied SIGPIPE signal from a client, the thread exits");
 	pthread_exit(NULL);
-	return;
 }
+
 void parse_args(int argc, char *argv[])
 {
 	int next_option;
@@ -345,15 +342,14 @@ SSL_CTX* InitServerCTX()
 
     OpenSSL_add_all_algorithms();
     SSL_load_error_strings();
-    method = SSLv23_server_method();
-    ctx = SSL_CTX_new(method);
+    ctx = SSL_CTX_new(SSLv23_server_method());
 
     if ( ctx == NULL )
 	{
 		ERR_print_errors_fp(stderr);
 		abort();
 	}
-    
+
     return ctx;
 }
 
@@ -405,5 +401,5 @@ int isRoot()
     else
     {
 	return 1;
-    }							     
+    }
 }
