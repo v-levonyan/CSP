@@ -9,11 +9,11 @@ dir = os.curdir
 def verify_cb(conn, cert, errnum, depth, ok):
     certsubject = crypto.X509Name(cert.get_subject())
     commonname = certsubject.commonName
-    print '\n---------------------------------Certificate information---------------------------------\n'
-    print'Common name:   ', commonname + '\n'
-    print'Country name:  ', certsubject.countryName + '\n'
-    print'LocalityName:  ', certsubject.localityName + '\n'
-    print'Email Address: ', certsubject.emailAddress + '\n'
+    print'\n---------------------------------Certificate information---------------------------------\n'
+    print'Common   name:  ', commonname + '\n'
+    print'Country  name:  ', certsubject.countryName + '\n'
+    print'Locality Name:  ', certsubject.localityName + '\n'
+    print'Email Address:  ', certsubject.emailAddress + '\n'
     print'------------------------------------------------------------------------------------------\n'
     return ok
 

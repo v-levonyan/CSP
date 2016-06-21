@@ -21,6 +21,7 @@
 
 int main(int argc, char *argv[])
 {
+    int i = 0;
     parse_args(argc, argv);
     set_hash_table();
 
@@ -60,7 +61,7 @@ int main(int argc, char *argv[])
 
     pthread_t helper_thread[thread_count];
 
-    for(int i = 0; i < thread_count; ++i)
+    for(; i < thread_count; ++i)
     {
 	struct handler_args args;
 
@@ -85,8 +86,8 @@ int main(int argc, char *argv[])
 	    handle_error("could not create thread");
 	}
     }
-
-    for(int i = 0; i < thread_count; ++i)
+ 
+    for(i = 0; i < thread_count; ++i)
     {
 	pthread_join(helper_thread[i], NULL);
     }
