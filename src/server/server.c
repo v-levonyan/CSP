@@ -9,71 +9,17 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <resolv.h>
+
 #include "openssl/ssl.h"
 #include "openssl/err.h"
 #include "hashtable.h"
 #include "server.h"
+#include "ssl_support.h"
+#include "data_transfer.h"
 
 #define FAIL -1
 #define DATA_SIZE 1024
 #define HTABLE_SIZE 10
-
-int send_file(int file_fd, SSL* ssl)
-{
-	char buf[DATA_SIZE] = { 0 };
-
-	while(1)
-	{
-		int num_read;
-		char* p = buf;
-
-		num_read = read(file_fd, buf, DATA_SIZE - 1);
-
-		if(num_read < 0)
-		{
-			fprintf(stderr,"%s\n",strerror(errno));
-			return 1;
-		}
-
-		if(num_read == 0)
-		{
-			break;
-		}
-
-		while(num_read > 0)
-		{
-			int num_write =  SSL_write(ssl, p, num_read);
-
-			if(num_write < 0)
-			{
-				fprintf(stderr, "%s\n", strerror(errno));
-				return 1;
-			}
-
-			num_read -= num_write;
-			p += num_write;
-		}
-	}
-
-	return 0;
-}
-
-int send_services(SSL* ssl)
-{
-	int file_fd = open("server/services.txt", O_RDONLY);
-
-	if ( file_fd < 0 )
-	{
-		fprintf(stderr, "%s", "couldn't open services.txt file");
-		strerror(errno);
-		return 1;
-	}
-
-	if( 1 == send_file(file_fd, ssl) )
-		return 1;
-
-	return 0;
-}
 
 void create_socket(int *socket_desc)
 {
@@ -84,6 +30,53 @@ void create_socket(int *socket_desc)
 	int enable = 1;
 	if (setsockopt((*socket_desc), SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
 		fprintf(stderr, "setsockopt(SO_REUSEADDR) failed");
+}
+
+void parse_args(int argc, char *argv[])
+{
+	int next_option;
+	const char* const short_options = "hc:";
+	const struct option long_options[] = {
+		{ "help", 0, NULL, 'h' },
+		{ "conf", 1, NULL, 'c' },
+		{ NULL,   0, NULL,  0  }
+	};
+
+	program_name = argv[0];
+
+	do
+	{
+		next_option = getopt_long(argc, argv, short_options, long_options, NULL);
+
+		switch(next_option)
+		{
+			case 'h':
+				print_usage(stdout, 0);
+
+			case 'c':
+				conf_file = optarg;
+				break;
+			case '?':
+				print_usage(stderr, 1);
+			case -1:
+				break;
+			default:
+				abort();
+		}
+	}
+	while(next_option != -1);
+
+	if(optind == 1)
+	{
+		fprintf(stderr, "No options specified\n");
+		print_usage(stderr, 1);
+	}
+
+	if(access(conf_file, F_OK) == -1)
+	{
+		fprintf(stderr, "No such file\n");
+		print_usage(stderr, 1);
+	}
 }
 
 int configure(const char* file_path)
@@ -131,43 +124,6 @@ void initialize_server(struct sockaddr_in* server)
 	free(params);
 }
 
-void compute_hash_file(size_t filesize, SSL* ssl)
-{
-	unsigned char hash[SHA_DIGEST_LENGTH] = { 0 };
-	ssize_t bytes_read = 0;
-	size_t remain_data = filesize;
-	char data[DATA_SIZE] = { 0 };
-	SHA_CTX ctx;
-	SHA1_Init(&ctx);
-	printf("%s\n", "Receiving the file ... \n");
-	while( remain_data > 0 && (bytes_read = SSL_read(ssl, data, DATA_SIZE - 1)) )
-	{
-		remain_data -= bytes_read;
-
-		if(bytes_read == -1)
-		{
-			handle_error("data wasn't read");
-		}
-
-		SHA1_Update(&ctx, data, strlen(data));
-		memset(data, 0, DATA_SIZE);
-	}
-	printf("%s\n","Generating final hash\n");
-	if( SHA1_Final(hash, &ctx) == 0)
-	{
-
-		fprintf(stderr,"%s", "SHA final exits");
-		pthread_exit(NULL);
-	}
-	SSL_write(ssl, hash, SHA_DIGEST_LENGTH);
-	printf("%s\n", "Final hash sent to the client\n");
-}
-
-struct request_t {
-	char query[30];
-	int filesize;
-};
-
 void order_parser(char* order, struct request_t* request)
 {
 	char* token;
@@ -181,19 +137,6 @@ void set_hash_table()
 {
 	createHashTable(HTABLE_SIZE, &ht);
 	addToHashTable(ht,"compute_file_hash",compute_hash_file);
-}
-
-int read_request(SSL* ssl, char request[DATA_SIZE])
-{
-	memset(request, 0, DATA_SIZE);
-	int read_size;
-	read_size = SSL_read(ssl, request, DATA_SIZE);
-	if(read_size < 0)
-	{
-		handle_error("Could not read from socket");
-	}
-
-	return read_size;
 }
 
 void* connection_handler(void* cl_args)
@@ -288,118 +231,4 @@ void handler(int signum)
 	pthread_exit(NULL);
 }
 
-void parse_args(int argc, char *argv[])
-{
-	int next_option;
-	const char* const short_options = "hc:";
-	const struct option long_options[] = {
-		{ "help", 0, NULL, 'h' },
-		{ "conf", 1, NULL, 'c' },
-		{ NULL,   0, NULL,  0  }
-	};
 
-	program_name = argv[0];
-
-	do
-	{
-		next_option = getopt_long(argc, argv, short_options, long_options, NULL);
-
-		switch(next_option)
-		{
-			case 'h':
-				print_usage(stdout, 0);
-
-			case 'c':
-				conf_file = optarg;
-				break;
-			case '?':
-				print_usage(stderr, 1);
-			case -1:
-				break;
-			default:
-				abort();
-		}
-	}
-	while(next_option != -1);
-
-	if(optind == 1)
-	{
-		fprintf(stderr, "No options specified\n");
-		print_usage(stderr, 1);
-	}
-
-	if(access(conf_file, F_OK) == -1)
-	{
-		fprintf(stderr, "No such file\n");
-		print_usage(stderr, 1);
-	}
-}
-
-SSL_CTX* InitServerCTX()
-{
-    SSL_METHOD* method;
-    SSL_CTX* ctx;
-
-    OpenSSL_add_all_algorithms();
-    SSL_load_error_strings();
-    ctx = SSL_CTX_new(SSLv23_server_method());
-
-    if ( ctx == NULL )
-	{
-		ERR_print_errors_fp(stderr);
-		abort();
-	}
-
-    return ctx;
-}
-
-void LoadCertificates(SSL_CTX* ctx, char* CertFile, char* KeyFile)
-{
-    if ( SSL_CTX_use_certificate_file(ctx, CertFile, SSL_FILETYPE_PEM) <= 0 )
-	{
-		ERR_print_errors_fp(stderr);
-		abort();
-	}
-
-    if ( SSL_CTX_use_PrivateKey_file(ctx, KeyFile, SSL_FILETYPE_PEM) <= 0 )
-    {
-	ERR_print_errors_fp(stderr);
-	abort();
-    }
-    if ( !SSL_CTX_check_private_key(ctx) )
-    {
-	fprintf(stderr, "Private key does not match the public certificate\n");
-	abort();
-    }
-}
-
-void ShowCerts(SSL* ssl)
-{
-    X509* cert;
-    char* line;
-
-    cert = SSL_get_peer_certificate(ssl); /* Get certificates (if available) */
-    if( cert != NULL )
-    {
-	printf("Server certificates:\n");
-	line = X509_NAME_oneline(X509_get_subject_name(cert), 0, 0);
-	printf("Subject: %s\n",line);
-	line = X509_NAME_oneline(X509_get_issuer_name(cert), 0, 0);
-	printf("Issuer: %s\n", line);
-	X509_free(cert);
-    }
-    else
-	printf("No certificates.\n");
-}
-
-int isRoot()
-{
-    if (getuid() != 0)
-    {
-	return 0;
-    }
-    else
-    {
-	return 1;
-    }
-}

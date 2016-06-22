@@ -14,6 +14,12 @@ struct handler_args
     SSL_CTX* ctx;
 };
 
+struct request_t 
+{
+    char query[30];
+    int filesize;
+};
+
 void create_socket(int *socket_desc); 
 void initialize_server(struct sockaddr_in* server);
 int configure(const char* file_path);
@@ -21,12 +27,7 @@ void handler(int signal_number);
 void compute_hash_file(size_t filesize, SSL* ssl);
 void set_hash_table();
 void* connection_handler(void*);
-int send_file(int,SSL*);
-int send_services(SSL*);
-SSL_CTX* InitServerCTX();
 int isRoot();
-void ShowCerts(SSL* ssl);
-void LoadCertificates(SSL_CTX* ctx, char* CertFile, char* KeyFile);
 
 typedef void (*fptr)(size_t, SSL*);
 struct hashTable* ht;

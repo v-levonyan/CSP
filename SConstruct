@@ -44,16 +44,18 @@ if env["SCAN_BUILD"]:
     env["ENV"].update(x for x in env["ENV"].items() if x[0].startswith("CCC_"))
 
 #### SERVER ############################################################################################################
-server = env.Object('src/server/server.c')
-server_init = env.Object('src/server/server_init.c')
-hash_table = env.Object('src/server/hashtable.c')
+server         = env.Object('src/server/server.c')
+server_init    = env.Object('src/server/server_main.c')
+hash_table     = env.Object('src/server/hashtable.c')
+data_transfer  = env.Object('src/server/data_transfer.c')
+ssl_support    = env.Object('src/server/ssl_support.c')
 
-server_sources = server + server_init + hash_table
-env.Program(target = ['server'], source = server_sources)
-
+server_sources = server + server_init + hash_table + data_transfer + ssl_support
+env.Program(target = ['src/server.out'], source = server_sources)
+ 
 #### CLIENT ############################################################################################################
 client = env.Object('src/client/client.c')
 client_main = env.Object('src/client/client_main.c')
-env.Program(target = ['client'], source = client + client_main)
+env.Program(target = ['src/client.out'], source = client + client_main)
 
 ########################################################################################################################
