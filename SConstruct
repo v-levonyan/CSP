@@ -49,8 +49,9 @@ server_init    = env.Object('src/server/server_main.c')
 hash_table     = env.Object('src/server/hashtable.c')
 data_transfer  = env.Object('src/server/data_transfer.c')
 ssl_support    = env.Object('src/server/ssl_support.c')
+services       = env.Object('src/server/services.c')
 
-server_sources = server + server_init + hash_table + data_transfer + ssl_support
+server_sources = server + server_init + hash_table + data_transfer + ssl_support + services 
 env.Program(target = ['src/server.out'], source = server_sources)
  
 #### CLIENT ############################################################################################################

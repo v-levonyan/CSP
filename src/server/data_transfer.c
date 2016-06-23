@@ -56,7 +56,6 @@ int send_file(int file_fd, SSL* ssl)
 		while(num_read > 0)
 		{
 			int num_write =  SSL_write(ssl, p, num_read);
-
 			if(num_write < 0)
 			{
 				fprintf(stderr, "%s\n", strerror(errno));
@@ -71,38 +70,27 @@ int send_file(int file_fd, SSL* ssl)
 	return 0;
 }
 
-void receive_file_compute_hash_send_back(size_t filesize, SSL* ssl)
+int send_buff(SSL* ssl, const unsigned char* buf, size_t buf_size)
 {
-	unsigned char hash[SHA_DIGEST_LENGTH] = { 0 };
-	ssize_t bytes_read = 0;
-	size_t remain_data = filesize;
-	char data[DATA_SIZE] = { 0 };
-	SHA_CTX ctx;
-	SHA1_Init(&ctx);
-	printf("%s\n", "Receiving the file ... \n");
-	while( remain_data > 0 && (bytes_read = SSL_read(ssl, data, DATA_SIZE - 1)) )
-	{
-		remain_data -= bytes_read;
+    const unsigned char* tmp = buf;
+    size_t sent_bytes = 0;
+    int num_write = 0;
 
-		if(bytes_read == -1)
-		{
-			handle_error("data wasn't read");
-		}
+    do 
+    {
+	num_write = SSL_write(ssl, tmp, DATA_SIZE);
+	tmp += num_write;
+	sent_bytes += num_write;
+    }
+    while (sent_bytes < buf_size && num_write > 0);
 
-		SHA1_Update(&ctx, data, strlen(data));
-		memset(data, 0, DATA_SIZE);
-	}
-	printf("%s\n","Generating final hash\n");
-	if( SHA1_Final(hash, &ctx) == 0)
-	{
-
-		fprintf(stderr,"%s", "SHA final exits");
-		pthread_exit(NULL);
-	}
-	SSL_write(ssl, hash, SHA_DIGEST_LENGTH);
-	printf("%s\n", "Final hash sent to the client\n");
+    if( num_write < 0)
+    {
+	fprintf(stderr, "%s\n", strerror(errno));
+	return 1;
+    }
+    return 0;
 }
-
 
 int read_request(SSL* ssl, char request[DATA_SIZE])
 {

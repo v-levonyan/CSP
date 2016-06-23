@@ -18,6 +18,7 @@
 #include "server.h"
 #include "ssl_support.h"
 #include "data_transfer.h"
+#include "services.h"
 
 #define listen_backlog 50
 #define thread_count 5
