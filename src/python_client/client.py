@@ -122,8 +122,9 @@ class clientSocket:
 	             
 	try:
             receivedMessage = self.sock.recv(self.MSGLEN)
+	    print 'Received message ', len(receivedMessage)
 	except SSL.ZeroReturnError:
-	    print 'Received message '
+	    print 'Received message ', len(receivedMessage)
 	
 	return receivedMessage 
 
@@ -132,7 +133,7 @@ class clientSocket:
 	self.sock.close()
 
     def byteToHex(self, byteStr):
-	return ''.join( [ "%02X " % ord( x ) for x in byteStr ] ).strip()
+	return ''.join( [ "%01X " % ord( x ) for x in byteStr ] ).strip()
 
 #if __name__ == "__main__":
 #   clientSock = clientSocket()

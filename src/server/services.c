@@ -44,26 +44,41 @@ void receive_file_compute_hash_send_back(size_t filesize, SSL* ssl)
 		fprintf(stderr,"%s", "SHA final exits");
 		pthread_exit(NULL);
 	}
-	SSL_write(ssl, hash, SHA_DIGEST_LENGTH);
+	//SSL_write(ssl, hash, SHA_DIGEST_LENGTH);
+	send_buff(ssl, hash, SHA_DIGEST_LENGTH);
 	printf("%s\n", "Final hash sent to the client\n");
 }
 
+void print_key(const unsigned char* key, int size)
+{
+    int i = 0;
+
+    for (; i < size; ++i)
+    {
+	printf("%01x", key[i]);
+    }
+
+    printf("%s","\n");
+}
 int send_symmetric_key(size_t key_size, SSL* ssl)
 {
-    unsigned char* key = (unsigned char*)malloc(key_size+1);
+    unsigned char* key = (unsigned char*)malloc(key_size);
     memset(key, 0, key_size+1);
-    if( !RAND_bytes(key, sizeof(key) - 1 ) )
+    if( !RAND_bytes(key, key_size ) )
     {
 	fprintf(stderr, "OpenSSL reports a failure on RAND_bytes! \n");
 	/* correct here */
 	pthread_exit(NULL);
     }
+    printf("key : ");
+    print_key(key, key_size);
 
-    if( send_buff(ssl, key, key_size + 1) == 1)
+    if( send_buff(ssl, key, key_size) == 1)
     {
 	fprintf(stderr, "failure on send_buff! \n");
-	/* correct here */
+//	 correct here 
 	pthread_exit(NULL);
-    }
+    } 
+
     return 0;
 }

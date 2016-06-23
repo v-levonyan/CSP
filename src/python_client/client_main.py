@@ -43,6 +43,5 @@ while 1:
 	exit(1)
 
     result = options.get(serviceId)(str(serviceId))
-    print result,'\n'
     pretty = clientSock.byteToHex(result) 
     print 'SHA 1 : ', pretty

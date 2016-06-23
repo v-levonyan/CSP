@@ -224,6 +224,7 @@ void* connection_handler(void* cl_args)
 				pthread_exit(NULL);
 			}
 
+			printf("\nsize %d\n", request.filesize);
 			func(request.filesize, ssl);
 
 			memset(request_message, 0, DATA_SIZE);

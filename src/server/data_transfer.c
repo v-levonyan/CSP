@@ -53,9 +53,11 @@ int send_file(int file_fd, SSL* ssl)
 			break;
 		}
 
+		
 		while(num_read > 0)
 		{
 			int num_write =  SSL_write(ssl, p, num_read);
+			printf("num_write...%d...\n",num_write);
 			if(num_write < 0)
 			{
 				fprintf(stderr, "%s\n", strerror(errno));
@@ -64,7 +66,8 @@ int send_file(int file_fd, SSL* ssl)
 
 			num_read -= num_write;
 			p += num_write;
-		}
+		} 
+
 	}
 
 	return 0;
@@ -72,17 +75,19 @@ int send_file(int file_fd, SSL* ssl)
 
 int send_buff(SSL* ssl, const unsigned char* buf, size_t buf_size)
 {
+    printf("\n buf_size --%d--\n",buf_size);
     const unsigned char* tmp = buf;
     size_t sent_bytes = 0;
     int num_write = 0;
 
     do 
     {
-	num_write = SSL_write(ssl, tmp, DATA_SIZE);
+	num_write = SSL_write(ssl, tmp, buf_size);
 	tmp += num_write;
 	sent_bytes += num_write;
+	printf("sent_bytes %d : \n",sent_bytes);
     }
-    while (sent_bytes < buf_size && num_write > 0);
+    while (sent_bytes < buf_size);
 
     if( num_write < 0)
     {
