@@ -12,9 +12,12 @@
 #include <signal.h>
 #include <getopt.h>
 #include <resolv.h>
+
 #include "openssl/ssl.h"
 #include "openssl/err.h"
 #include "server.h"
+#include "ssl_support.h"
+#include "data_transfer.h"
 
 #define listen_backlog 50
 #define thread_count 5
@@ -66,8 +69,8 @@ int main(int argc, char *argv[])
 	struct handler_args args;
 
 	SSL_library_init();
-	args.ctx = InitServerCTX();
-	LoadCertificates(args.ctx,"mycert.pem","mycert.pem");
+	args.ctx = init_server_ctx();
+	load_certificates(args.ctx,"mycert.pem","mycert.pem");
 
 	SSL* ssl;
 

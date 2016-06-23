@@ -5,10 +5,12 @@
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include "openssl/ssl.h"
 #include "openssl/err.h"
 #include "hashtable.h"
 #include "server.h"
+#include "data_transfer.h"
 
 #define DATA_SIZE 1024
 
@@ -69,7 +71,7 @@ int send_file(int file_fd, SSL* ssl)
 	return 0;
 }
 
-void compute_hash_file(size_t filesize, SSL* ssl)
+void receive_file_compute_hash_send_back(size_t filesize, SSL* ssl)
 {
 	unsigned char hash[SHA_DIGEST_LENGTH] = { 0 };
 	ssize_t bytes_read = 0;

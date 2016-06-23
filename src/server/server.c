@@ -136,7 +136,7 @@ void order_parser(char* order, struct request_t* request)
 void set_hash_table()
 {
 	createHashTable(HTABLE_SIZE, &ht);
-	addToHashTable(ht,"compute_file_hash",compute_hash_file);
+	addToHashTable(ht,"compute_file_hash",receive_file_compute_hash_send_back);
 }
 
 void* connection_handler(void* cl_args)

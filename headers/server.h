@@ -24,9 +24,9 @@ void create_socket(int *socket_desc);
 void initialize_server(struct sockaddr_in* server);
 int configure(const char* file_path);
 void handler(int signal_number);
-void compute_hash_file(size_t filesize, SSL* ssl);
 void set_hash_table();
 void* connection_handler(void*);
+void print_usage(FILE* stream, int exit_code);
 int isRoot();
 
 typedef void (*fptr)(size_t, SSL*);

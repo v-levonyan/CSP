@@ -9,7 +9,7 @@
 #include "openssl/err.h"
 #include "ssl_support.h"
 
-SSL_CTX* InitServerCTX()
+SSL_CTX* init_server_ctx()
 {
     SSL_METHOD* method;
     SSL_CTX* ctx;
@@ -27,7 +27,7 @@ SSL_CTX* InitServerCTX()
     return ctx;
 }
 
-void LoadCertificates(SSL_CTX* ctx, char* CertFile, char* KeyFile)
+void load_certificates(SSL_CTX* ctx, char* CertFile, char* KeyFile)
 {
     if ( SSL_CTX_use_certificate_file(ctx, CertFile, SSL_FILETYPE_PEM) <= 0 )
 	{
@@ -47,7 +47,7 @@ void LoadCertificates(SSL_CTX* ctx, char* CertFile, char* KeyFile)
     }
 }
 
-void ShowCerts(SSL* ssl)
+void show_certs(SSL* ssl)
 {
     X509* cert;
     char* line;
