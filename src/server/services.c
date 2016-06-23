@@ -48,7 +48,7 @@ void receive_file_compute_hash_send_back(size_t filesize, SSL* ssl)
 	printf("%s\n", "Final hash sent to the client\n");
 }
 
-int send_symmetric_key(SSL* ssl, int key_size)
+int send_symmetric_key(size_t key_size, SSL* ssl)
 {
     unsigned char* key = (unsigned char*)malloc(key_size+1);
     memset(key, 0, key_size+1);

@@ -69,8 +69,11 @@ class clientSocket:
     def getFile(self):        
         inputFile = raw_input("Enter the path of the file: ")
         return inputFile
-            
-    def getSHA1File(self):
+    
+    def get_sha1_string(self):
+	return 1
+
+    def get_sha1_file(self, num):
         f = self.getFile()
         fileSize = os.path.getsize(f)
 
@@ -84,7 +87,21 @@ class clientSocket:
         self.sendFile(f)
         result = self.recieveMessage()
         return result
+    
+    def symmetric_key(self,num):
+	
+	CorrespondingKey = { '3' : '7', '4' : '21', '5' : '16', '6' : '24', '7' : '32' }
+	size = CorrespondingKey.get(num)
+	print size,'-', num
 
+	seq = (num, size)
+	params = ':'.join(seq)
+	
+	print "sending parameters: ", params 
+        
+	self.sendMessage(params)
+	result = self.recieveMessage()
+	return result
 
     def recieveMessage(self):
 

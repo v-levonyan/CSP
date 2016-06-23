@@ -16,6 +16,7 @@
 #include "server.h"
 #include "ssl_support.h"
 #include "data_transfer.h"
+#include "services.h"
 
 #define FAIL -1
 #define DATA_SIZE 1024
@@ -137,8 +138,37 @@ void set_hash_table()
 {
 	createHashTable(HTABLE_SIZE, &ht);
 	addToHashTable(ht,"compute_file_hash",receive_file_compute_hash_send_back);
+	addToHashTable(ht,"symmetric_key", send_symmetric_key);
 }
 
+void choose_corresponding_service(int serv, struct request_t* request)
+{	
+	switch(serv)
+	{
+	    case 1:
+		strcpy(request->query, "compute_file_hash");
+		break;
+	    case 2:
+		strcpy(request->query, "compute_string_hash");
+		break;
+	    case 3:
+		strcpy(request->query, "symmetric_key");
+		break;
+	    case 4:
+		strcpy(request->query, "symmetric_key");
+		break;
+	    case 5:
+		strcpy(request->query, "symmetric_key");
+		break;
+	    case 6:
+		strcpy(request->query, "symmetric_key");
+		break; 
+	    case 7:
+		strcpy(request->query, "symmetric_key");
+		break;
+	}
+
+}
 void* connection_handler(void* cl_args)
 {
 	struct handler_args* args = (struct handler_args*) cl_args;
@@ -174,7 +204,7 @@ void* connection_handler(void* cl_args)
 			fptr func;
 
 			struct request_t request;
-
+    
 			bytes_read = read_request(ssl, request_message);
 			if (bytes_read == 0)
 			{
@@ -184,18 +214,9 @@ void* connection_handler(void* cl_args)
 
 			order_parser(request_message, &request);
 
-			fprintf(stderr,"\nClient responsed\nquery: %s , filesize: %d\n", request.query, request.filesize);
+			fprintf(stderr,"\nClient responsed\nquery: %s : %d\n", request.query, request.filesize);
 
-			if( atoi(request.query) == 1 )
-			{
-				strcpy(request.query, "compute_file_hash");
-			}
-
-			else
-			{
-				fprintf(stderr, "%s\n", "Wrong order from the client");
-				pthread_exit(NULL);
-			}
+			choose_corresponding_service(atoi(request.query), &request);
 
 			if( valueForKeyInHashTable(ht, request.query, &func) == 0)
 			{

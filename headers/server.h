@@ -27,6 +27,8 @@ void handler(int signal_number);
 void set_hash_table();
 void* connection_handler(void*);
 void print_usage(FILE* stream, int exit_code);
+void choose_corresponding_service(int, struct request_t*);
+
 int isRoot();
 
 typedef void (*fptr)(size_t, SSL*);
@@ -39,8 +41,9 @@ struct params_t
     int port;
 };
 
-void handler(int );
 typedef struct params_t params_t;
+
+void handler(int );
 void parse_args(int argc, char *argv[]);
 
 params_t* params;
