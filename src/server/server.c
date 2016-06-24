@@ -208,7 +208,7 @@ void* connection_handler(void* cl_args)
 			bytes_read = read_request(ssl, request_message);
 			if (bytes_read == 0)
 			{
-				fprintf(stdout, "Client disconnected");
+				fprintf(stdout, "Client disconnected\n");
 				pthread_exit(NULL);
 			}
 

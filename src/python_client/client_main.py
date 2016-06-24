@@ -43,5 +43,12 @@ while 1:
 	exit(1)
 
     result = options.get(serviceId)(str(serviceId))
-    pretty = clientSock.byteToHex(result) 
-    print 'SHA 1 : ', pretty
+    pretty = clientSock.byteToHex(result)
+    
+    if serviceId == 1 or serviceId == 2:
+	print '\nSHA 1: ', pretty
+	print '\n'
+
+    else:
+	print '\nSymmetric key: ', pretty
+	print '\n'
