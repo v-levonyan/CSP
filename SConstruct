@@ -1,13 +1,14 @@
 #!python
 
 ########################################################################################################################
+
 variables = Variables()
 variables.Add(BoolVariable("SCAN_BUILD", help="Use LLVM/Clang scan-build as code static analyzer (for Intel/Linux only).", default="no"))
 variables.Add("SCAN_REPORTS_DIR", help="Specifies the output directory for static analyzer reports (for Intel/Linux only).", default="scan-build")
 
 ########################################################################################################################
 env = Environment(variables=variables, CCFLAGS = '-g -std=gnu11')
-env.Append(CPPPATH = ['headers'], LIBS=['-lconfig', '-lcrypto', '-lssl', '-lpthread'])
+env.Append(CPPPATH = ['headers'], LIBS=['-lconfig', '-lsqlite3','-lcrypto', '-lssl', '-lpthread'])
 
 if env["SCAN_BUILD"]:
     enabled_checkers  = " "

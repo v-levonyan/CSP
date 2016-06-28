@@ -60,7 +60,7 @@ void print_key(const unsigned char* key, int size)
 
     printf("%s","\n");
 }
-int send_symmetric_key(size_t key_size, SSL* ssl)
+void send_symmetric_key(size_t key_size, SSL* ssl)
 {
     unsigned char* key = (unsigned char*)malloc(key_size);
     memset(key, 0, key_size+1);
@@ -79,6 +79,4 @@ int send_symmetric_key(size_t key_size, SSL* ssl)
 //	 correct here 
 	pthread_exit(NULL);
     } 
-
-    return 0;
 }
