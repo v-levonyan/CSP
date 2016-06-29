@@ -20,6 +20,3 @@
 .project
 .pydevproject
 .sconsign.dblite
-client
-server
-

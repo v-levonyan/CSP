@@ -26,7 +26,7 @@ if env["SCAN_BUILD"]:
     enabled_checkers += "-enable-checker alpha.security.MallocOverflow "
     enabled_checkers += "-enable-checker alpha.security.ReturnPtrRange "
     enabled_checkers += "-enable-checker alpha.security.taint.TaintPropagation "
-    enabled_checkers += "-enable-checker alpha.unix.MallocWithAnnotations "
+#    enabled_checkers += "-enable-checker alpha.unix.MallocWithAnnotations "
     enabled_checkers += "-enable-checker alpha.unix.PthreadLock "
     enabled_checkers += "-enable-checker alpha.unix.SimpleStream "
     enabled_checkers += "-enable-checker alpha.unix.Stream "
