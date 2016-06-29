@@ -21,7 +21,8 @@ int create_table(sqlite3** db)
     char* errmssg = 0;
     int rc ;
     
-    sql = "CREATE TABLE IF NOT EXISTS CLIENTS(ID INT, SYMMETRIC_KEY TEXT)";
+    sql = "CREATE TABLE IF NOT EXISTS CLIENTS(ID, SYMMETRIC_KEY)";
+
     rc = sqlite3_exec(*db, sql, 0, 0, &errmssg);
      
     if( rc != SQLITE_OK )
@@ -51,7 +52,8 @@ const unsigned char* get_key_by_id(sqlite3** db, int ID)
     printf("%s\n","get_key_by_id");
 
     char* sql = "SELECT * FROM CLIENTS;";
-    
+    //sprintf( sql, "INSERT INTO CLIENTS(ID, SYMMETRIC_KEY) VALUES (%d, %s);", *id, key);
+
     if( sqlite3_exec(*db, sql, retrieve_key, 0, &errmssg) != SQLITE_OK)
     {
 	fprintf(stderr, "SQL error: %s\n", errmssg);
@@ -62,8 +64,17 @@ const unsigned char* get_key_by_id(sqlite3** db, int ID)
 }
 int add_key_to_clients(sqlite3** db, const unsigned char* key, int* id)
 {
+    char sql[200] = { 0 };
     char* errmssg = 0;
     sqlite3_open("SERVER_DB.dblite", db);
-    char* sql = "INSERT INTO CLIENTS (id, symmetric_key) VALUES (id_count, key);";
-    sqlite3_exec(*db, sql, 0, 0, &errmssg);
+    printf("id: %d key: %s\n", *id, key);  
+    sprintf( sql, "INSERT INTO CLIENTS VALUES (%d,%c%s%c);", *id, '"', key, '"');
+    printf("sql - %s\n", sql);
+    
+   // char* sql = "INSERT INTO CLIENTS (id, symmetric_key) VALUES (id_count, key);";
+    if( sqlite3_exec(*db, sql, 0, 0, &errmssg) != SQLITE_OK)
+    {
+	fprintf(stderr, "SQL error: %s\n", errmssg);
+	sqlite3_free(errmssg);
+    }
 }
