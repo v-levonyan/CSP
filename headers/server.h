@@ -12,6 +12,7 @@ struct handler_args
 {
     int socket;
     SSL_CTX* ctx;
+    int client_id;
 };
 
 struct request_t 
@@ -31,7 +32,7 @@ void choose_corresponding_service(int, struct request_t*);
 
 int isRoot();
 
-typedef void (*fptr)(size_t, SSL*);
+typedef void (*fptr)(size_t, SSL*, int* client_id);
 struct hashTable* ht;
 const char* conf_file;
 char* program_name;

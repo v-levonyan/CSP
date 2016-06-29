@@ -18,9 +18,7 @@
 
 #define DATA_SIZE 1024
 
-int id_count =  0;
-
-void receive_file_compute_hash_send_back(size_t filesize, SSL* ssl)
+void receive_file_compute_hash_send_back(size_t filesize, SSL* ssl, int* client_id)
 {
 	unsigned char hash[SHA_DIGEST_LENGTH] = { 0 };
 	ssize_t bytes_read = 0;
@@ -65,7 +63,7 @@ void print_key(const unsigned char* key, int size)
     printf("%s","\n");
 }
 
-void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl)
+void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
 {
     sqlite3* db;
 
@@ -93,7 +91,7 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl)
     printf("generated key: ");
     print_key(key, key_size);
     
-    while(add_key_to_clients(&db,key, key_size, &id_count) == 1) //Generated key contained quotes, get new one 
+    while(add_key_to_clients(&db,key, key_size, client_id) == 1) //Generated key contained quotes, get new one 
     {
 	fprintf(stderr, "%s\n","Generated key contained quotes, which causes sql syntas error, now generating new key");
 
@@ -118,13 +116,11 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl)
 	 }
     }
      
-    sprintf(ID_str, "%d", id_count);
+    sprintf(ID_str, "%d", *client_id);
 
     printf("ID %s\n", ID_str);
 
-    get_key_by_id(&db, id_count);
-    
-    ++id_count;
+    get_key_by_id(&db, *client_id);
 
     if( send_buff(ssl, ID_str, 10) == 1)
     {

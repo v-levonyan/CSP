@@ -57,6 +57,7 @@ static int retrieve_key(void* key, int argc, char** argv, char** azColName)
     fprintf(stderr,"%s","----------------retrieve key end-------------------\n");
     return 0;
 }
+
 const unsigned char* get_key_by_id(sqlite3** db, int ID)
 {
     char sql[200] = { 0 };

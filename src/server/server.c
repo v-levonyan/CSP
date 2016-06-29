@@ -226,7 +226,8 @@ void* connection_handler(void* cl_args)
 			}
 
 			printf("\nsize %d\n", request.filesize);
-			func(request.filesize, ssl);
+			
+			func(request.filesize, ssl, &(args->client_id));
 
 			memset(request_message, 0, DATA_SIZE);
 	    }

@@ -22,7 +22,7 @@
 
 // linked list
 
-typedef void (*f)(size_t, SSL*);
+typedef void (*f)(size_t, SSL*, int* client_id);
 
 struct hLinkedList
 {
