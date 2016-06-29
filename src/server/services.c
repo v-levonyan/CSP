@@ -93,7 +93,7 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl)
     printf("generated key: ");
     print_key(key, key_size);
     
-    while(add_key_to_clients(&db,key, &id_count) == 1) //Generated key contained quotes, get new one 
+    while(add_key_to_clients(&db,key, key_size, &id_count) == 1) //Generated key contained quotes, get new one 
     {
 	fprintf(stderr, "%s\n","Generated key contained quotes, which causes sql syntas error, now generating new key");
 
@@ -115,7 +115,7 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl)
 	    }
 
 	    fprintf(stderr, "Generated key was short, now generating new one! \n");
-	}
+	 }
     }
      
     sprintf(ID_str, "%d", id_count);
