@@ -73,30 +73,51 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl)
     unsigned char* key = (unsigned char*)malloc(key_size);
     
     memset(key, 0, key_size+1);
-    if( !RAND_bytes(key, key_size ) )
-    {
-	fprintf(stderr, "OpenSSL reports a failure on RAND_bytes! \n");
-	/* correct here */
-	pthread_exit(NULL);
-    }
     
-    printf("generated key: ");
-    print_key(key, key_size);
-   
-    while(add_key_to_clients(&db,key, &id_count) == 1)
+    while(1)
     {
-	 if( !RAND_bytes(key, key_size ) )
-	 {
+	if( !RAND_bytes(key, key_size) )
+	{
 	    fprintf(stderr, "OpenSSL reports a failure on RAND_bytes! \n");
 	    /* correct here */
 	    pthread_exit(NULL);
-	 }
- 	 printf("generated key: ");
-	 print_key(key, key_size);
-    }
-    
+	}
 
+	if(strlen(key) == key_size)
+	{
+	    break;
+	}
+	fprintf(stderr, "Generated key was short, now generating new one! \n");
+    } 
    
+    printf("generated key: ");
+    print_key(key, key_size);
+    
+    while(add_key_to_clients(&db,key, &id_count) == 1) //Generated key contained quotes, get new one 
+    {
+	fprintf(stderr, "%s\n","Generated key contained quotes, which causes sql syntas error, now generating new key");
+
+	while(1)
+	{
+	    if( !RAND_bytes(key, key_size ) )
+	    {
+		fprintf(stderr, "OpenSSL reports a failure on RAND_bytes! \n");
+		/* correct here */
+		pthread_exit(NULL);
+	    }
+	 	
+	    if(strlen(key) == key_size)
+	    {
+		printf("generated key: ");
+	        print_key(key, key_size);
+
+		break;
+	    }
+
+	    fprintf(stderr, "Generated key was short, now generating new one! \n");
+	}
+    }
+     
     sprintf(ID_str, "%d", id_count);
 
     printf("ID %s\n", ID_str);
