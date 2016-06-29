@@ -8,13 +8,17 @@
 #include <pthread.h>
 #include <openssl/rand.h>
 
+#include "sqlite3.h"
 #include "openssl/ssl.h"
 #include "openssl/err.h"
 #include "hashtable.h"
 #include "server.h"
 #include "data_transfer.h"
+#include "server_db.h"
 
 #define DATA_SIZE 1024
+
+int id_count =  0;
 
 void receive_file_compute_hash_send_back(size_t filesize, SSL* ssl)
 {
@@ -60,6 +64,44 @@ void print_key(const unsigned char* key, int size)
 
     printf("%s","\n");
 }
+
+void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl)
+{
+    sqlite3* db;
+
+    char ID_str[10] = { 0 };
+    unsigned char* key = (unsigned char*)malloc(key_size);
+    
+    memset(key, 0, key_size+1);
+    if( !RAND_bytes(key, key_size ) )
+    {
+	fprintf(stderr, "OpenSSL reports a failure on RAND_bytes! \n");
+	/* correct here */
+	pthread_exit(NULL);
+    }
+    
+    printf("generated key: ");
+    print_key(key, key_size);
+    
+    add_key_to_clients(&db,key, &id_count);
+        
+    sprintf(ID_str, "%d", id_count);
+
+    printf("ID %s\n", ID_str);
+
+    get_key_by_id(&db, id_count);
+    
+    ++id_count;
+
+    if( send_buff(ssl, ID_str, 10) == 1)
+    {
+	fprintf(stderr, "failure on send_buff! \n");
+//	 correct here 
+	pthread_exit(NULL);
+    } 
+
+}
+/*
 void send_symmetric_key(size_t key_size, SSL* ssl)
 {
     unsigned char* key = (unsigned char*)malloc(key_size);
@@ -67,7 +109,7 @@ void send_symmetric_key(size_t key_size, SSL* ssl)
     if( !RAND_bytes(key, key_size ) )
     {
 	fprintf(stderr, "OpenSSL reports a failure on RAND_bytes! \n");
-	/* correct here */
+	* correct here *
 	pthread_exit(NULL);
     }
     printf("key : ");
@@ -79,4 +121,4 @@ void send_symmetric_key(size_t key_size, SSL* ssl)
 //	 correct here 
 	pthread_exit(NULL);
     } 
-}
+i}*/

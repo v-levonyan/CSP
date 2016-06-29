@@ -50,5 +50,5 @@ while 1:
 	print '\n'
 
     else:
-	print '\nSymmetric key: ', pretty
+	print '\nSymmetric key ID: ', result
 	print '\n'

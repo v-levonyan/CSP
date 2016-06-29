@@ -21,45 +21,11 @@
 #include "ssl_support.h"
 #include "data_transfer.h"
 #include "services.h"
+#include "server_db.h"
 
 #define listen_backlog 50
 #define thread_count 5
 
-int connecting_to_db(sqlite3** db, const char* name)
-{
-    int rc; 
-    rc = sqlite3_open(name, db);
-
-    if ( rc )
-    {
-	fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(*db));
-	return 1;
-    }
-
-    return 0;
-}
-
-int create_table(sqlite3** db)
-{
-    char* sql;
-    char* errmssg = 0;
-    int rc ;
-
-    sql = "CREATE TABLE IF NOT EXISTS CLIENTS(ID INT, SYMMETRIC_KEY TEXT)";
-    
-    rc = sqlite3_exec(*db, sql, 0, 0, &errmssg);
-    
-   // printf("%d - %d\n", rc, SQLITE_OK);
-    if( rc != SQLITE_OK )
-    {
-	fprintf(stderr, "SQL error: %s\n", errmssg);
-	sqlite3_free(errmssg);
-	return 1;
-    }
-    
- //   printf("%s\n", "_________");
-    return 0;
-}
 int main(int argc, char *argv[])
 {
     int i = 0;
@@ -70,7 +36,7 @@ int main(int argc, char *argv[])
     
     sqlite3* db = 0; 
     
-    if( connecting_to_db(&db, "SERVER_DB.dblite") == 1)
+    if( connect_to_db(&db, "SERVER_DB.dblite") == 1)
     {
 	pthread_exit(NULL);
     }
@@ -83,6 +49,7 @@ int main(int argc, char *argv[])
     }
 
     printf("%s\n", "Table created");
+   
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
 

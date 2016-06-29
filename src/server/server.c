@@ -137,8 +137,9 @@ void order_parser(char* order, struct request_t* request)
 void set_hash_table()
 {
 	createHashTable(HTABLE_SIZE, &ht);
-	addToHashTable(ht,"compute_file_hash",receive_file_compute_hash_send_back);
-	addToHashTable(ht,"symmetric_key", send_symmetric_key);
+	addToHashTable(ht,"symmetric_key",add_symmetric_key_to_db_send_id);
+	addToHashTable(ht,"compute_file_hash", receive_file_compute_hash_send_back);
+	//addToHashTable(ht,"add_symmetric_key_to_db_send_id", add_symmetric_key_to_db_send_id);
 }
 
 void choose_corresponding_service(int serv, struct request_t* request)
