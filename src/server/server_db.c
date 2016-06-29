@@ -35,12 +35,12 @@ int create_table(sqlite3** db)
     return 0;
 }
 
-int retrieve_key(void* key, int argc, char** argv, char** azColName)
+static int retrieve_key(void* key, int argc, char** argv, char** azColName)
 {
  //   unsigned char* key_buf = (unsigned char*) key;
     fprintf(stderr,"%s","retrieve key\n");
 
-    printf("key: %s\n, %s\n", *azColName, *(azColName+1));
+    //printf("in retrieve key: %s\n", *azColName);
     return 1;
 }
 
@@ -49,7 +49,7 @@ const unsigned char* get_key_by_id(sqlite3** db, int ID)
     char* errmssg = 0;
     sqlite3_open("SERVER_DB.dblite", db);
 
-    printf("%s\n","get_key_by_id");
+    //printf("%s\n","get_key_by_id");
 
     char* sql = "SELECT * FROM CLIENTS;";
     //sprintf( sql, "INSERT INTO CLIENTS(ID, SYMMETRIC_KEY) VALUES (%d, %s);", *id, key);
@@ -60,8 +60,9 @@ const unsigned char* get_key_by_id(sqlite3** db, int ID)
 	sqlite3_free(errmssg);
 	return NULL;
     }
-    printf("%s\n","get_key_by_id_end");
+    //printf("%s\n","get_key_by_id_end");
 }
+
 int add_key_to_clients(sqlite3** db, const unsigned char* key, int* id)
 {
     char sql[200] = { 0 };
@@ -76,5 +77,9 @@ int add_key_to_clients(sqlite3** db, const unsigned char* key, int* id)
     {
 	fprintf(stderr, "SQL error: %s\n", errmssg);
 	sqlite3_free(errmssg);
+	return 1;
     }
+    
+    fprintf(stderr, "SQL error: %s\n", errmssg);
+    return 0;
 }

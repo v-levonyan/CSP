@@ -82,9 +82,21 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl)
     
     printf("generated key: ");
     print_key(key, key_size);
+   
+    while(add_key_to_clients(&db,key, &id_count) == 1)
+    {
+	 if( !RAND_bytes(key, key_size ) )
+	 {
+	    fprintf(stderr, "OpenSSL reports a failure on RAND_bytes! \n");
+	    /* correct here */
+	    pthread_exit(NULL);
+	 }
+ 	 printf("generated key: ");
+	 print_key(key, key_size);
+    }
     
-    add_key_to_clients(&db,key, &id_count);
-        
+
+   
     sprintf(ID_str, "%d", id_count);
 
     printf("ID %s\n", ID_str);

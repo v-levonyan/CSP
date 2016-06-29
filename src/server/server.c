@@ -253,5 +253,3 @@ void handler(int signum)
 	printf("%s\n","Recevied SIGPIPE signal from a client, the thread exits");
 	pthread_exit(NULL);
 }
-
-
