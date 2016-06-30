@@ -99,10 +99,18 @@ int read_request(SSL* ssl, char request[DATA_SIZE])
 	memset(request, 0, DATA_SIZE);
 	int read_size = SSL_read(ssl, request, DATA_SIZE);
 
-	if(read_size <= 0)
+	if(read_size < 0)
 	{
 		// TODO: why server killed if there is issue ?
+	
 		handle_error("Could not read from socket");
 	}
+
+	if(read_size == 0)
+	{
+		fprintf(stderr, "%s\n","Client disconnected, corresponding thread exited");
+		pthread_exit(NULL);
+	}
+	    
 	return read_size;
 }

@@ -8,6 +8,9 @@
 #define handle_error(msg) \
     do { perror(msg); exit(EXIT_FAILURE); } while (0)
 
+#define exit_thread(msg) \
+    do { perror(msg); pthread_exit(NULL); } while (0)
+
 struct handler_args
 {
     int socket;

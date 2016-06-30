@@ -66,10 +66,9 @@ void print_key(const unsigned char* key, int size)
 void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
 {
     sqlite3* db;
-
     char ID_str[10] = { 0 };
     unsigned char* key = (unsigned char*)malloc(key_size);
-    
+
     memset(key, 0, key_size+1);
     
     while(1)
@@ -115,13 +114,13 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
 	    fprintf(stderr, "Generated key was short, now generating new one! \n");
 	 }
     }
-     
-    sprintf(ID_str, "%d", *client_id);
+    // loooook here 
+  /*  sprintf(ID_str, "%d", *client_id);
 
     printf("ID %s\n", ID_str);
 
     get_key_by_id(&db, *client_id);
-
+*/
     if( send_buff(ssl, ID_str, 10) == 1)
     {
 	fprintf(stderr, "failure on send_buff! \n");
