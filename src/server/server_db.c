@@ -137,3 +137,12 @@ int add_key_to_clients(sqlite3** db, const unsigned char* key,int key_size, int*
 
     return 0;
 }
+
+void drop_table()
+{
+    char* sql = "DROP TABLE CLIENTS";
+    sqlite3* db;
+
+    sqlite3_open("SERVER_DB.dblite", &db);
+    sqlite3_exec(db, sql, 0, 0, 0);
+}

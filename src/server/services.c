@@ -10,11 +10,14 @@
 
 #include "sqlite3.h"
 #include "openssl/ssl.h"
+#include <openssl/aes.h>
+#include <openssl/rand.h>
 #include "openssl/err.h"
 #include "hashtable.h"
 #include "server.h"
 #include "data_transfer.h"
 #include "server_db.h"
+#include "services.h"
 
 #define DATA_SIZE 1024
 
@@ -128,7 +131,55 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
 	pthread_exit(NULL);
     } 
 
+    encrypt_AES(key, key_size, "aaaaaaaab", "am");
+
 }
+
+void encrypt_AES(const unsigned char* aes_key, int key_size, const char* plain_text, char*
+decrypted) //AES-CBC-128, AES-CBC-192, AES-CBC-256
+{
+    // Init vector
+    
+    print_key(aes_key, key_size);
+
+    unsigned char iv_enc[AES_BLOCK_SIZE],  iv_dec[AES_BLOCK_SIZE];
+    RAND_bytes(iv_enc, AES_BLOCK_SIZE);
+    memcpy(iv_dec, iv_enc, AES_BLOCK_SIZE);
+
+    // Buffers for encryption and decryption
+
+    const size_t encslength = (( strlen(plain_text) + AES_BLOCK_SIZE)/ AES_BLOCK_SIZE)*AES_BLOCK_SIZE;
+    
+    unsigned char enc_out[encslength];
+    unsigned char dec_out[strlen(plain_text)];
+    
+    memset(enc_out, 0, sizeof(enc_out));
+    memset(dec_out, 0, sizeof(dec_out));
+
+    //aes-cbc-128 aes-cbc-192 aes-cbc-256
+
+    AES_KEY enc_key, dec_key;
+    AES_set_encrypt_key(aes_key, key_size*8, &enc_key);
+ sleep(2);
+
+    AES_cbc_encrypt(plain_text, enc_out, strlen(plain_text), &enc_key, iv_enc, AES_ENCRYPT);
+   
+    AES_set_decrypt_key(aes_key, key_size*8, &dec_key);
+
+    AES_cbc_encrypt(enc_out, dec_out, encslength, &dec_key, iv_dec, AES_DECRYPT);
+
+    printf("original:\t");
+    printf("%s\n", plain_text);
+
+    printf("encrypt:\t");
+    print_key(enc_out, sizeof(enc_out));
+    
+    printf("decrypt:\t");
+    printf("%s\n",dec_out);
+    //print_key(dec_out, sizeof(dec_out));
+}
+
+
 /*
 void send_symmetric_key(size_t key_size, SSL* ssl)
 {

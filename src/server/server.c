@@ -189,7 +189,7 @@ void* connection_handler(void* cl_args)
 	else
 	{
 	   // ShowCerts(ssl);
-	    printf("\n%s\n","SSL connection established with the client");
+	    printf("\n%s\n","SSL connection established with client");
 
 	    while ( (bytes_read = read_request(ssl, request_message)) > 0 )
 	    {
