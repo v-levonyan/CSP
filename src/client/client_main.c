@@ -7,7 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include <openssl/sha.h>
+#include "openssl/sha.h"
 #include <fcntl.h>
 #include <sys/stat.h>
 #include "client.h"

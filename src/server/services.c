@@ -130,38 +130,40 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
 //	 correct here 
 	pthread_exit(NULL);
     } 
-    
-    
+        
     unsigned char* encrypted;
     char* message = "Hello David";
     size_t encslength;
    
     unsigned char* decrypted = (unsigned char*)malloc(strlen(message));
-    unsigned char iv_vec[AES_BLOCK_SIZE];
-    
-    AES_KEY dec_key;
+    memset(decrypted, 0, strlen(message));
+    unsigned char iv_enc[AES_BLOCK_SIZE], iv_dec[AES_BLOCK_SIZE];
+     
+    AES_KEY enc_key, dec_key;
 
-    encslength = encrypt_AES(key, key_size, dec_key, message, encrypted, iv_vec);
+    encslength = encrypt_AES(key, key_size, &enc_key, &dec_key, message, encrypted, iv_enc, iv_dec);
     
     printf("original text: %s\n", message);
 
-    printf("encrypted text: ");
-    print_key(encrypted, encslength);
+    printf("encrypted text: \n");
+      //print_key(encrypted, encslength);
+    
+    decrypt_AES(encrypted, encslength, decrypted, &dec_key, iv_dec);
     
     printf("decrypted text: ");
-    decrypt_AES(encrypted, decrypted, dec_key, iv_vec);
+    printf("%s\n", decrypted);
+    //print_key(decrypted, strlen(message));
 }
 
-size_t  encrypt_AES(const unsigned char* aes_key, int key_size, AES_KEY dec_key, const char*
-plain_text, char* encrypt, unsigned char* iv_vec) //AES-CBC-128, AES-CBC-192, AES-CBC-256
+size_t  encrypt_AES(const unsigned char* aes_key, int key_size, AES_KEY* enc_key, AES_KEY* dec_key, const char* plain_text, char* encrypt, unsigned char* iv_enc, unsigned char* iv_dec) //AES-CBC-128, AES-CBC-192, AES-CBC-256
 {
     // Init vector
     
     print_key(aes_key, key_size);
 
     //unsigned char iv_enc[AES_BLOCK_SIZE],  iv_dec[AES_BLOCK_SIZE];
-    RAND_bytes(iv_vec, AES_BLOCK_SIZE);
-    //memcpy(iv_dec, iv_enc, AES_BLOCK_SIZE);
+    RAND_bytes(iv_enc, AES_BLOCK_SIZE);
+    memcpy(iv_dec, iv_enc, AES_BLOCK_SIZE);
 
     // Buffers for encryption and decryption
 
@@ -175,14 +177,10 @@ plain_text, char* encrypt, unsigned char* iv_vec) //AES-CBC-128, AES-CBC-192, AE
 
     //aes-cbc-128 aes-cbc-192 aes-cbc-256
 
-    AES_KEY enc_key, decr_key;
+    AES_set_encrypt_key(aes_key, key_size*8, enc_key);
+    AES_set_decrypt_key(aes_key, key_size*8, dec_key);
 
-    AES_set_encrypt_key(aes_key, key_size*8, &enc_key);
-    AES_set_decrypt_key(aes_key, key_size*8, &decr_key);
-
-    dec_key = decr_key;
-
-    AES_cbc_encrypt(plain_text, enc_out, strlen(plain_text), &enc_key, iv_vec, AES_ENCRYPT);
+    AES_cbc_encrypt(plain_text, enc_out, strlen(plain_text), enc_key, iv_enc, AES_ENCRYPT);
 
     encrypt = enc_out;
 
@@ -203,9 +201,9 @@ plain_text, char* encrypt, unsigned char* iv_vec) //AES-CBC-128, AES-CBC-192, AE
     //print_key(dec_out, sizeof(dec_out)); */
 }
 
-void decrypt_AES(const unsigned char* encrypted, unsigned char* decrypt, AES_KEY dec_key, unsigned char* iv_vec)
+void decrypt_AES(const unsigned char* encrypted, size_t encslength, unsigned char* decrypt, AES_KEY* dec_key, unsigned char* iv_dec)
 {
-    AES_cbc_encrypt(encrypted, decrypt, strlen(encrypted), dec_key, iv_vec, AES_DECRYPT);
+    AES_cbc_encrypt(encrypted, decrypt, encslength, dec_key, iv_dec, AES_DECRYPT);
 }
 
 /*
