@@ -143,9 +143,9 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
     unsigned char* enc_out;
     unsigned char* dec_out;
 
-    encslength = encrypt_AES(key, key_size, message, iv_enc, iv_dec, enc_key, dec_key, enc_out, dec_out);
-  //  decrypt_AES(enc_out, dec_out, encslength, dec_key, iv_dec);
-   /*
+    encslength = encrypt_AES(key, key_size, message, &iv_enc, &iv_dec, &enc_key, &dec_key, &enc_out, &dec_out);
+    decrypt_AES(&enc_out, &dec_out, encslength, &dec_key, &iv_dec);
+ 
     printf("original:\t");
     printf("%s\n", message);
 
@@ -154,10 +154,10 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
    
     printf("decrypt:\t");
     printf("%s\n",dec_out);
-    */
+    
 }
 
-size_t encrypt_AES(const unsigned char* aes_key, int key_size, const char* plain_text, unsigned char* iv_enc, unsigned char* iv_dec, AES_KEY* enc_key, AES_KEY* dec_key, unsigned char* enc_out, unsigned char* dec_out) //AES-CBC-128, AES-CBC-192, AES-CBC-256
+size_t encrypt_AES(const unsigned char* aes_key, int key_size, const char* plain_text, unsigned char** iv_enc, unsigned char** iv_dec, AES_KEY** enc_key, AES_KEY** dec_key, unsigned char** enc_out, unsigned char** dec_out) //AES-CBC-128, AES-CBC-192, AES-CBC-256
 {
     // Init vector
     
@@ -198,18 +198,18 @@ size_t encrypt_AES(const unsigned char* aes_key, int key_size, const char* plain
     AES_cbc_encrypt(plain_text, enc_out_l, strlen(plain_text), enc_key_l, iv_enc_l, AES_ENCRYPT);
    
     AES_set_decrypt_key(aes_key, key_size*8, dec_key_l);
-/*
-    iv_enc  = iv_enc_l;
-    iv_dec  = iv_dec_l;
 
-    enc_key = enc_key_l;
-    dec_key = dec_key_l;
+    *iv_enc  = iv_enc_l;
+    *iv_dec  = iv_dec_l;
 
-    enc_out = enc_out_l;
-    dec_out = dec_out_l;
-  */   
+    *enc_key = enc_key_l;
+    *dec_key = dec_key_l;
+
+    *enc_out = enc_out_l;
+    *dec_out = dec_out_l;
+     
     //return encslength;
-  
+/*  
     AES_cbc_encrypt(enc_out_l, dec_out_l, encslength, dec_key_l, iv_dec_l, AES_DECRYPT);
 
     printf("original:\t");
@@ -225,9 +225,9 @@ size_t encrypt_AES(const unsigned char* aes_key, int key_size, const char* plain
    return encslength;
 }
 
-void decrypt_AES(unsigned char* enc_out, unsigned char* dec_out, size_t encslength, AES_KEY* dec_key, unsigned char* iv_dec )
+void decrypt_AES(unsigned char** enc_out, unsigned char** dec_out, size_t encslength, AES_KEY** dec_key, unsigned char** iv_dec )
 {
-    AES_cbc_encrypt(enc_out, dec_out, encslength, dec_key, iv_dec, AES_DECRYPT);
+    AES_cbc_encrypt(*enc_out, *dec_out, encslength, *dec_key, *iv_dec, AES_DECRYPT);
 }
 /*
 void send_symmetric_key(size_t key_size, SSL* ssl)
