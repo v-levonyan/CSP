@@ -86,7 +86,6 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
 
 	if(strlen(key) == key_size)
 	{
-	    printf("strlen\n");
 	    break;
 	}
 	fprintf(stderr, "Generated key was short, now generating new one! \n");
@@ -95,30 +94,12 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
     printf("generated key: ");
     print_key(key, key_size);
     
-    while(add_key_to_clients(&db,key, key_size, client_id) == 1) //Generated key contained quotes, get new one 
+    if (add_key_to_clients(&db,key, key_size, client_id) == 1) 
     {
-	fprintf(stderr, "%s\n","Generated key contained quotes, which causes sql syntas error, now generating new key");
-
-	while(1)
-	{
-	    if( !RAND_bytes(key, key_size ) )
-	    {
-		fprintf(stderr, "OpenSSL reports a failure on RAND_bytes! \n");
-		/* correct here */
-		pthread_exit(NULL);
-	    }
-	 	
-	    if(strlen(key) == key_size)
-	    {
-		printf("generated key: ");
-	        print_key(key, key_size);
-
-		break;
-	    }
-
-	    fprintf(stderr, "Generated key was short, now generating new one! \n");
-	 }
+	fprintf(stderr, "FAILURE while adding key to DB! \n");
+	pthread_exit(NULL);
     }
+
     // loooook here 
     sprintf(ID_str, "%d", *client_id);
 /*

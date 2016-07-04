@@ -128,14 +128,14 @@ int add_key_to_clients(sqlite3** db, const unsigned char* key, int key_size, int
         
 	printf("%s\n", sql);
 
-	sqlite3_exec(*db, sql, 0, 0, &errmssg);// != SQLITE_OK
-/*	{
+	if( sqlite3_exec(*db, sql, 0, 0, &errmssg) != SQLITE_OK)
+	{
 	    fprintf(stderr, "SQL error: %s\n", errmssg);
 	    sqlite3_free(errmssg);
 	    return 1;
-	}  */
+	}  
 
-//	printf("insert:\n\n%s\n\n",sql);
+	printf("key inserted:\n\n%s\n\n",sql);
     }
 
     else
@@ -144,17 +144,15 @@ int add_key_to_clients(sqlite3** db, const unsigned char* key, int key_size, int
     	
 	sprintf( sql, "UPDATE CLIENTS SET SYMMETRIC_KEY = %c%s%c,  KEY_LENGTH = %d WHERE ID IN (SELECT ID FROM CLIENTS WHERE ID=%d);", '"', hex_key, '"', key_size, *id);
 	
-//	printf("update:\n\n%s\n\n",sql);
 	
-	sqlite3_exec(*db, sql, 0, 0, &errmssg);// != SQLITE_OK
-/*	
+	if( sqlite3_exec(*db, sql, 0, 0, &errmssg) != SQLITE_OK)	
 	{
 	    fprintf(stderr, "SQL error: %s\n", errmssg);
 	    sqlite3_free(errmssg);
 	    return 1;
 	}
-*/	
-	printf("%s\n","Key updated");
+
+	printf("key updated:\n\n%s\n\n",sql);
 
     }
 
