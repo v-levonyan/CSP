@@ -23,10 +23,11 @@ clientSock.connect(args.host, args.port)
 print "Secure connection established"
 
 options = {
-        1 : clientSock.get_sha1_file, 2 : clientSock.get_sha1_string, 3 :
-	clientSock.symmetric_key,  4 : clientSock.symmetric_key,  5 :
-	clientSock.symmetric_key,  6 : clientSock.symmetric_key,  7 :
-	clientSock.symmetric_key
+        1 : clientSock.get_sha1_file,  2 : clientSock.get_sha1_string, 3 :
+	clientSock.symmetric_key,      4 : clientSock.symmetric_key,  5  :
+	clientSock.symmetric_key,      6 : clientSock.symmetric_key,  7  :
+	clientSock.symmetric_key,      8 : clientSock.DES_encryption, 9  : clientSock.DES_encryption,
+	10 : clientSock.AES_encryption, 11 : clientSock.AES_encryption, 12 : clientSock.AES_encryption
         }
 
 while 1:
@@ -35,7 +36,7 @@ while 1:
     print services
     serviceId = input("Choose service: ")
 
-    if serviceId < 0 or serviceId > 7:
+    if serviceId < 0 or serviceId > 12:
 	print 'Wrong order'
 	exit(1)
     if serviceId == 2:

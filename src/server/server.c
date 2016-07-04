@@ -140,6 +140,7 @@ void set_hash_table()
 	createHashTable(HTABLE_SIZE, &ht);
 	addToHashTable(ht,"symmetric_key",add_symmetric_key_to_db_send_id);
 	addToHashTable(ht,"compute_file_hash", receive_file_compute_hash_send_back);
+	addToHashTable(ht,"AESencr_decr", AESencryption_decryption);
 	//addToHashTable(ht,"add_symmetric_key_to_db_send_id", add_symmetric_key_to_db_send_id);
 }
 
@@ -168,6 +169,22 @@ void choose_corresponding_service(int serv, struct request_t* request)
 	    case 7:
 		strcpy(request->query, "symmetric_key");
 		break;
+	    case 8:
+		strcpy(request->query, "----");
+		break;
+	    case 9:
+		strcpy(request->query, "symmetric_key");
+		break;
+	    case 10:
+		strcpy(request->query, "AESencr_decr");
+		break;
+	    case 11:
+		strcpy(request->query, "AESencr_decr");
+		break;
+	    case 12:
+		strcpy(request->query, "AESencr_decr");
+		break;
+
 	}
 
 }
@@ -217,13 +234,13 @@ void* connection_handler(void* cl_args)
 				fprintf(stdout, "Client disconnected\n");
 				pthread_exit(NULL);
 			}
-
+				
 			order_parser(request_message, &request);
 
 			fprintf(stderr,"\nClient responsed\nquery: %s : %d\n", request.query, request.filesize);
 
 			choose_corresponding_service(atoi(request.query), &request);
-
+		
 			if( valueForKeyInHashTable(ht, request.query, &func) == 0)
 			{
 				fprintf(stdout, "Could not find request: %s\n", request.query);

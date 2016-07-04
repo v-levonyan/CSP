@@ -1,13 +1,27 @@
 
------CSP 1.0-----
+CSP 1.0 
+_______________________________________________________________________
 
 Enter the corresponding number
 
-1 - SHA1 of a file 
-2 - SHA1 of a string
+--------------------------------Hashing--------------------------------
+
+1 - SHA1 of a file   
+2 - SHA1 of a string   
+
+-----------------------------Key Generation----------------------------
+
 3 - Symmetric key for DES
-4 - Symmetric key for 3DES
+4 - Symmetric key for 3DES 
 5 - Symmetric key for AES128
 6 - Symmetric key for AES192
 7 - Symmetric key for AES256
 
+---------------------Symmetric Encryption/Decryption-------------------
+
+8  - DES    encryption/decryption
+9  - 3DES   encryption/decryption
+10 - AES128 encryption/decryption 
+11 - AES192 encryption/decryption  
+12 - AES256 encryption/decryption 
+_______________________________________________________________________

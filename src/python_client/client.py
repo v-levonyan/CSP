@@ -62,9 +62,16 @@ class clientSocket:
             yield data
 
     def sendFile(self, inputFile):
-        f = open(inputFile)
+	print "sendfile\n"
+        try:
+	    f = open(inputFile)
+	except:
+	    print "Specified file doesn't exist\n"
+	    exit()
+
         for piece in self.readInChunks(f):
             self.sendMessage(piece)
+	    print 'aaaaa'
 
     def getFile(self):        
         inputFile = raw_input("Enter the path of the file: ")
@@ -102,6 +109,29 @@ class clientSocket:
 	self.sendMessage(params)
 	result = self.recieveMessage()
 	return result
+    
+    def AES_encryption(self, num):
+	CorrespondingKey = { '10' : '128', '11' : '192', '12' : '256' }
+	size = CorrespondingKey.get(num)
+	
+	print 'size', size	
+	
+	message = 'AESencr_decr:' + str(size)
+
+	print message
+	self.sendMessage(message)
+
+	filename = raw_input("Input filename to encrypt\n")
+
+	fileSize = os.path.getsize(filename)
+	
+	print 'file size: ', fileSize
+	self.sendMessage(str(fileSize))
+
+	self.sendFile(str(filename))
+
+    def DES_encryption(self, key_size):
+	return 1
 
     def recieveMessage(self):
 
@@ -122,7 +152,7 @@ class clientSocket:
 	             
 	try:
             receivedMessage = self.sock.recv(self.MSGLEN)
-	    print 'Received message ', len(receivedMessage)
+#	    print 'Received message ', len(receivedMessage)
 	except SSL.ZeroReturnError:
 	    print 'Received message ', len(receivedMessage)
 	
