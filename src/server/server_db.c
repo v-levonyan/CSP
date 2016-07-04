@@ -124,7 +124,7 @@ void fill_garbage_entry(sqlite3** db, int id)
 	
 }
 
-int add_key_to_clients(sqlite3** db, const unsigned char* key, int key_size, int* id, int AddOrUpdate)
+int add_key_to_clients(sqlite3** db, const unsigned char* key, int key_size, int* id)
 {
     char sql[200] = { 0 };
     char* errmssg = 0;
@@ -133,52 +133,20 @@ int add_key_to_clients(sqlite3** db, const unsigned char* key, int key_size, int
     char* hex_key;
 
     sqlite3_open("SERVER_DB.dblite", db);
- /* 
-    pthread_key_create(&AddOrUpdate, NULL);
-    pthread_setspecific(AddOrUpdate, (void*) -1);
-    ++i;
-
-    pthread_setspecific(AddOrUpdate, (void*) i);
-*/    
-    printf("AddOrUpdate: %d\n",AddOrUpdate);
-    
+   
     string_to_hex_string(key, key_size, &hex_key);
 
-  /*  if(AddOrUpdate == 0)
+    sprintf( sql, "UPDATE CLIENTS SET SYMMETRIC_KEY = %c%s%c,  KEY_LENGTH = %d WHERE ID IN (SELECT ID FROM CLIENTS WHERE ID=%d);", '"', hex_key, '"', key_size, *id);
+	
+	
+    if( sqlite3_exec(*db, sql, 0, 0, &errmssg) != SQLITE_OK)	
     {
-	// insert...
-
-	sprintf( sql, "INSERT INTO CLIENTS VALUES (%d,%c%s%c,%d);", *id, '"', hex_key, '"', key_size);
-        
-	printf("%s\n", sql);
-
-	if( sqlite3_exec(*db, sql, 0, 0, &errmssg) != SQLITE_OK)
-	{
-	    fprintf(stderr, "SQL error: %s\n", errmssg);
-	    sqlite3_free(errmssg);
-	    return 1;
-	}  
-
-	printf("key inserted:\n\n%s\n\n",sql);
+	fprintf(stderr, "SQL error: %s\n", errmssg);
+	sqlite3_free(errmssg);
+	return 1;
     }
 
-    else
-    {*/
-	// update...
-    	
-	sprintf( sql, "UPDATE CLIENTS SET SYMMETRIC_KEY = %c%s%c,  KEY_LENGTH = %d WHERE ID IN (SELECT ID FROM CLIENTS WHERE ID=%d);", '"', hex_key, '"', key_size, *id);
-	
-	
-	if( sqlite3_exec(*db, sql, 0, 0, &errmssg) != SQLITE_OK)	
-	{
-	    fprintf(stderr, "SQL error: %s\n", errmssg);
-	    sqlite3_free(errmssg);
-	    return 1;
-	}
-
-	printf("key updated:\n\n%s\n\n",sql);
-
-    //}
+    printf("key updated:\n\n%s\n\n",sql);
 
     return 0;
 }
