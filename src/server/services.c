@@ -71,9 +71,10 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
     sqlite3* db;
     char ID_str[10] = { 0 };
     unsigned char* key = (unsigned char*)malloc(key_size+1);
-
+    
     memset(key, 0, key_size+1);
- /*############################################# BUG #######################################*/
+
+/*############################################# BUG #######################################*/
 
     while(1)
     {
@@ -94,7 +95,7 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
     printf("generated key: ");
     print_key(key, key_size);
     
-    if (add_key_to_clients(&db,key, key_size, client_id) == 1) 
+    if (add_key_to_clients(&db, key, key_size, client_id) == 1) 
     {
 	fprintf(stderr, "FAILURE while adding key to DB! \n");
 	pthread_exit(NULL);
@@ -113,7 +114,7 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
 //	 correct here 
 	pthread_exit(NULL);
     } 
-	
+
     char* message = "Hello David";
     size_t encslength;
   
@@ -174,10 +175,7 @@ size_t encrypt_AES(const unsigned char* aes_key, int key_size, const char* plain
     
     memset(enc_key_l, 0, sizeof(AES_KEY));
     memset(dec_key_l, 0, sizeof(AES_KEY)); 
-    
-
-    //AES_KEY enc_key_l, dec_key_l;	
-    
+   
     AES_set_encrypt_key(aes_key, key_size*8, enc_key_l);
 
     AES_cbc_encrypt(plain_text, enc_out_l, strlen(plain_text), enc_key_l, iv_enc_l, AES_ENCRYPT);
@@ -214,6 +212,7 @@ void decrypt_AES(unsigned char** enc_out, unsigned char** dec_out, size_t encsle
 {
     AES_cbc_encrypt(*enc_out, *dec_out, encslength, *dec_key, *iv_dec, AES_DECRYPT);
 }
+
 /*
 void send_symmetric_key(size_t key_size, SSL* ssl)
 {

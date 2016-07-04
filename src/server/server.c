@@ -17,6 +17,7 @@
 #include "ssl_support.h"
 #include "data_transfer.h"
 #include "services.h"
+#include "server_db.h"
 
 #define FAIL -1
 #define DATA_SIZE 1024
@@ -189,8 +190,12 @@ void* connection_handler(void* cl_args)
 	else
 	{
 	   // ShowCerts(ssl);
-	    printf("\n%s\n","SSL connection established with client");
+	    sqlite3* db;
 
+	    printf("\n%s\n","SSL connection established with client");
+	    sqlite3_open("SERVER_DB.dblite", &db);
+	    fill_garbage_entry(&db, args->client_id);
+	    
 	    while ( (bytes_read = read_request(ssl, request_message)) > 0 )
 	    {
 			printf("Client's request : %s\n", request_message);

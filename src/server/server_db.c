@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 #include "sqlite3.h"
 
-int AddOrUpdate = -1; // if 0 add key to db, if 1 update key
+//static pthread_key_t AddOrUpdate;
+
+//int AddOrUpdate = -1; // if 0 add key to db, if 1 update key
 
 int connect_to_db(sqlite3** db, const char* name)
 {
@@ -105,22 +108,43 @@ void string_to_hex_string(const unsigned char* str, size_t str_size, char** hex_
     *hex_str = hex;
 }
 
-int add_key_to_clients(sqlite3** db, const unsigned char* key, int key_size, int* id)
+void fill_garbage_entry(sqlite3** db, int id)
 {
     char sql[200] = { 0 };
     char* errmssg = 0;
+
+    sprintf( sql, "INSERT INTO CLIENTS VALUES (%d,%c,%s,%c,%d);", id, '"', "-1", '"', -1);
+    
+    if( sqlite3_exec(*db, sql, 0, 0, &errmssg) != SQLITE_OK)
+    {
+	fprintf(stderr, "SQL error: %s\n", errmssg);
+	sqlite3_free(errmssg);
+	pthread_exit(NULL);
+    }
+	
+}
+
+int add_key_to_clients(sqlite3** db, const unsigned char* key, int key_size, int* id, int AddOrUpdate)
+{
+    char sql[200] = { 0 };
+    char* errmssg = 0;
+
+    /* possible memory leak */  
     char* hex_key;
 
     sqlite3_open("SERVER_DB.dblite", db);
-    //sprintf( sql, "INSERT INTO CLIENTS VALUES (%d,%c%s%c,%d);", *id, '"', key, '"', key_size);
-    
-    ++AddOrUpdate;
-    
+ /* 
+    pthread_key_create(&AddOrUpdate, NULL);
+    pthread_setspecific(AddOrUpdate, (void*) -1);
+    ++i;
+
+    pthread_setspecific(AddOrUpdate, (void*) i);
+*/    
     printf("AddOrUpdate: %d\n",AddOrUpdate);
     
     string_to_hex_string(key, key_size, &hex_key);
 
-    if(AddOrUpdate == 0)
+  /*  if(AddOrUpdate == 0)
     {
 	// insert...
 
@@ -139,7 +163,7 @@ int add_key_to_clients(sqlite3** db, const unsigned char* key, int key_size, int
     }
 
     else
-    {
+    {*/
 	// update...
     	
 	sprintf( sql, "UPDATE CLIENTS SET SYMMETRIC_KEY = %c%s%c,  KEY_LENGTH = %d WHERE ID IN (SELECT ID FROM CLIENTS WHERE ID=%d);", '"', hex_key, '"', key_size, *id);
@@ -154,7 +178,7 @@ int add_key_to_clients(sqlite3** db, const unsigned char* key, int key_size, int
 
 	printf("key updated:\n\n%s\n\n",sql);
 
-    }
+    //}
 
     return 0;
 }
