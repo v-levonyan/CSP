@@ -106,8 +106,6 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
 /*
     printf("ID %s\n", ID_str);
 */
-    get_key_by_id(&db, *client_id);
-
     if( send_buff(ssl, ID_str, 10) == 1)
     {
 	fprintf(stderr, "failure on send_buff! \n");
@@ -115,6 +113,10 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
 	pthread_exit(NULL);
     } 
 
+    unsigned char* r_key;
+    get_key_by_id(&db, *client_id, &r_key);
+
+   // printf("r_key: %s\n\n", r_key);
     char* message = "Hello David";
     size_t encslength;
   
@@ -129,7 +131,7 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
     unsigned char* enc_out;
     unsigned char* dec_out;
 
-    encslength = encrypt_AES(key, key_size, message, &iv_enc, &iv_dec, &enc_key, &dec_key, &enc_out, &dec_out);
+    encslength = encrypt_AES(r_key, key_size, message, &iv_enc, &iv_dec, &enc_key, &dec_key, &enc_out, &dec_out);
     decrypt_AES(&enc_out, &dec_out, encslength, &dec_key, &iv_dec);
  
     printf("original:\t");
@@ -146,9 +148,7 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
 size_t encrypt_AES(const unsigned char* aes_key, int key_size, const char* plain_text, unsigned char** iv_enc, unsigned char** iv_dec, AES_KEY** enc_key, AES_KEY** dec_key, unsigned char** enc_out, unsigned char** dec_out) //AES-CBC-128, AES-CBC-192, AES-CBC-256
 {
     // Init vector
-    
-    print_key(aes_key, key_size);
-    
+     
     unsigned char* iv_enc_l = (unsigned char*) malloc(AES_BLOCK_SIZE);
     unsigned char* iv_dec_l = (unsigned char*) malloc(AES_BLOCK_SIZE);
 

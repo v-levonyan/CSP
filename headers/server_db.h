@@ -10,7 +10,7 @@ int add_key_to_clients(sqlite3**, const unsigned char* key, int key_size, int* i
 void fill_garbage_entry(sqlite3** db, int id);
 int retrieve_key(void* key, int argc, char** argv, char** azColName);
 void drop_table();
-const unsigned char* get_key_by_id(sqlite3** db, int ID);
+const unsigned char* get_key_by_id(sqlite3** db, int ID, unsigned char** key);
 void string_to_hex_string(const unsigned char* str, size_t str_size, char** hex_str);
 
 /*---------------------------------------------------------------------------------------------------*/
