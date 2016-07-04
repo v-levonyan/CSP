@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "sqlite3.h"
 
 int AddOrUpdate = -1; // if 0 add key to db, if 1 update key
@@ -55,7 +58,7 @@ static int retrieve_key(void* exists, int argc, char** argv, char** azColName)
     
     fprintf(stderr,"%s","----------------retrieved key begin-------------------\n");
 
-    Print_key(*argv,21);
+    Print_key(*argv,15);
 
     fprintf(stderr,"%s","-----------------retrieved key end--------------------\n");
     
@@ -72,6 +75,7 @@ const unsigned char* get_key_by_id(sqlite3** db, int ID)
 
     sprintf(sql, "SELECT SYMMETRIC_KEY FROM CLIENTS WHERE ID=%d", ID);
 
+    printf("get key -----\n");
     if( sqlite3_exec(*db, sql, retrieve_key, 0, &errmssg) != SQLITE_OK)
     {
 	fprintf(stderr, "SQL error: %s\n", errmssg);
@@ -86,11 +90,27 @@ const unsigned char* get_key_by_id(sqlite3** db, int ID)
 
 }
 
-int add_key_to_clients(sqlite3** db, const unsigned char* key,int key_size, int* id)
+void string_to_hex_string(const unsigned char* str, size_t str_size, char** hex_str)
+{
+    char* hex = (char*)malloc(str_size*2 + 1);
+    memset(hex, 0, str_size*2 + 1);
+
+    int i;
+
+    for( i=0; i<str_size; ++i )
+    {
+	sprintf( &hex[i*2], "%02X", str[i]);
+    }
+    
+    *hex_str = hex;
+}
+
+int add_key_to_clients(sqlite3** db, const unsigned char* key, int key_size, int* id)
 {
     char sql[200] = { 0 };
     char* errmssg = 0;
-    
+    char* hex_key;
+
     sqlite3_open("SERVER_DB.dblite", db);
     //sprintf( sql, "INSERT INTO CLIENTS VALUES (%d,%c%s%c,%d);", *id, '"', key, '"', key_size);
     
@@ -98,12 +118,16 @@ int add_key_to_clients(sqlite3** db, const unsigned char* key,int key_size, int*
     
     printf("AddOrUpdate: %d\n",AddOrUpdate);
     
+    string_to_hex_string(key, key_size, &hex_key);
+
     if(AddOrUpdate == 0)
     {
 	// insert...
 
-	sprintf( sql, "INSERT INTO CLIENTS VALUES (%d,%c%s%c,%d);", *id, '"', key, '"', key_size);
-	
+	sprintf( sql, "INSERT INTO CLIENTS VALUES (%d,%c%s%c,%d);", *id, '"', hex_key, '"', key_size);
+        
+	printf("%s\n", sql);
+
 	sqlite3_exec(*db, sql, 0, 0, &errmssg);// != SQLITE_OK
 /*	{
 	    fprintf(stderr, "SQL error: %s\n", errmssg);
@@ -111,17 +135,16 @@ int add_key_to_clients(sqlite3** db, const unsigned char* key,int key_size, int*
 	    return 1;
 	}  */
 
-	printf("%s\n","Key inserted");
-
+//	printf("insert:\n\n%s\n\n",sql);
     }
 
     else
     {
 	// update...
     	
-	sprintf( sql, "UPDATE CLIENTS SET SYMMETRIC_KEY = %c%s%c,  KEY_LENGTH = %d WHERE ID IN (SELECT ID FROM CLIENTS WHERE ID=%d);", '"', key, '"', key_size, *id);
+	sprintf( sql, "UPDATE CLIENTS SET SYMMETRIC_KEY = %c%s%c,  KEY_LENGTH = %d WHERE ID IN (SELECT ID FROM CLIENTS WHERE ID=%d);", '"', hex_key, '"', key_size, *id);
 	
-	//printf("update:\n\n%s\n\n",sql);
+//	printf("update:\n\n%s\n\n",sql);
 	
 	sqlite3_exec(*db, sql, 0, 0, &errmssg);// != SQLITE_OK
 /*	

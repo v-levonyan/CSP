@@ -12,6 +12,7 @@
 #include <signal.h>
 #include <getopt.h>
 #include <resolv.h>
+#include <unistd.h>
 
 #include "sqlite3.h"
 
@@ -35,10 +36,16 @@ int main(int argc, char *argv[])
     // let's do the main job
     
     sqlite3* db = 0; 
-    
-    if( connect_to_db(&db, "SERVER_DB.dblite") == 1)
+
+    if ( access("SERVER_DB.dblite", F_OK) != -1)
     {
-	pthread_exit(NULL);
+	//DB exists
+	unlink("SERVER_DB.dblite");
+    }
+
+    if(connect_to_db(&db, "SERVER_DB.dblite") == 1)
+    {
+	exit(EXIT_FAILURE);
     }
 
     printf("%s\n", "DB created");
