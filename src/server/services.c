@@ -68,13 +68,17 @@ void print_key(const unsigned char* key, int size)
 
 void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 {
+//    size_t key_size = key_sz;
+
+    //printf("1key size : %d\n", key_size);
+
     sqlite3* db;
     //possible memory leak
      unsigned char* key;
      
     get_key_by_id(&db, *client_id, &key);
     
-    printf("AES encryption/decryption: %s\n", key);
+    //printf("AES encryption/decryption: %s\n", key);
    
        
     if( 4*strlen(key) != key_size) //garbage key
@@ -106,44 +110,63 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 
 	size_t file_size = atoi(file_size_buf);
 	
-	printf("file size: %d\n", file_size);
+//	printf("file size: %d\n", file_size);
 
 	size_t encslength;
   
   	//be aware of memory leak 
 
-    	unsigned char* iv_enc;
-    	unsigned char* iv_dec;
- 
-    	AES_KEY* enc_key;
-    	AES_KEY* dec_key;
-    
-	unsigned char* enc_out;
-    	unsigned char* dec_out;
-	
-	//receiving file ...
+  //  	printf("%s", "Receiving file to encrypt ... \n");
 	
 	ssize_t bytes_read = 0;
 	size_t remain_data = file_size;
-	char data[DATA_SIZE] = { 0 };
-
-	printf("%s", "Receiving file to encrypt ... \n");
-
-	while( remain_data > 0 && (bytes_read = SSL_read(ssl, data, DATA_SIZE - 1)) )
+	char data[AES_BLOCK_SIZE] = { 0 };
+	int fd;
+	char name[] = "/tmp/encryptedXXXXXX";
+	fd = mkstemp(name);
+	
+	while( remain_data > 0 && (bytes_read = SSL_read(ssl, data, AES_BLOCK_SIZE - 1)) )
 	{
+		//receiving file ...	
+	
+		unsigned char* iv_enc;
+    		unsigned char* iv_dec;
+ 
+    		AES_KEY* enc_key;
+    		AES_KEY* dec_key;
+    
+		unsigned char* enc_out;
+    		unsigned char* dec_out;
+	
 		remain_data -= bytes_read;
 
 		if(bytes_read == -1)
 		{
 			handle_error("data wasn't read");
 		}
-		printf("%s",data);
-	//	SHA1_Update(&ctx, data, strlen(data));
-		memset(data, 0, DATA_SIZE);
+
+		printf("key_size : %d\n", key_size);		
+		encslength = encrypt_AES(key, key_size/8, data, &iv_enc, &iv_dec, &enc_key, &dec_key, &enc_out, &dec_out);
+	
+	//	decrypt_AES(&enc_out, &dec_out, encslength, &dec_key, &iv_dec);
+		send_buff(ssl,enc_out,strlen(enc_out));
+		printf("dec: %s\n", dec_out);
+		write(fd, dec_out, strlen(dec_out));
+		memset(data, 0, AES_BLOCK_SIZE);
+/*	
+	#####	problem here    #####	
+		free(iv_enc);
+		free(iv_dec);
+	
+		free(enc_key);
+		free(dec_key);
+	
+		free(enc_out);
+		free(dec_out);	*/
 	}
 	
-//	encslength = encrypt_AES(r_key, key_size, message, &iv_enc, &iv_dec, &enc_key, &dec_key, &enc_out, &dec_out);
-   
+	send_file(fd,ssl);
+	printf("\n-----\n");
       }
 }
 void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)

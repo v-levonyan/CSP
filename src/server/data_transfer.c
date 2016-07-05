@@ -52,8 +52,8 @@ int send_file(int file_fd, SSL* ssl)
 		{
 			break;
 		}
-
 		
+		printf("%s", buf);
 		while(num_read > 0)
 		{
 			int num_write =  SSL_write(ssl, p, num_read);

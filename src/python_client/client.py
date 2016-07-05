@@ -61,15 +61,19 @@ class clientSocket:
                 break
             yield data
 
-    def sendFile(self, inputFile):
+    def sendFile(self, inputFile, hashOrEnc = 0):
 	print "sendfile\n"
-        try:
+        if hashOrEnc == 0:
+	   chunkSize = 100
+	else:
+	   chunkSize = 128
+	try:
 	    f = open(inputFile)
 	except:
 	    print "Specified file doesn't exist\n"
 	    exit()
-
-        for piece in self.readInChunks(f):
+	
+        for piece in self.readInChunks(f, chunkSize):
             self.sendMessage(piece)
 	    print 'aaaaa'
 
@@ -134,8 +138,11 @@ class clientSocket:
 	print 'file size: ', fileSize
 	self.sendMessage(str(fileSize))
 
-	self.sendFile(str(filename))
-
+	self.sendFile(str(filename),1)
+	
+	while 1:
+	   self.recieveMessage()
+	return 0
     
     def DES_encryption(self, key_size):
 	return 1
@@ -159,7 +166,7 @@ class clientSocket:
 	             
 	try:
             receivedMessage = self.sock.recv(self.MSGLEN)
-#	    print 'Received message ', len(receivedMessage)
+	    print ' Received message ', receivedMessage
 	except SSL.ZeroReturnError:
 	    print 'Received message ', len(receivedMessage)
 	
