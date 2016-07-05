@@ -120,8 +120,14 @@ class clientSocket:
 
 	print message
 	self.sendMessage(message)
+	rec_message = self.recieveMessage();
+	print 'rec_message', rec_message
 
-	filename = raw_input("Input filename to encrypt\n")
+	if int(rec_message) == -1:
+	   print "First order corresponding key\n"	
+	   return -1
+
+        filename = raw_input("Input filename to encrypt\n")
 
 	fileSize = os.path.getsize(filename)
 	
@@ -130,6 +136,7 @@ class clientSocket:
 
 	self.sendFile(str(filename))
 
+    
     def DES_encryption(self, key_size):
 	return 1
 

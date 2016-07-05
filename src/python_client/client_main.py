@@ -44,6 +44,8 @@ while 1:
 	exit(1)
 
     result = options.get(serviceId)(str(serviceId))
+    if result == -1:
+       continue
     pretty = clientSock.byteToHex(result)
     
     if serviceId == 1 or serviceId == 2:

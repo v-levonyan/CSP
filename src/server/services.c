@@ -66,6 +66,86 @@ void print_key(const unsigned char* key, int size)
     printf("%s","\n");
 }
 
+void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
+{
+    sqlite3* db;
+    //possible memory leak
+     unsigned char* key;
+     
+    get_key_by_id(&db, *client_id, &key);
+    
+    printf("AES encryption/decryption: %s\n", key);
+   
+       
+    if( 4*strlen(key) != key_size) //garbage key
+    {
+	send_buff(ssl, "-1",2);
+	fprintf(stderr,"%s\n", "Key didn't match chosen algorithm!\n");
+	return;
+    }
+    
+    else
+    {   
+	send_buff(ssl,"1",1);
+        
+	char file_size_buf[10];
+	memset(file_size_buf,0,10);
+	
+	int read_size = SSL_read(ssl, file_size_buf, 10);
+
+        if(read_size < 0)
+        {
+                handle_error("Could not read from socket");
+        }
+
+        if(read_size == 0)
+        {
+                fprintf(stderr, "%s\n","Client disconnected, corresponding thread exited");
+                pthread_exit(NULL);
+        }
+
+	size_t file_size = atoi(file_size_buf);
+	
+	printf("file size: %d\n", file_size);
+
+	size_t encslength;
+  
+  	//be aware of memory leak 
+
+    	unsigned char* iv_enc;
+    	unsigned char* iv_dec;
+ 
+    	AES_KEY* enc_key;
+    	AES_KEY* dec_key;
+    
+	unsigned char* enc_out;
+    	unsigned char* dec_out;
+	
+	//receiving file ...
+	
+	ssize_t bytes_read = 0;
+	size_t remain_data = file_size;
+	char data[DATA_SIZE] = { 0 };
+
+	printf("%s", "Receiving file to encrypt ... \n");
+
+	while( remain_data > 0 && (bytes_read = SSL_read(ssl, data, DATA_SIZE - 1)) )
+	{
+		remain_data -= bytes_read;
+
+		if(bytes_read == -1)
+		{
+			handle_error("data wasn't read");
+		}
+		printf("%s",data);
+	//	SHA1_Update(&ctx, data, strlen(data));
+		memset(data, 0, DATA_SIZE);
+	}
+	
+//	encslength = encrypt_AES(r_key, key_size, message, &iv_enc, &iv_dec, &enc_key, &dec_key, &enc_out, &dec_out);
+   
+      }
+}
 void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
 {
     sqlite3* db;
