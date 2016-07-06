@@ -102,6 +102,10 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 
 	send_buff(ssl,"1",1); //OK
         
+	char encr_or_decr[3] = { 0 }; 
+
+	SSL_read(ssl, encr_or_decr, 3);
+
 	char file_size_buf[10];
 	
 	memset(file_size_buf,0,10);
@@ -122,8 +126,6 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 	size_t file_size = atoi(file_size_buf);
 	
 //	printf("file size: %d\n", file_size);
-
-	size_t encslength;
   
   	//be aware of memory leak 
 
@@ -152,13 +154,22 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 		}
 
 		size_t encslength = set_enc_dec_buffers(data, &enc_out, &dec_out);
-		
-		encrypt_AES(data, &iv_enc, &enc_key, &enc_out);
+		if (atoi(encr_or_decr) == 0) //encrypt
+		{
+		    encrypt_AES(data, &iv_enc, &enc_key, &enc_out);
+		//decrypt_AES(&enc_out, &dec_out, encslength, &dec_key, &iv_dec);
+		    printf("enc: %s\n", enc_out);
+		    send_buff(ssl,enc_out,strlen(enc_out));
+		    write(fd, enc_out, strlen(enc_out));
+		}
 
-//		encslength = encrypt_AES(key, key_size/8, data, &iv_enc, &iv_dec, &enc_key, &dec_key, &enc_out, &dec_out);
-	
-		decrypt_AES(&enc_out, &dec_out, encslength, &dec_key, &iv_dec);
-		send_buff(ssl,enc_out,strlen(enc_out));
+		else
+		{
+		    decrypt_AES(data, &dec_out, strlen(data), &dec_key, &iv_dec);
+		    printf("dec: %s", dec_out);
+		    send_buff(ssl,dec_out, strlen(dec_out));
+		    write(fd, dec_out, strlen(dec_out));
+		}
 	//	printf("dec: %s\n", dec_out);
 
 //		printf("key_size : %d\n", key_size);		
@@ -167,7 +178,7 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 //		decrypt_AES(&enc_out, &dec_out, encslength, &dec_key, &iv_dec);
 //		send_buff(ssl,dec_out,strlen(dec_out));
 //		printf("enc: %s\n", enc_out);
-		write(fd, enc_out, strlen(enc_out));
+	
 		memset(data, 0, AES_BLOCK_SIZE);
 /*	
 	#####	problem here    #####	
@@ -254,7 +265,8 @@ void set_initial_vectors( unsigned char** iv_enc, unsigned char** iv_dec)
     unsigned char* iv_enc_l = (unsigned char*) malloc(AES_BLOCK_SIZE);
     unsigned char* iv_dec_l = (unsigned char*) malloc(AES_BLOCK_SIZE);
 
-    RAND_bytes(iv_enc_l, AES_BLOCK_SIZE);
+    memset(iv_enc_l, 0, AES_BLOCK_SIZE);
+    //RAND_bytes(iv_enc_l, AES_BLOCK_SIZE);
     memcpy(iv_dec_l, iv_enc_l, AES_BLOCK_SIZE);
     
     *iv_enc = iv_enc_l;
@@ -302,9 +314,9 @@ void encrypt_AES(const char* plain_text, unsigned char** iv_enc, AES_KEY** enc_k
    
 }
 
-void decrypt_AES(unsigned char** enc_out, unsigned char** dec_out, size_t encslength, AES_KEY** dec_key, unsigned char** iv_dec )
+void decrypt_AES(unsigned char* enc_out, unsigned char** dec_out, size_t encslength, AES_KEY** dec_key, unsigned char** iv_dec )
 {
-    AES_cbc_encrypt(*enc_out, *dec_out, encslength, *dec_key, *iv_dec, AES_DECRYPT);
+    AES_cbc_encrypt(enc_out, *dec_out, encslength, *dec_key, *iv_dec, AES_DECRYPT);
 }
 
 /*

@@ -117,19 +117,19 @@ class clientSocket:
 		
 	CorrespondingKey = { '10' : '128', '11' : '192', '12' : '256',  '15' : '128', '16' : '192', '17' : '256' }
 	size = CorrespondingKey.get(num)
+	
+	message = 'AESencr_decr:' + str(size)
+
+	self.sendMessage(message)
+	rec_message = self.recieveMessage();
+
+	if int(rec_message) == -1:
+	    print "First order corresponding key\n"	
+	    return -1
 
 	if aux == 0: ## AES encryption
-	    message = 'AESencr_decr:' + str(size)
-
-	    self.sendMessage(message)
-	    rec_message = self.recieveMessage();
-
-	    if int(rec_message) == -1:
-		print "First order corresponding key\n"	
-		return -1
-
+	    self.sendMessage("0") 
 	    filename = raw_input("Input filename to encrypt\n... ")
-	
 	    fileSize = os.path.getsize(filename)
 
 	    self.sendMessage(str(fileSize))
@@ -153,7 +153,33 @@ class clientSocket:
 		    return -1     	
 
 	    return -1
-    
+	if aux == 1: ## AES decryption
+	    self.sendMessage("1")
+	    filename = raw_input("Input filename to decrypt\n... ")
+	    fileSize = os.path.getsize(filename)
+
+	    self.sendMessage(str(fileSize))
+
+	    self.sendFile(str(filename),1)
+        
+	    decrypted_file_name = 'decrypted_' + filename
+	    index_of_slash = decrypted_file_name.rfind('/')
+        
+	    decr_name = decrypted_file_name[0:10] + decrypted_file_name[index_of_slash+1 :len(decrypted_file_name)]
+
+	    print 'encr name: ', decr_name, '\n'
+	
+	    fd = open(decr_name,'w+')
+	
+	    while 1:
+		rec_m = self.recieveMessage(fd)
+	    
+		if rec_m == 'END' :
+		    print 'Decrypted file received \nIt is in your current directory with name ', decr_name,  '\n'
+		    return -1     	
+
+	    return -1
+
     def DES_encr_decr(self, key_size):
 	return 1
 
