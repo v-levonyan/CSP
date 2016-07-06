@@ -140,8 +140,13 @@ class clientSocket:
 
 	self.sendFile(str(filename),1)
 	
+	#f_size = self.recieveMessage()
+	
+	#print 'file size::: ', f_size
+	
 	while 1:
-	   self.recieveMessage()
+	   rec_m = self.recieveMessage()
+	   print rec_m
 	return 0
     
     def DES_encryption(self, key_size):
