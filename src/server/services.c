@@ -84,7 +84,18 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
     }
     
     else
-    {	
+    {
+	// enc/dec variables 
+	// possible memory leak
+	
+	unsigned char* iv_enc;
+    	unsigned char* iv_dec;
+ 
+    	AES_KEY* enc_key;
+    	AES_KEY* dec_key;
+    
+	unsigned char* enc_out;
+    	unsigned char* dec_out;
 		
 	send_buff(ssl,"1",1); //OK
         
@@ -125,15 +136,6 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 	while( remain_data > 0 && (bytes_read = SSL_read(ssl, data, AES_BLOCK_SIZE - 1)) )
 	{
 		//receiving file ...	
-	
-		unsigned char* iv_enc;
-    		unsigned char* iv_dec;
- 
-    		AES_KEY* enc_key;
-    		AES_KEY* dec_key;
-    
-		unsigned char* enc_out;
-    		unsigned char* dec_out;
 	
 		remain_data -= bytes_read;
 
@@ -264,6 +266,53 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
     printf("decrypt:\t");
     printf("%s\n",dec_out);
     
+}
+
+void set_initial_vectors( unsigned char** iv_enc, unsigned char** iv_dec)
+{
+     // Init vector
+     
+    unsigned char* iv_enc_l = (unsigned char*) malloc(AES_BLOCK_SIZE);
+    unsigned char* iv_dec_l = (unsigned char*) malloc(AES_BLOCK_SIZE);
+
+    RAND_bytes(iv_enc_l, AES_BLOCK_SIZE);
+    memcpy(iv_dec_l, iv_enc_l, AES_BLOCK_SIZE);
+    
+    *iv_enc = iv_enc_l;
+    *iv_dec = iv_dec_l;
+
+}
+
+void set_enc_dec_keys(const unsigned char* aes_key, int key_size, AES_KEY** enc_key, AES_KEY** dec_key)
+{
+    AES_KEY* enc_key_l;
+    AES_KEY* dec_key_l;
+ 
+    enc_key_l = (AES_KEY*)malloc(sizeof(AES_KEY));    
+    dec_key_l = (AES_KEY*)malloc(sizeof(AES_KEY));    
+    
+    memset(enc_key_l, 0, sizeof(AES_KEY));
+    memset(dec_key_l, 0, sizeof(AES_KEY)); 
+   
+    AES_set_encrypt_key(aes_key, key_size*8, enc_key_l);
+    AES_set_decrypt_key(aes_key, key_size*8, dec_key_l);
+
+    *enc_key = enc_key_l;
+    *dec_key = dec_key_l;
+}
+
+void set_enc_dec_buffers(const char* plain_text, unsigned char** enc_out, unsigned char** dec_out)
+{
+    const size_t encslength = (( strlen(plain_text) + AES_BLOCK_SIZE)/ AES_BLOCK_SIZE)*   AES_BLOCK_SIZE;
+    
+    unsigned char* enc_out_l = (unsigned char*) malloc(encslength);
+    unsigned char* dec_out_l = (unsigned char*) malloc(strlen(plain_text));
+    
+    memset(enc_out_l, 0, encslength);
+    memset(dec_out_l, 0, strlen(plain_text));
+    
+    *enc_out = enc_out_l;
+    *dec_out = dec_out_l;
 }
 
 size_t encrypt_AES(const unsigned char* aes_key, int key_size, const char* plain_text, unsigned char** iv_enc, unsigned char** iv_dec, AES_KEY** enc_key, AES_KEY** dec_key, unsigned char** enc_out, unsigned char** dec_out) //AES-CBC-128, AES-CBC-192, AES-CBC-256
