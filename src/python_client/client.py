@@ -83,7 +83,7 @@ class clientSocket:
     def get_sha1_string(self):
 	return 1
 
-    def get_sha1_file(self, num):
+    def get_sha1_file(self, num, aux = 0):
         f = self.getFile()
         fileSize = os.path.getsize(f)
 
@@ -98,7 +98,7 @@ class clientSocket:
         result = self.recieveMessage()
         return result
     
-    def symmetric_key(self,num):
+    def symmetric_key(self,num, aux = 0):
 	
 	CorrespondingKey = { '3' : '7', '4' : '21', '5' : '16', '6' : '24', '7' : '32' }
 	size = CorrespondingKey.get(num)
@@ -113,9 +113,9 @@ class clientSocket:
 	result = self.recieveMessage()
 	return result
     
-    def AES_encryption(self, num):
+    def AES_encr_decr(self, num, aux = 0):
 		
-	CorrespondingKey = { '10' : '128', '11' : '192', '12' : '256' }
+	CorrespondingKey = { '10' : '128', '11' : '192', '12' : '256',  '15' : '128', '16' : '192', '17' : '256' }
 	size = CorrespondingKey.get(num)
 	
 	message = 'AESencr_decr:' + str(size)
@@ -144,22 +144,16 @@ class clientSocket:
 	
 	fd = open(encr_name,'w+')
 	
-	#f_size = self.recieveMessage()
-	
-	#print 'file size::: ', f_size
-	
 	while 1:
-	  rec_m = self.recieveMessage(fd)
-	 
-	  if rec_m == 'END' :
-	     print 'Encrypted file received \nIt is in your current directory with name ', encr_name,  '\n'
-	     return -1
-     
-	   rec_m = self.recieveMessage()
-	   print rec_m
+	    rec_m = self.recieveMessage(fd)
+	    
+	    if rec_m == 'END' :
+		print 'Encrypted file received \nIt is in your current directory with name ', encr_name,  '\n'
+		return -1     	
+
 	return 0
     
-    def DES_encryption(self, key_size):
+    def DES_encr_decr(self, key_size):
 	return 1
 
     def recieveMessage(self, fd = -1):

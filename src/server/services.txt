@@ -19,9 +19,9 @@ Enter the corresponding number
 
 ---------------------Symmetric Encryption/Decryption-------------------
 
-8  - DES    encryption/decryption
-9  - 3DES   encryption/decryption
-10 - AES128 encryption/decryption 
-11 - AES192 encryption/decryption  
-12 - AES256 encryption/decryption 
+8  - DES    encryption				13 - DES     decryption
+9  - 3DES   encryption				14 - 3DES    decryption
+10 - AES128 encryption 				15 - AES128  decryption
+11 - AES192 encryption 				16 - AES192  decryption
+12 - AES256 encryption 				17 - AES256  decryption
 _______________________________________________________________________

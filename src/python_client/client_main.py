@@ -26,9 +26,10 @@ options = {
         1 : clientSock.get_sha1_file,  2 : clientSock.get_sha1_string, 3 :
 	clientSock.symmetric_key,      4 : clientSock.symmetric_key,  5  :
 	clientSock.symmetric_key,      6 : clientSock.symmetric_key,  7  :
-	clientSock.symmetric_key,      8 : clientSock.DES_encryption, 9  : clientSock.DES_encryption,
-	10 : clientSock.AES_encryption, 11 : clientSock.AES_encryption, 12 : clientSock.AES_encryption
-        }
+	clientSock.symmetric_key,      8 : clientSock.DES_encr_decr, 9  : clientSock.DES_encr_decr,
+	10 : clientSock.AES_encr_decr, 11 : clientSock.AES_encr_decr, 12 :
+	clientSock.AES_encr_decr, 13 : clientSock.DES_encr_decr, 14 : clientSock.DES_encr_decr, 15 :
+	clientSock.AES_encr_decr, 16 : clientSock.AES_encr_decr, 17 : clientSock.AES_encr_decr}
 
 while 1:
     clientSock.sendMessage("CSP1.0://Get Services")
@@ -36,16 +37,22 @@ while 1:
     print services
     serviceId = input("Choose service: ")
 
-    if serviceId < 0 or serviceId > 12:
+    if serviceId < 0 or serviceId > 17:
 	print 'Wrong order'
 	exit(1)
-    if serviceId == 2:
-	print ' Your specified order now is not available, it will available soon'
-	exit(1)
+    if serviceId == 2 or serviceId == 8 or serviceId == 9 or serviceId == 13 or serviceId == 14:
+	print ' Your specified order now is not available, it will available soon\n'
+	exit()
 
-    result = options.get(serviceId)(str(serviceId))
-    if result == -1:
-       continue
+    if serviceId > 0  and serviceId <= 12:
+	result = options.get(serviceId)(str(serviceId))
+	if result == -1:
+	    continue
+
+    if serviceId > 12 and serviceId <= 17:
+	result = options.get(serviceId)(str(serviceId),1)
+	if result == -1:
+	    continue
     
     pretty = clientSock.byteToHex(result)
     

@@ -156,7 +156,7 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 	
 //		decrypt_AES(&enc_out, &dec_out, encslength, &dec_key, &iv_dec);
 //		send_buff(ssl,dec_out,strlen(dec_out));
-		printf("enc: %s\n", enc_out);
+//		printf("enc: %s\n", enc_out);
 		write(fd, enc_out, strlen(enc_out));
 		memset(data, 0, AES_BLOCK_SIZE);
 /*	
@@ -183,8 +183,8 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 	sprintf(file_size_buff, "%d", file_size);
 	printf("file size: %s\n", file_size_buff);
 	send_buff(ssl,file_size_buff,strlen(file_size_buff)); */
-	send_file(fd,ssl);  
-	printf("\n-----\n");
+//	send_file(fd,ssl);  
+	printf("\nEncrypted file sent.\n");
       }
 }
 void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
