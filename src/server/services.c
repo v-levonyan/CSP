@@ -133,15 +133,15 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 	
 	ssize_t bytes_read = 0;
 	size_t remain_data = file_size;
-	char data[AES_BLOCK_SIZE] = { 0 };
+	char data[AES_BLOCK_SIZE + 1] = { 0 };
 	int fd;
 	char name[] = "/tmp/encryptedXXXXXX";
 	fd = mkstemp(name);
 	
-	while( remain_data > 0 && (bytes_read = SSL_read(ssl, data, AES_BLOCK_SIZE - 1)) )
+	while( remain_data > 0 && (bytes_read = SSL_read(ssl, data, AES_BLOCK_SIZE )) )
 	{
 		//receiving file ...	
-	
+		printf("AES block size %d, bytes read: %d  ", AES_BLOCK_SIZE, bytes_read);	
 		remain_data -= bytes_read;
 
 		if(bytes_read == -1)
@@ -154,21 +154,35 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 		}
 
 		size_t encslength = set_enc_dec_buffers(data, &enc_out, &dec_out);
+//		printf("-----");
+//		printf("encslength %d\n", encslength);
 		if (atoi(encr_or_decr) == 0) //encrypt
 		{
 		    encrypt_AES(data, &iv_enc, &enc_key, &enc_out);
-		//decrypt_AES(&enc_out, &dec_out, encslength, &dec_key, &iv_dec);
-		    printf("enc: %s\n", enc_out);
-		    send_buff(ssl,enc_out,strlen(enc_out));
-		    write(fd, enc_out, strlen(enc_out));
+		    decrypt_AES(enc_out, &dec_out, encslength, &dec_key, &iv_dec);
+		    printf("dec: %s\n", dec_out);
+		   // printf("\n data: %d, enc_out: %d\n", strlen(data), strlen(enc_out));
+		    printf("enc_out: ");
+		    print_key(enc_out, encslength);
+		    send_buff(ssl,enc_out,encslength);
+		    write(fd, enc_out, encslength);
+		    free(enc_out);
+		    free(dec_out);
 		}
 
 		else
 		{
-		    decrypt_AES(data, &dec_out, strlen(data), &dec_key, &iv_dec);
-		    printf("dec: %s", dec_out);
-		    send_buff(ssl,dec_out, strlen(dec_out));
-		    write(fd, dec_out, strlen(dec_out));
+		      printf("\ndata: ");
+		      print_key(data,strlen(data));
+		    decrypt_AES(data, &dec_out, bytes_read, &dec_key, &iv_dec);
+		      printf("dec: ");
+		      print_key(dec_out,15);
+ 		      printf("dec_out: %s\n",dec_out);
+		    send_buff(ssl,dec_out, bytes_read-1);
+		   // write(fd, dec_out, 15);
+		   /* free(enc_out);
+		    free(dec_out);*/
+			printf("\n|||||||||||||\n");
 		}
 	//	printf("dec: %s\n", dec_out);
 
@@ -296,11 +310,11 @@ size_t set_enc_dec_buffers(const char* plain_text, unsigned char** enc_out, unsi
 {
     const size_t encslength = (( strlen(plain_text) + AES_BLOCK_SIZE)/ AES_BLOCK_SIZE)*   AES_BLOCK_SIZE;
     
-    unsigned char* enc_out_l = (unsigned char*) malloc(encslength);
-    unsigned char* dec_out_l = (unsigned char*) malloc(strlen(plain_text));
+    unsigned char* enc_out_l = (unsigned char*) malloc(encslength + 1);
+    unsigned char* dec_out_l = (unsigned char*) malloc(encslength /*strlen(plain_text)*/);
     
     memset(enc_out_l, 0, encslength);
-    memset(dec_out_l, 0, strlen(plain_text));
+    memset(dec_out_l, 0, encslength -1 /*strlen(plain_text)*/);
     
     *enc_out = enc_out_l;
     *dec_out = dec_out_l;

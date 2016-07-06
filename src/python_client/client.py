@@ -54,7 +54,7 @@ class clientSocket:
             # print "totalsent",totalsent
 
 
-    def readInChunks(self, inputFile, chunkSize=100):
+    def readInChunks(self, inputFile, chunkSize=15):
         while True:
             data = inputFile.read(chunkSize)
             if not data:
@@ -62,11 +62,11 @@ class clientSocket:
             yield data
 
     def sendFile(self, inputFile, hashOrEnc = 0):
-	print "File is being sent ...\n"
-        if hashOrEnc == 0:
-	   chunkSize = 100
-	else:
-	   chunkSize = 128
+	print "File is being sent ...\n" 
+	if hashOrEnc == 1: #encrypt
+	   chunkSize = 15
+	if hashOrEnc == 2:   #decrypt
+	   chunkSize = 16
 	try:
 	    f = open(inputFile)
 	except:
@@ -74,7 +74,8 @@ class clientSocket:
 	    exit()
 	
         for piece in self.readInChunks(f, chunkSize):
-            self.sendMessage(piece)
+            print 'piece: ', self.byteToHex(piece), '\n' 
+	    self.sendMessage(piece)
 
     def getFile(self):        
         inputFile = raw_input("Enter the path of the file: ")
@@ -136,7 +137,7 @@ class clientSocket:
 
 	    self.sendFile(str(filename),1)
         
-	    encrypted_file_name = 'encrypted_' + filename
+	    encrypted_file_name = 'encrypted_' + filename + '.txt'
 	    index_of_slash = encrypted_file_name.rfind('/')
         
 	    encr_name = encrypted_file_name[0:10] + encrypted_file_name[index_of_slash+1 : len(encrypted_file_name)]
@@ -147,7 +148,8 @@ class clientSocket:
 	
 	    while 1:
 		rec_m = self.recieveMessage(fd)
-	    
+	    	print self.byteToHex(rec_m) 
+ 
 		if rec_m == 'END' :
 		    print 'Encrypted file received \nIt is in your current directory with name ', encr_name,  '\n'
 		    return -1     	
@@ -160,20 +162,21 @@ class clientSocket:
 
 	    self.sendMessage(str(fileSize))
 
-	    self.sendFile(str(filename),1)
+	    self.sendFile(str(filename),2)
         
 	    decrypted_file_name = 'decrypted_' + filename
 	    index_of_slash = decrypted_file_name.rfind('/')
         
 	    decr_name = decrypted_file_name[0:10] + decrypted_file_name[index_of_slash+1 :len(decrypted_file_name)]
 
-	    print 'encr name: ', decr_name, '\n'
+	    print 'decr name: ', decr_name, '\n'
 	
 	    fd = open(decr_name,'w+')
 	
 	    while 1:
-		rec_m = self.recieveMessage(fd)
-	    
+		rec_m = self.recieveMessage(-1)
+	  	print 'decrypted1 :',  rec_m 
+		fd.write(rec_m)
 		if rec_m == 'END' :
 		    print 'Decrypted file received \nIt is in your current directory with name ', decr_name,  '\n'
 		    return -1     	
