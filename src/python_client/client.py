@@ -144,6 +144,10 @@ class clientSocket:
 	
 	fd = open(encr_name,'w+')
 	
+	#f_size = self.recieveMessage()
+	
+	#print 'file size::: ', f_size
+	
 	while 1:
 	  rec_m = self.recieveMessage(fd)
 	 
@@ -151,6 +155,10 @@ class clientSocket:
 	     print 'Encrypted file received \nIt is in your current directory with name ', encr_name,  '\n'
 	     return -1
      
+	   rec_m = self.recieveMessage()
+	   print rec_m
+	return 0
+    
     def DES_encryption(self, key_size):
 	return 1
 

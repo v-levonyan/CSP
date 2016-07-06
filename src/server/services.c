@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <openssl/rand.h>
+#include <sys/stat.h>
 
 #include "sqlite3.h"
 #include "openssl/ssl.h"
@@ -149,6 +150,13 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 		//decrypt_AES(&enc_out, &dec_out, encslength, &dec_key, &iv_dec);
 		send_buff(ssl,enc_out,strlen(enc_out));
 		//printf("dec: %s\n", dec_out);
+
+//		printf("key_size : %d\n", key_size);		
+		encslength = encrypt_AES(key, key_size/8, data, &iv_enc, &iv_dec, &enc_key, &dec_key, &enc_out, &dec_out);
+	
+//		decrypt_AES(&enc_out, &dec_out, encslength, &dec_key, &iv_dec);
+//		send_buff(ssl,dec_out,strlen(dec_out));
+		printf("enc: %s\n", enc_out);
 		write(fd, enc_out, strlen(enc_out));
 		memset(data, 0, AES_BLOCK_SIZE);
 /*	
@@ -165,6 +173,17 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 	
 //	send_file(fd,ssl);
 	send_buff(ssl, "END", 3);
+
+/*	struct stat buf;
+	fstat(fd, &buf);
+	//##############################
+	file_size = buf.st_size;
+	char file_size_buff[10] = { 0 };
+
+	sprintf(file_size_buff, "%d", file_size);
+	printf("file size: %s\n", file_size_buff);
+	send_buff(ssl,file_size_buff,strlen(file_size_buff)); */
+	send_file(fd,ssl);  
 	printf("\n-----\n");
       }
 }
