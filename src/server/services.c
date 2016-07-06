@@ -96,7 +96,10 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
     
 	unsigned char* enc_out;
     	unsigned char* dec_out;
-		
+        
+	set_initial_vectors(&iv_enc, &iv_dec);
+	set_enc_dec_keys(key, key_size/8, &enc_key, &dec_key);
+
 	send_buff(ssl,"1",1); //OK
         
 	char file_size_buf[10];
@@ -147,14 +150,19 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 		{
 		    return;
 		}
-		encslength = encrypt_AES(key, key_size/8, data, &iv_enc, &iv_dec, &enc_key, &dec_key, &enc_out, &dec_out);
+
+		size_t encslength = set_enc_dec_buffers(data, &enc_out, &dec_out);
+		
+		encrypt_AES(data, &iv_enc, &enc_key, &enc_out);
+
+//		encslength = encrypt_AES(key, key_size/8, data, &iv_enc, &iv_dec, &enc_key, &dec_key, &enc_out, &dec_out);
 	
-		//decrypt_AES(&enc_out, &dec_out, encslength, &dec_key, &iv_dec);
+		decrypt_AES(&enc_out, &dec_out, encslength, &dec_key, &iv_dec);
 		send_buff(ssl,enc_out,strlen(enc_out));
-		//printf("dec: %s\n", dec_out);
+	//	printf("dec: %s\n", dec_out);
 
 //		printf("key_size : %d\n", key_size);		
-		encslength = encrypt_AES(key, key_size/8, data, &iv_enc, &iv_dec, &enc_key, &dec_key, &enc_out, &dec_out);
+//		encslength = encrypt_AES(key, key_size/8, data, &iv_enc, &iv_dec, &enc_key, &dec_key, &enc_out, &dec_out);
 	
 //		decrypt_AES(&enc_out, &dec_out, encslength, &dec_key, &iv_dec);
 //		send_buff(ssl,dec_out,strlen(dec_out));
@@ -236,36 +244,7 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
 	pthread_exit(NULL);
     } 
 
-    unsigned char* r_key;
-    get_key_by_id(&db, *client_id, &r_key);
-
-   // printf("r_key: %s\n\n", r_key);
-    char* message = "Hello David";
-    size_t encslength;
-  
-  //be aware of memory leak 
-
-    unsigned char* iv_enc;
-    unsigned char* iv_dec;
- 
-    AES_KEY* enc_key;
-    AES_KEY* dec_key;
-    
-    unsigned char* enc_out;
-    unsigned char* dec_out;
-
-    encslength = encrypt_AES(r_key, key_size, message, &iv_enc, &iv_dec, &enc_key, &dec_key, &enc_out, &dec_out);
-    decrypt_AES(&enc_out, &dec_out, encslength, &dec_key, &iv_dec);
- 
-    printf("original:\t");
-    printf("%s\n", message);
-
-    printf("encrypt:\t");
-    print_key(enc_out, encslength);
    
-    printf("decrypt:\t");
-    printf("%s\n",dec_out);
-    
 }
 
 void set_initial_vectors( unsigned char** iv_enc, unsigned char** iv_dec)
@@ -301,7 +280,7 @@ void set_enc_dec_keys(const unsigned char* aes_key, int key_size, AES_KEY** enc_
     *dec_key = dec_key_l;
 }
 
-void set_enc_dec_buffers(const char* plain_text, unsigned char** enc_out, unsigned char** dec_out)
+size_t set_enc_dec_buffers(const char* plain_text, unsigned char** enc_out, unsigned char** dec_out)
 {
     const size_t encslength = (( strlen(plain_text) + AES_BLOCK_SIZE)/ AES_BLOCK_SIZE)*   AES_BLOCK_SIZE;
     
@@ -313,69 +292,14 @@ void set_enc_dec_buffers(const char* plain_text, unsigned char** enc_out, unsign
     
     *enc_out = enc_out_l;
     *dec_out = dec_out_l;
+
+    return encslength;
 }
 
-size_t encrypt_AES(const unsigned char* aes_key, int key_size, const char* plain_text, unsigned char** iv_enc, unsigned char** iv_dec, AES_KEY** enc_key, AES_KEY** dec_key, unsigned char** enc_out, unsigned char** dec_out) //AES-CBC-128, AES-CBC-192, AES-CBC-256
+void encrypt_AES(const char* plain_text, unsigned char** iv_enc, AES_KEY** enc_key, unsigned char** enc_out) //AES-CBC-128, AES-CBC-192, AES-CBC-256
 {
-    // Init vector
-     
-    unsigned char* iv_enc_l = (unsigned char*) malloc(AES_BLOCK_SIZE);
-    unsigned char* iv_dec_l = (unsigned char*) malloc(AES_BLOCK_SIZE);
-
-    RAND_bytes(iv_enc_l, AES_BLOCK_SIZE);
-    memcpy(iv_dec_l, iv_enc_l, AES_BLOCK_SIZE);
-    
-    // Buffers for encryption and decryption
-
-    const size_t encslength = (( strlen(plain_text) + AES_BLOCK_SIZE)/ AES_BLOCK_SIZE)*AES_BLOCK_SIZE;
-    
-    unsigned char* enc_out_l = (unsigned char*) malloc(encslength);
-    unsigned char* dec_out_l = (unsigned char*) malloc(strlen(plain_text));
-    
-    memset(enc_out_l, 0, encslength);
-    memset(dec_out_l, 0, strlen(plain_text));
-
-    //aes-cbc-128 aes-cbc-192 aes-cbc-256
-
-    AES_KEY* enc_key_l;
-    AES_KEY* dec_key_l;
- 
-    enc_key_l = (AES_KEY*)malloc(sizeof(AES_KEY));    
-    dec_key_l = (AES_KEY*)malloc(sizeof(AES_KEY));    
-    
-    memset(enc_key_l, 0, sizeof(AES_KEY));
-    memset(dec_key_l, 0, sizeof(AES_KEY)); 
+        AES_cbc_encrypt(plain_text, *enc_out, strlen(plain_text), *enc_key, *iv_enc, AES_ENCRYPT);
    
-    AES_set_encrypt_key(aes_key, key_size*8, enc_key_l);
-
-    AES_cbc_encrypt(plain_text, enc_out_l, strlen(plain_text), enc_key_l, iv_enc_l, AES_ENCRYPT);
-   
-    AES_set_decrypt_key(aes_key, key_size*8, dec_key_l);
-
-    *iv_enc  = iv_enc_l;
-    *iv_dec  = iv_dec_l;
-
-    *enc_key = enc_key_l;
-    *dec_key = dec_key_l;
-
-    *enc_out = enc_out_l;
-    *dec_out = dec_out_l;
-     
-    //return encslength;
-/*  
-    AES_cbc_encrypt(enc_out_l, dec_out_l, encslength, dec_key_l, iv_dec_l, AES_DECRYPT);
-
-    printf("original:\t");
-    printf("%s\n", plain_text);
-
-    printf("encrypt:\t");
-    print_key(enc_out_l, encslength);
-    
-    printf("decrypt:\t");
-    printf("%s\n",dec_out_l);
-    //print_key(dec_out, sizeof(dec_out)); */
-    
-   return encslength;
 }
 
 void decrypt_AES(unsigned char** enc_out, unsigned char** dec_out, size_t encslength, AES_KEY** dec_key, unsigned char** iv_dec )
