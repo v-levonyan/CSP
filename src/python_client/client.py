@@ -62,7 +62,7 @@ class clientSocket:
             yield data
 
     def sendFile(self, inputFile, hashOrEnc = 0):
-	print "sendfile\n"
+	print "File is being sent ...\n"
         if hashOrEnc == 0:
 	   chunkSize = 100
 	else:
@@ -75,7 +75,6 @@ class clientSocket:
 	
         for piece in self.readInChunks(f, chunkSize):
             self.sendMessage(piece)
-	    print 'aaaaa'
 
     def getFile(self):        
         inputFile = raw_input("Enter the path of the file: ")
@@ -115,39 +114,47 @@ class clientSocket:
 	return result
     
     def AES_encryption(self, num):
+		
 	CorrespondingKey = { '10' : '128', '11' : '192', '12' : '256' }
 	size = CorrespondingKey.get(num)
 	
-	print 'size', size	
-	
 	message = 'AESencr_decr:' + str(size)
 
-	print message
 	self.sendMessage(message)
 	rec_message = self.recieveMessage();
-	print 'rec_message', rec_message
 
 	if int(rec_message) == -1:
 	   print "First order corresponding key\n"	
 	   return -1
 
-        filename = raw_input("Input filename to encrypt\n")
-
-	fileSize = os.path.getsize(filename)
+        filename = raw_input("Input filename to encrypt\n... ")
 	
-	print 'file size: ', fileSize
+	fileSize = os.path.getsize(filename)
+
 	self.sendMessage(str(fileSize))
 
 	self.sendFile(str(filename),1)
+        
+	encrypted_file_name = 'encrypted_' + filename
+	index_of_slash = encrypted_file_name.rfind('/')
+        
+	encr_name = encrypted_file_name[0:10] + encrypted_file_name[index_of_slash+1 : len(encrypted_file_name)]
+
+	print 'encr name: ', encr_name, '\n'
+	
+	fd = open(encr_name,'w+')
 	
 	while 1:
-	   self.recieveMessage()
-	return 0
-    
+	  rec_m = self.recieveMessage(fd)
+	 
+	  if rec_m == 'END' :
+	     print 'Encrypted file received \nIt is in your current directory with name ', encr_name,  '\n'
+	     return -1
+     
     def DES_encryption(self, key_size):
 	return 1
 
-    def recieveMessage(self):
+    def recieveMessage(self, fd = -1):
 
 #        print "enter recv"
 #        chunks = []
@@ -166,9 +173,12 @@ class clientSocket:
 	             
 	try:
             receivedMessage = self.sock.recv(self.MSGLEN)
-	    print ' Received message ', receivedMessage
+	   # print ' Received message ', receivedMessage
+	    if fd != -1:
+		fd.write(receivedMessage)
 	except SSL.ZeroReturnError:
-	    print 'Received message ', len(receivedMessage)
+	    print 'Server disconnected '
+	    exit()
 	
 	return receivedMessage 
 

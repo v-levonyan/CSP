@@ -68,19 +68,13 @@ void print_key(const unsigned char* key, int size)
 
 void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 {
-//    size_t key_size = key_sz;
-
-    //printf("1key size : %d\n", key_size);
-
     sqlite3* db;
+    
     //possible memory leak
-     unsigned char* key;
+    unsigned char* key;
      
     get_key_by_id(&db, *client_id, &key);
-    
-    //printf("AES encryption/decryption: %s\n", key);
-   
-       
+          
     if( 4*strlen(key) != key_size) //garbage key
     {
 	send_buff(ssl, "-1",2);
@@ -89,10 +83,12 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
     }
     
     else
-    {   
-	send_buff(ssl,"1",1);
+    {	
+		
+	send_buff(ssl,"1",1); //OK
         
 	char file_size_buf[10];
+	
 	memset(file_size_buf,0,10);
 	
 	int read_size = SSL_read(ssl, file_size_buf, 10);
@@ -144,14 +140,16 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 		{
 			handle_error("data wasn't read");
 		}
-
-		printf("key_size : %d\n", key_size);		
+		if(bytes_read == 0 )
+		{
+		    return;
+		}
 		encslength = encrypt_AES(key, key_size/8, data, &iv_enc, &iv_dec, &enc_key, &dec_key, &enc_out, &dec_out);
 	
-	//	decrypt_AES(&enc_out, &dec_out, encslength, &dec_key, &iv_dec);
+		//decrypt_AES(&enc_out, &dec_out, encslength, &dec_key, &iv_dec);
 		send_buff(ssl,enc_out,strlen(enc_out));
-		printf("dec: %s\n", dec_out);
-		write(fd, dec_out, strlen(dec_out));
+		//printf("dec: %s\n", dec_out);
+		write(fd, enc_out, strlen(enc_out));
 		memset(data, 0, AES_BLOCK_SIZE);
 /*	
 	#####	problem here    #####	
@@ -165,7 +163,8 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 		free(dec_out);	*/
 	}
 	
-	send_file(fd,ssl);
+//	send_file(fd,ssl);
+	send_buff(ssl, "END", 3);
 	printf("\n-----\n");
       }
 }

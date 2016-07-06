@@ -227,14 +227,15 @@ void* connection_handler(void* cl_args)
 			fptr func;
 
 			struct request_t request;
-    
+					
 			bytes_read = read_request(ssl, request_message);
+			
 			if (bytes_read == 0)
 			{
 				fprintf(stdout, "Client disconnected\n");
 				pthread_exit(NULL);
-			}
-				
+			}	
+			
 			order_parser(request_message, &request);
 
 			fprintf(stderr,"\nClient responsed\nquery: %s : %d\n", request.query, request.filesize);

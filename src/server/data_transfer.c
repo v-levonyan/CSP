@@ -53,7 +53,6 @@ int send_file(int file_fd, SSL* ssl)
 			break;
 		}
 		
-		printf("%s", buf);
 		while(num_read > 0)
 		{
 			int num_write =  SSL_write(ssl, p, num_read);
@@ -101,8 +100,6 @@ int read_request(SSL* ssl, char request[DATA_SIZE])
 
 	if(read_size < 0)
 	{
-		// TODO: why server killed if there is issue ?
-	
 		handle_error("Could not read from socket");
 	}
 
