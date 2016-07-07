@@ -25,7 +25,7 @@
 #include "server_db.h"
 
 #define listen_backlog 50
-#define thread_count 5
+#define thread_count 100
 
 int main(int argc, char *argv[])
 {
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 
     pthread_t helper_thread[thread_count];
 
-    for(; i < 100; ++i)
+    for(; i < thread_count; ++i)
     {
 	struct handler_args args;
 

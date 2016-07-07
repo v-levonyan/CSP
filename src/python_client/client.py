@@ -126,8 +126,12 @@ class clientSocket:
 	if aux == 0: ## AES encryption
 	    self.sendMessage("0") 
 	    filename = raw_input("Input filename to encrypt\n... ")
-	    fileSize = os.path.getsize(filename)
-
+	    try:
+		fileSize = os.path.getsize(filename)
+	    except OSError:
+		print "Specified file doesn't exist!\n"
+		self.sendMessage('-1')
+		return -1
 	    self.sendMessage(str(fileSize))
 
 	    self.sendFile(str(filename),1)
@@ -153,7 +157,12 @@ class clientSocket:
 	if aux == 1: ## AES decryption
 	    self.sendMessage("1")
 	    filename = raw_input("Input filename to decrypt\n... ")
-	    fileSize = os.path.getsize(filename)
+	    try:
+		fileSize = os.path.getsize(filename)
+	    except OSError:
+		print "Specified file doesn't exist!\n"
+		self.sendMessage('-1')
+		return -1
 
 	    self.sendMessage(str(fileSize))
 

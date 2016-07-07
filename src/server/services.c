@@ -114,6 +114,11 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 	
 	int read_size = SSL_read(ssl, file_size_buf, 10);
 
+	if(atoi(file_size_buf) == -1) // client specified wrong file, repeat main loop
+	{
+	    fprintf(stderr, "Client specified wrong file, repeat main loop!\n");
+	    return;
+	}
         if(read_size < 0)
         {
                 handle_error("Could not read from socket");
