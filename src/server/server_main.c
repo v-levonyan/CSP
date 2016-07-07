@@ -48,14 +48,21 @@ int main(int argc, char *argv[])
 	exit(EXIT_FAILURE);
     }
 
-    printf("%s\n", "DB created");
+    printf("%s\n", "Database created.");
     
-    if( create_table(&db) == 1)
+    if( create_table_CLIENTS(&db) == 1)
     {
 	exit(EXIT_FAILURE);
     }
 
-    printf("%s\n", "Table created");
+    printf("%s\n", "Table CLIENTS created.");
+    
+    if ( create_table_USERS_AUTHORIZATION(&db) == 1)
+    {
+	exit(EXIT_FAILURE);
+    }
+
+    printf("%s\n", "Table USERS_AUTHORIZATION created.");
    
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
@@ -85,7 +92,7 @@ int main(int argc, char *argv[])
 	handle_error("listen failed");
     }
 
-    printf("waiting for incoming connection...\n");
+    printf("Waiting for incoming connection...\n");
 
     socklen_t address_len = sizeof(struct sockaddr_in);
 

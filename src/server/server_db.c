@@ -31,7 +31,26 @@ void Print_key(const unsigned char* key, int size)
     printf("%s","\n");
 }
 
-int create_table(sqlite3** db)
+int create_table_USERS_AUTHORIZATION(sqlite3** db)
+{
+    char* sql;
+    char* errmssg = 0;
+    int rc;
+
+    sql = "CREATE TABLE IF NOT EXISTS USERS_AUTHORIZATION(USER_NAME TEXT, PASSWORD TEXT)";
+
+    rc = sqlite3_exec(*db, sql, 0, 0, &errmssg);
+
+    if( rc != SQLITE_OK )
+    {
+	fprintf(stderr, "SQL error: %s\n", errmssg);
+	sqlite3_free(errmssg);
+	return 1;
+    }
+
+    return 0;
+}
+int create_table_CLIENTS(sqlite3** db)
 {
     char* sql;
     char* errmssg = 0;
@@ -135,7 +154,7 @@ int add_key_to_clients(sqlite3** db, const unsigned char* key, int key_size, int
 	return 1;
     }
 
-    printf("key updated:\n\n%s\n\n",sql);
+    printf("key updated.\n");
 
     return 0;
 }

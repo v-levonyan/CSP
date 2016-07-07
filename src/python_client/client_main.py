@@ -30,6 +30,10 @@ options = {
 	10 : clientSock.AES_encr_decr, 11 : clientSock.AES_encr_decr, 12 :
 	clientSock.AES_encr_decr, 13 : clientSock.DES_encr_decr, 14 : clientSock.DES_encr_decr, 15 :
 	clientSock.AES_encr_decr, 16 : clientSock.AES_encr_decr, 17 : clientSock.AES_encr_decr}
+	
+rec_message = clientSock.recieveMessage()
+	
+print rec_message
 
 while 1:
     clientSock.sendMessage("CSP1.0://Get Services")
@@ -63,3 +67,5 @@ while 1:
     if serviceId >=3 and serviceId <= 7:
 	print 'Symmetric key generated, ID: ', result
 	print '\n'
+    else:
+	continue

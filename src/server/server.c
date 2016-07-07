@@ -201,14 +201,17 @@ void* connection_handler(void* cl_args)
 	if( SSL_accept(ssl) == FAIL )
 	{
 	    ERR_print_errors_fp(stderr);
+	    pthread_exit(NULL);
 	}
 
 	else
 	{
 	   // ShowCerts(ssl);
-	    sqlite3* db;
-
-	    printf("\n%s\n","SSL connection established with client");
+	    sqlite3* db; 
+	    printf("\n%s\n","SSL connection established.");
+	    //demand authorization
+	    
+	    SSL_write(ssl,"Authorize!",10);
 	    sqlite3_open("SERVER_DB.dblite", &db);
 	    fill_garbage_entry(&db, args->client_id);
 	    
