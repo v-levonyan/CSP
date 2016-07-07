@@ -5,10 +5,6 @@
 
 #include "sqlite3.h"
 
-//static pthread_key_t AddOrUpdate;
-
-//int AddOrUpdate = -1; // if 0 add key to db, if 1 update key
-
 int connect_to_db(sqlite3** db, const char* name)
 {
     int rc;
@@ -67,12 +63,6 @@ static int retrieve_key(void* key, int argc, char** argv, char** azColName)
     strcpy(key_buf,*argv);
     *key_loc = key_buf;
     
-    fprintf(stderr,"%s","\n----------------retrieved key begin-------------------\n\n");
-   
-    printf("%s\n",*key_loc);
-    
-    fprintf(stderr,"%s","\n-----------------retrieved key end--------------------\n\n");
-
     return 1;
 }
 

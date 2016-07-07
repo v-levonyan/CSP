@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     
     if( create_table(&db) == 1)
     {
-	pthread_exit(NULL);
+	exit(EXIT_FAILURE);
     }
 
     printf("%s\n", "Table created");
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 
     pthread_t helper_thread[thread_count];
 
-    for(; i < thread_count; ++i)
+    for(; i < 100; ++i)
     {
 	struct handler_args args;
 

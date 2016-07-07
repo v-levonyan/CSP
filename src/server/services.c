@@ -28,9 +28,12 @@ void receive_file_compute_hash_send_back(size_t filesize, SSL* ssl, int* client_
 	ssize_t bytes_read = 0;
 	size_t remain_data = filesize;
 	char data[DATA_SIZE] = { 0 };
+	
 	SHA_CTX ctx;
 	SHA1_Init(&ctx);
+	
 	printf("%s\n", "Receiving the file ... \n");
+	
 	while( remain_data > 0 && (bytes_read = SSL_read(ssl, data, DATA_SIZE - 1)) )
 	{
 		remain_data -= bytes_read;
@@ -50,9 +53,8 @@ void receive_file_compute_hash_send_back(size_t filesize, SSL* ssl, int* client_
 		fprintf(stderr,"%s", "SHA final exits");
 		pthread_exit(NULL);
 	}
-	//SSL_write(ssl, hash, SHA_DIGEST_LENGTH);
 	send_buff(ssl, hash, SHA_DIGEST_LENGTH);
-	printf("%s\n", "Final hash sent to the client\n");
+	printf("%s\n", "Final hash was sent \n");
 }
 
 void print_key(const unsigned char* key, int size)
@@ -129,10 +131,21 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 	size_t remain_data = file_size;
 	char data[AES_BLOCK_SIZE + 1] = { 0 };
 	int fd;
-	char name[] = "/tmp/encryptedXXXXXX"; // file for temporary holding
+	char name[30];
+
+	if(atoi(encr_or_decr) == 0) 
+	{
+	    char name[] = "/tmp/encryptedXXXXXX"; // file for temporary holding
+	}
+
+	else
+	{
+	    char name[] = "/tmp/decryptedXXXXXX"; 
+	}
+
 	fd = mkstemp(name);
 	
-	printf("%s", "Receiving file to encrypt ... \n");
+	//printf("%s", "Receiving file to encrypt ... \n");
 
 	while( remain_data > 0 && (bytes_read = SSL_read(ssl, data, AES_BLOCK_SIZE )) )
 	{
@@ -155,15 +168,17 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 		    encrypt_AES(data, &iv_enc, &enc_key, &enc_out);
 		    send_buff(ssl,enc_out,encslength);
 		    write(fd, enc_out, encslength);
+		    
 		    free(enc_out);
 		    free(dec_out);
 		}
 
-		else
+		else //decrypt
 		{
 		    decrypt_AES(data, &dec_out, bytes_read, &dec_key, &iv_dec);
 		    send_buff(ssl,dec_out, bytes_read-1);
 		    write(fd, dec_out, 15);
+		    
 		    free(enc_out);
 		    free(dec_out);
 		}
@@ -173,9 +188,15 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 	
 	SSL_write(ssl, "END", 3);
 
-	printf("\nEncrypted file sent.\n");
+	printf("\nEncryptedi/decrypted file sent.\n");
+
+	free(iv_enc);
+	free(iv_dec);
+	free(enc_key);
+	free(dec_key);
     }
-}
+
+   }
 void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
 {
     sqlite3* db;
@@ -184,14 +205,11 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
     
     memset(key, 0, key_size+1);
 
-/*############################################# BUG #######################################*/
-
     while(1)
     {
 	if( !RAND_bytes(key, key_size) )
 	{
 	    fprintf(stderr, "OpenSSL reports a failure on RAND_bytes! \n");
-	    /* correct here */
 	    pthread_exit(NULL);
 	}
 
@@ -202,9 +220,8 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
 	fprintf(stderr, "Generated key was short, now generating new one! \n");
     } 
    
-    printf("generated key: ");
-    print_key(key, key_size);
-    
+    printf("Key generated\n");
+   
     if (add_key_to_clients(&db, key, key_size, client_id) == 1) 
     {
 	fprintf(stderr, "FAILURE while adding key to DB! \n");
@@ -213,17 +230,13 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
 
     // loooook here 
     sprintf(ID_str, "%d", *client_id);
-/*
-    printf("ID %s\n", ID_str);
-*/
+
     if( send_buff(ssl, ID_str, 10) == 1)
     {
-	fprintf(stderr, "failure on send_buff! \n");
-//	 correct here 
+	fprintf(stderr, "failure on send_buff! \n"); 
 	pthread_exit(NULL);
     } 
 
-   
 }
 
 void set_initial_vectors( unsigned char** iv_enc, unsigned char** iv_dec)
@@ -287,24 +300,3 @@ void decrypt_AES(unsigned char* enc_out, unsigned char** dec_out, size_t encslen
     AES_cbc_encrypt(enc_out, *dec_out, encslength, *dec_key, *iv_dec, AES_DECRYPT);
 }
 
-/*
-void send_symmetric_key(size_t key_size, SSL* ssl)
-{
-    unsigned char* key = (unsigned char*)malloc(key_size);
-    memset(key, 0, key_size+1);
-    if( !RAND_bytes(key, key_size ) )
-    {
-	fprintf(stderr, "OpenSSL reports a failure on RAND_bytes! \n");
-	* correct here *
-	pthread_exit(NULL);
-    }
-    printf("key : ");
-    print_key(key, key_size);
-
-    if( send_buff(ssl, key, key_size) == 1)
-    {
-	fprintf(stderr, "failure on send_buff! \n");
-//	 correct here 
-	pthread_exit(NULL);
-    } 
-i}*/

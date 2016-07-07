@@ -141,7 +141,6 @@ void set_hash_table()
 	addToHashTable(ht,"symmetric_key",add_symmetric_key_to_db_send_id);
 	addToHashTable(ht,"compute_file_hash", receive_file_compute_hash_send_back);
 	addToHashTable(ht,"AESencr_decr", AESencryption_decryption);
-	//addToHashTable(ht,"add_symmetric_key_to_db_send_id", add_symmetric_key_to_db_send_id);
 }
 
 void choose_corresponding_service(int serv, struct request_t* request)
@@ -248,8 +247,6 @@ void* connection_handler(void* cl_args)
 				pthread_exit(NULL);
 			}
 
-			printf("\nsize %d\n", request.filesize);
-			
 			func(request.filesize, ssl, &(args->client_id));
 
 			memset(request_message, 0, DATA_SIZE);
