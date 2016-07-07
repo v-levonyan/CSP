@@ -74,6 +74,7 @@ class clientSocket:
 	    exit()
 	
         for piece in self.readInChunks(f, chunkSize):
+	    print 'sent: ', piece
             print 'piece: ', self.byteToHex(piece), '\n' 
 	    self.sendMessage(piece)
 
@@ -147,11 +148,17 @@ class clientSocket:
 	    fd = open(encr_name,'w+')
 	
 	    while 1:
-		rec_m = self.recieveMessage(fd)
-	    	print self.byteToHex(rec_m) 
+		rec_m = self.recieveMessage(-1)
+		
+		if rec_m != 'END':
+		    print 'end rec_m: ',rec_m
+		    fd.write(rec_m)
+		    print self.byteToHex(rec_m) 
  
-		if rec_m == 'END' :
-		    print 'Encrypted file received \nIt is in your current directory with name ', encr_name,  '\n'
+		else:
+		    print 'yeah\n'
+		    fd.close()
+		    print 'Encrypted file received, it is in your current directory with name ', encr_name,  '\n'
 		    return -1     	
 
 	    return -1
@@ -176,9 +183,14 @@ class clientSocket:
 	    while 1:
 		rec_m = self.recieveMessage(-1)
 	  	print 'decrypted1 :',  rec_m 
-		fd.write(rec_m)
-		if rec_m == 'END' :
-		    print 'Decrypted file received \nIt is in your current directory with name ', decr_name,  '\n'
+		
+		if rec_m != 'END':
+		    print 'end rec_m: ',rec_m
+		    fd.write(rec_m)
+		else:
+		    print'yeah dec\n'
+		    fd.close()
+		    print 'Decrypted file received, it is in your current directory with name ', decr_name,  '\n'
 		    return -1     	
 
 	    return -1
@@ -206,8 +218,7 @@ class clientSocket:
 	try:
             receivedMessage = self.sock.recv(self.MSGLEN)
 	   # print ' Received message ', receivedMessage
-	    if fd != -1:
-		fd.write(receivedMessage)
+
 	except SSL.ZeroReturnError:
 	    print 'Server disconnected '
 	    exit()

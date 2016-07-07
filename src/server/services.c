@@ -135,7 +135,7 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 	size_t remain_data = file_size;
 	char data[AES_BLOCK_SIZE + 1] = { 0 };
 	int fd;
-	char name[] = "/tmp/encryptedXXXXXX";
+	char name[] = "/tmp/encryptedXXXXXX"; // file for temporary holding
 	fd = mkstemp(name);
 	
 	while( remain_data > 0 && (bytes_read = SSL_read(ssl, data, AES_BLOCK_SIZE )) )
@@ -180,8 +180,8 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
  		      printf("dec_out: %s\n",dec_out);
 		    send_buff(ssl,dec_out, bytes_read-1);
 		   // write(fd, dec_out, 15);
-		   /* free(enc_out);
-		    free(dec_out);*/
+		    free(enc_out);
+		    free(dec_out);
 			printf("\n|||||||||||||\n");
 		}
 	//	printf("dec: %s\n", dec_out);
