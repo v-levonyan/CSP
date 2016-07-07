@@ -62,7 +62,8 @@ class clientSocket:
             yield data
 
     def sendFile(self, inputFile, hashOrEnc = 0):
-	print "File is being sent ...\n" 
+
+	chunkSize = 100
 	if hashOrEnc == 1: #encrypt
 	   chunkSize = 15
 	if hashOrEnc == 2:   #decrypt
@@ -72,10 +73,8 @@ class clientSocket:
 	except:
 	    print "Specified file doesn't exist\n"
 	    exit()
-	
+	print 'File is being sent ...\n'
         for piece in self.readInChunks(f, chunkSize):
-	    print 'sent: ', piece
-            print 'piece: ', self.byteToHex(piece), '\n' 
 	    self.sendMessage(piece)
 
     def getFile(self):        
@@ -93,9 +92,7 @@ class clientSocket:
 
         params = ':'.join(seq)
         
-        print "sending parameters: ", params
-
-        self.sendMessage(params)
+	self.sendMessage(params)
         self.sendFile(f)
         result = self.recieveMessage()
         return result
@@ -104,13 +101,10 @@ class clientSocket:
 	
 	CorrespondingKey = { '3' : '7', '4' : '21', '5' : '16', '6' : '24', '7' : '32' }
 	size = CorrespondingKey.get(num)
-	print size,'-', num
 
 	seq = (num, size)
 	params = ':'.join(seq)
 	
-	print "sending parameters: ", params 
-        
 	self.sendMessage(params)
 	result = self.recieveMessage()
 	return result
@@ -143,20 +137,14 @@ class clientSocket:
         
 	    encr_name = encrypted_file_name[0:10] + encrypted_file_name[index_of_slash+1 : len(encrypted_file_name)]
 
-	    print 'encr name: ', encr_name, '\n'
-	
 	    fd = open(encr_name,'w+')
 	
 	    while 1:
 		rec_m = self.recieveMessage(-1)
 		
-		if rec_m != 'END':
-		    print 'end rec_m: ',rec_m
+		if rec_m != "END":
 		    fd.write(rec_m)
-		    print self.byteToHex(rec_m) 
- 
 		else:
-		    print 'yeah\n'
 		    fd.close()
 		    print 'Encrypted file received, it is in your current directory with name ', encr_name,  '\n'
 		    return -1     	
@@ -176,19 +164,14 @@ class clientSocket:
         
 	    decr_name = decrypted_file_name[0:10] + decrypted_file_name[index_of_slash+1 :len(decrypted_file_name)]
 
-	    print 'decr name: ', decr_name, '\n'
-	
 	    fd = open(decr_name,'w+')
 	
 	    while 1:
 		rec_m = self.recieveMessage(-1)
-	  	print 'decrypted1 :',  rec_m 
-		
-		if rec_m != 'END':
-		    print 'end rec_m: ',rec_m
+	 
+		if rec_m != "END":
 		    fd.write(rec_m)
 		else:
-		    print'yeah dec\n'
 		    fd.close()
 		    print 'Decrypted file received, it is in your current directory with name ', decr_name,  '\n'
 		    return -1     	

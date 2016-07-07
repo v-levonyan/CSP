@@ -41,11 +41,11 @@ while 1:
 	print 'Wrong order'
 	exit(1)
     if serviceId == 2 or serviceId == 8 or serviceId == 9 or serviceId == 13 or serviceId == 14:
-	print ' Your specified order now is not available, it will available soon\n'
+	print ' Your specified order now is not available, it will be available soon\n'
 	exit()
 
     if serviceId > 0  and serviceId <= 12:
-	result = options.get(serviceId)(str(serviceId))
+	result = options.get(serviceId)(str(serviceId),0)
 	if result == -1:
 	    continue
 
@@ -60,6 +60,6 @@ while 1:
 	print '\nSHA 1: ', pretty
 	print '\n'
 
-    else:
-	print '\nSymmetric key ID: ', result
+    if serviceId >=3 and serviceId <= 7:
+	print 'Symmetric key generated, ID: ', result
 	print '\n'

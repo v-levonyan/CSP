@@ -124,13 +124,7 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
         }
 
 	size_t file_size = atoi(file_size_buf);
-	
-//	printf("file size: %d\n", file_size);
-  
-  	//be aware of memory leak 
-
-  //  	printf("%s", "Receiving file to encrypt ... \n");
-	
+		
 	ssize_t bytes_read = 0;
 	size_t remain_data = file_size;
 	char data[AES_BLOCK_SIZE + 1] = { 0 };
@@ -138,10 +132,11 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 	char name[] = "/tmp/encryptedXXXXXX"; // file for temporary holding
 	fd = mkstemp(name);
 	
+	printf("%s", "Receiving file to encrypt ... \n");
+
 	while( remain_data > 0 && (bytes_read = SSL_read(ssl, data, AES_BLOCK_SIZE )) )
 	{
 		//receiving file ...	
-		printf("AES block size %d, bytes read: %d  ", AES_BLOCK_SIZE, bytes_read);	
 		remain_data -= bytes_read;
 
 		if(bytes_read == -1)
@@ -154,16 +149,10 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 		}
 
 		size_t encslength = set_enc_dec_buffers(data, &enc_out, &dec_out);
-//		printf("-----");
-//		printf("encslength %d\n", encslength);
+		
 		if (atoi(encr_or_decr) == 0) //encrypt
 		{
 		    encrypt_AES(data, &iv_enc, &enc_key, &enc_out);
-		    decrypt_AES(enc_out, &dec_out, encslength, &dec_key, &iv_dec);
-		    printf("dec: %s\n", dec_out);
-		   // printf("\n data: %d, enc_out: %d\n", strlen(data), strlen(enc_out));
-		    printf("enc_out: ");
-		    print_key(enc_out, encslength);
 		    send_buff(ssl,enc_out,encslength);
 		    write(fd, enc_out, encslength);
 		    free(enc_out);
@@ -172,55 +161,20 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 
 		else
 		{
-		      printf("\ndata: ");
-		      print_key(data,strlen(data));
 		    decrypt_AES(data, &dec_out, bytes_read, &dec_key, &iv_dec);
-		      printf("dec: ");
-		      print_key(dec_out,15);
- 		      printf("dec_out: %s\n",dec_out);
 		    send_buff(ssl,dec_out, bytes_read-1);
-		   // write(fd, dec_out, 15);
+		    write(fd, dec_out, 15);
 		    free(enc_out);
 		    free(dec_out);
-			printf("\n|||||||||||||\n");
 		}
-	//	printf("dec: %s\n", dec_out);
-
-//		printf("key_size : %d\n", key_size);		
-//		encslength = encrypt_AES(key, key_size/8, data, &iv_enc, &iv_dec, &enc_key, &dec_key, &enc_out, &dec_out);
-	
-//		decrypt_AES(&enc_out, &dec_out, encslength, &dec_key, &iv_dec);
-//		send_buff(ssl,dec_out,strlen(dec_out));
-//		printf("enc: %s\n", enc_out);
-	
+		
 		memset(data, 0, AES_BLOCK_SIZE);
-/*	
-	#####	problem here    #####	
-		free(iv_enc);
-		free(iv_dec);
-	
-		free(enc_key);
-		free(dec_key);
-	
-		free(enc_out);
-		free(dec_out);	*/
 	}
 	
-//	send_file(fd,ssl);
-	send_buff(ssl, "END", 3);
+	SSL_write(ssl, "END", 3);
 
-/*	struct stat buf;
-	fstat(fd, &buf);
-	//##############################
-	file_size = buf.st_size;
-	char file_size_buff[10] = { 0 };
-
-	sprintf(file_size_buff, "%d", file_size);
-	printf("file size: %s\n", file_size_buff);
-	send_buff(ssl,file_size_buff,strlen(file_size_buff)); */
-//	send_file(fd,ssl);  
 	printf("\nEncrypted file sent.\n");
-      }
+    }
 }
 void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
 {
