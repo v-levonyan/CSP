@@ -32,8 +32,18 @@ options = {
 	clientSock.AES_encr_decr, 16 : clientSock.AES_encr_decr, 17 : clientSock.AES_encr_decr}
 	
 rec_message = clientSock.recieveMessage()
+
+reg_or_log = -1	
+
+if rec_message == "Authorize!":
+    while 1:
+	reg_or_log = raw_input ('Enter 0 for registration, 1 for log in\n>>> ')
 	
-print rec_message
+	if reg_or_log == '0' or reg_or_log == '1':
+	    break
+
+if reg_or_log == 0: # registration
+
 
 while 1:
     clientSock.sendMessage("CSP1.0://Get Services")
