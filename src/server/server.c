@@ -276,6 +276,74 @@ int registrate_user(SSL* ssl)
     printf("Password received.\n");
 
     insert_username_password_to_db(user_name, password);
+    return 0;
+}
+
+int check_user_name_and_password_AUX(void* pass_ok, int argc, char** argv, char** azColName)
+{   
+    struct password_and_ok* p_ok = (struct password_and_ok*) pass_ok;
+
+    char* SHA256_of_password = *argv;
+    unsigned char sha256[SHA256_DIGEST_LENGTH] = { 0 };
+    
+    char* hex_sha256;
+   
+    SHA256(p_ok->password, strlen(p_ok->password), sha256);
+    string_to_hex_string(sha256, SHA256_DIGEST_LENGTH, &hex_sha256);
+    
+    if(strcmp(hex_sha256, SHA256_of_password) == 0) //passwordes match
+    {
+	p_ok->ok = 1;
+	return 1;
+    }
+    return -1;
+}
+
+int check_user_name_and_password(const char* user_name, const char* Password)
+{
+    sqlite3* db;
+    char sql[200] = { 0 };
+    struct password_and_ok pass;
+    char* errmssg = 0;
+    
+    sqlite3_open("SERVER_DB.dblite", &db);
+
+    pass.ok = -1;
+    pass.password = Password;
+
+    sprintf(sql, "SELECT PASSWORD FROM USERS_AUTHORIZATION WHERE USER_NAME = '%s'", user_name);
+    
+    if( sqlite3_exec(db, sql, check_user_name_and_password_AUX, &pass, &errmssg) != SQLITE_OK)
+    {	
+	fprintf(stderr, "SQL error: %s\n", errmssg);
+    }
+
+    if(pass.ok == -1)
+    {
+	return -1; //wrong password
+    }
+
+    if(pass.ok == 1)
+    {
+	return 1; //right password
+    }
+}
+
+int signin_user(SSL* ssl)
+{
+    char user_name[20] = { 0 };
+    char password [20] = { 0 };
+
+    receive_buff(ssl, user_name, 20);
+    receive_buff(ssl, password, 20);
+
+    printf("username: %s, password: %s\n", user_name, password);
+    
+    int ok = check_user_name_and_password(user_name, password);
+
+    printf( "%s",  ok == -1 ? "Wrong password.\n": "Right password.\n");
+
+    return ok == -1 ? -1 : 1;
 }
 
 int authorize_client(SSL* ssl)
@@ -286,7 +354,7 @@ int authorize_client(SSL* ssl)
 	SSL_read(ssl, reg_or_log, 2);
 	printf("%s\n", atoi(reg_or_log) == 0 ? "registration" : "sign in" );
 
-	if( atoi(reg_or_log) == 0 ) // new
+	if( atoi(reg_or_log) == 0 ) // registration
 	{
 	    registrate_user( ssl );
 	    printf("Registration succeed.\n");
@@ -294,10 +362,16 @@ int authorize_client(SSL* ssl)
 
 	if( atoi(reg_or_log) == 1 ) // signing in
 	{
+	    while( signin_user( ssl ) == -1 )
+	    {
+		send_buff(ssl,"Wrong!",6);
+	    }
 
+	    send_buff(ssl,"Right!",6);
+	    
 	}
-
 }
+
 void* connection_handler(void* cl_args)
 {
 	struct handler_args* args = (struct handler_args*) cl_args;

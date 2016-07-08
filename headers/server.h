@@ -24,6 +24,12 @@ struct request_t
     int filesize;
 };
 
+struct password_and_ok
+{
+    char* password;
+    int ok;
+};
+
 void create_socket(int *socket_desc); 
 void initialize_server(struct sockaddr_in* server);
 int configure(const char* file_path);
