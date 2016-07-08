@@ -71,7 +71,7 @@ int send_file(int file_fd, SSL* ssl)
 	return 0;
 }
 
-int send_buff(SSL* ssl, const unsigned char* buf, size_t buf_size)
+int send_buff(SSL* ssl, const char* buf, size_t buf_size)
 {
     const unsigned char* tmp = buf;
     size_t sent_bytes = 0;
@@ -93,6 +93,26 @@ int send_buff(SSL* ssl, const unsigned char* buf, size_t buf_size)
     return 0;
 }
 
+int receive_buff(SSL* ssl, char* buff, int buff_size)
+{
+    memset(buff, 0, buff_size);
+    
+    int read_size = SSL_read(ssl, buff, buff_size);
+
+    if(read_size < 0)
+    {
+	handle_error("Could not read from socket");
+    }
+
+    if(read_size == 0)
+    {
+	fprintf(stderr, "%s\n","Client disconnected, corresponding thread exited");
+	pthread_exit(NULL);
+    }
+	    
+    return read_size;
+
+}
 int read_request(SSL* ssl, char request[DATA_SIZE])
 {
 	memset(request, 0, DATA_SIZE);

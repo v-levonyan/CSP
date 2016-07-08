@@ -243,12 +243,12 @@ void insert_username_password_to_db(const char* user_name, const char* password)
     sqlite3_open("SERVER_DB.dblite", &db);
     sprintf(sql, "INSERT INTO USERS_AUTHORIZATION (USER_NAME, PASSWORD) VALUES('%s','%s')",user_name, hex_hash);
     
-    printf("%s\n", sql);
-
     if( sqlite3_exec(db, sql, 0, 0, &errmssg) != SQLITE_OK )
     {
 	fprintf(stderr, "SQL error: %s\n", errmssg);     
     }
+
+    printf("%s\n", "SHA256 of the password was added to database.");
 
 }
 
@@ -264,11 +264,11 @@ int registrate_user(SSL* ssl)
     while ( (busy = lookup_for_username(user_name)) == 1)
     {
 	memset(user_name, 0, 20);
-	SSL_write(ssl,"1",1);
-	SSL_read(ssl, user_name,20);
-    }
+	send_buff(ssl, "1", 1);
+	receive_buff(ssl,user_name,20);
+   }
     
-    SSL_write(ssl,"0",1);
+    send_buff(ssl,"0",1);
 
     //demand password
 
@@ -276,7 +276,6 @@ int registrate_user(SSL* ssl)
     printf("Password received.\n");
 
     insert_username_password_to_db(user_name, password);
-
 }
 
 int authorize_client(SSL* ssl)
@@ -285,12 +284,17 @@ int authorize_client(SSL* ssl)
 	SSL_write(ssl, "Authorize!", 10);
 	
 	SSL_read(ssl, reg_or_log, 2);
-	printf("%s\n", reg_or_log);
 	printf("%s\n", atoi(reg_or_log) == 0 ? "registration" : "sign in" );
 
 	if( atoi(reg_or_log) == 0 ) // new
 	{
 	    registrate_user( ssl );
+	    printf("Registration succeed.\n");
+	}
+
+	if( atoi(reg_or_log) == 1 ) // signing in
+	{
+
 	}
 
 }
