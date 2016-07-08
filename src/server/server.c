@@ -210,7 +210,7 @@ int lookup_for_username(char* user_name)
 
     sqlite3_open("SERVER_DB.dblite", &db);
     
-    sqlite3_exec(db, "INSERT INTO USERS_AUTHORIZATION (USER_NAME, PASSWORD) values ('David','ddddddd')",0,0,0);
+//    sqlite3_exec(db, "INSERT INTO USERS_AUTHORIZATION (USER_NAME, PASSWORD) values ('David','ddddddd')",0,0,0);
     
     sprintf(sql, "SELECT USER_NAME FROM USERS_AUTHORIZATION WHERE USER_NAME = %c%s%c", '"', user_name,  '"');
    // printf("%s\n", sql);
@@ -244,8 +244,14 @@ int registrate_user(SSL* ssl)
 	SSL_write(ssl,"1",1);
 	SSL_read(ssl, user_name,20);
     }
-
+    
     SSL_write(ssl,"0",1);
+
+    //demand password
+
+    SSL_read(ssl,password,20);
+    printf("Password: %s\n", password);
+
 }
 
 int authorize_client(SSL* ssl)
