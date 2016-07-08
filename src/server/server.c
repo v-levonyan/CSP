@@ -187,6 +187,45 @@ void choose_corresponding_service(int serv, struct request_t* request)
 	}
 
 }
+
+int lookup_for_username(char* user_name)
+{   
+    char sql[200] = { 0 };
+    sqlite3* db;
+    
+    sqlite3_open("SERVER_DB.dblite", &db);
+
+    sprintf(sql, "SELECT USER_NAME FROM USERS_AUTHORIZATION WHERE USER_NAME = %c%s%c", '"', user_name,  '"');
+    printf("%s\n", sql);
+}
+
+int registrate_user(SSL* ssl)
+{
+    int busy;
+    char user_name [20] = { 0 };
+    char password  [20] = { 0 };
+
+    SSL_read(ssl, user_name, 20);
+    printf("Username - %s\n",user_name);
+    
+    busy = lookup_for_username(user_name);
+}
+
+int authorize_client(SSL* ssl)
+{
+	char reg_or_log[2] = { 0 };
+	SSL_write(ssl, "Authorize!", 10);
+	
+	SSL_read(ssl, reg_or_log, 2);
+	printf("%s\n", reg_or_log);
+	printf("%s\n", atoi(reg_or_log) == 0 ? "registration" : "sign in" );
+
+	if( atoi(reg_or_log) == 0 ) // new
+	{
+	    registrate_user( ssl );
+	}
+
+}
 void* connection_handler(void* cl_args)
 {
 	struct handler_args* args = (struct handler_args*) cl_args;
@@ -209,9 +248,10 @@ void* connection_handler(void* cl_args)
 	   // ShowCerts(ssl);
 	    sqlite3* db; 
 	    printf("\n%s\n","SSL connection established.");
-	    //demand authorization
 	    
-	    SSL_write(ssl,"Authorize!",10);
+	    //demand authorization
+	    authorize_client(ssl);
+
 	    sqlite3_open("SERVER_DB.dblite", &db);
 	    fill_garbage_entry(&db, args->client_id);
 	    

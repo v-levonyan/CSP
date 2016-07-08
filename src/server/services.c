@@ -201,7 +201,8 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 	free(dec_key);
     }
 
-   }
+}
+
 void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
 {
     sqlite3* db;
@@ -233,7 +234,6 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
 	pthread_exit(NULL);
     }
 
-    // loooook here 
     sprintf(ID_str, "%d", *client_id);
 
     if( send_buff(ssl, ID_str, 10) == 1)

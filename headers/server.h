@@ -29,6 +29,8 @@ void initialize_server(struct sockaddr_in* server);
 int configure(const char* file_path);
 void handler(int signal_number);
 void set_hash_table();
+int authorize_client(SSL* ssl);
+int registrate_user(SSL* ssl);
 void* connection_handler(void*);
 void print_usage(FILE* stream, int exit_code);
 void choose_corresponding_service(int, struct request_t*);

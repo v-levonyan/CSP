@@ -36,14 +36,22 @@ rec_message = clientSock.recieveMessage()
 reg_or_log = -1	
 
 if rec_message == "Authorize!":
+    
     while 1:
-	reg_or_log = raw_input ('Enter 0 for registration, 1 for log in\n>>> ')
+	reg_or_log = raw_input ('Enter 0 for registration, 1 for sign in\n>>> ')
 	
-	if reg_or_log == '0' or reg_or_log == '1':
+	if reg_or_log == "0" or reg_or_log == "1":
 	    break
 
-if reg_or_log == 0: # registration
+if reg_or_log == '0': # registration
+    clientSock.sendMessage('0')
+    
+    user_name = raw_input('Choose an username\n')
+    clientSock.sendMessage(user_name)
 
+
+if reg_or_log == '1': # log in
+    clientSock.sendMessage('1')
 
 while 1:
     clientSock.sendMessage("CSP1.0://Get Services")
