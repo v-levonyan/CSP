@@ -13,6 +13,6 @@ void AESencryption_decryption(size_t key_size, SSL* ssl, int* client_id);
 void set_initial_vectors( unsigned char** iv_enc, unsigned char** iv_dec);
 void set_enc_dec_keys(const unsigned char* aes_key, int key_size, AES_KEY** enc_key, AES_KEY**dec_key);
 size_t set_enc_dec_buffers(const char* plain_text, unsigned char** enc_out, unsigned char**dec_out);
-
+void print_key(const unsigned char* key, int size);
 #endif
 /*----------------------------------------------------------------------------------------------*/

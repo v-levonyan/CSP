@@ -229,6 +229,29 @@ int lookup_for_username(char* user_name)
     return 0;
 }
 
+void insert_username_password_to_db(const char* user_name, const char* password)
+{
+    unsigned char sha256_of_password[SHA256_DIGEST_LENGTH] = { 0 };
+    char* hex_hash;
+    char sql[200] = { 0 };
+    char* errmssg = 0;
+    sqlite3* db;
+    
+    SHA256(password, strlen(password), sha256_of_password);
+    string_to_hex_string(sha256_of_password, SHA256_DIGEST_LENGTH, &hex_hash);
+
+    sqlite3_open("SERVER_DB.dblite", &db);
+    sprintf(sql, "INSERT INTO USERS_AUTHORIZATION (USER_NAME, PASSWORD) VALUES('%s','%s')",user_name, hex_hash);
+    
+    printf("%s\n", sql);
+
+    if( sqlite3_exec(db, sql, 0, 0, &errmssg) != SQLITE_OK )
+    {
+	fprintf(stderr, "SQL error: %s\n", errmssg);     
+    }
+
+}
+
 int registrate_user(SSL* ssl)
 {
     int busy;
@@ -250,7 +273,9 @@ int registrate_user(SSL* ssl)
     //demand password
 
     SSL_read(ssl,password,20);
-    printf("Password: %s\n", password);
+    printf("Password received.\n");
+
+    insert_username_password_to_db(user_name, password);
 
 }
 
