@@ -50,6 +50,7 @@ int create_table_USERS_AUTHORIZATION(sqlite3** db)
 
     return 0;
 }
+
 int create_table_CLIENTS(sqlite3** db)
 {
     char* sql;

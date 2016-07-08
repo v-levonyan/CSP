@@ -188,15 +188,45 @@ void choose_corresponding_service(int serv, struct request_t* request)
 
 }
 
-int lookup_for_username(char* user_name)
-{   
-    char sql[200] = { 0 };
-    sqlite3* db;
+int look_up_aux(void* free_or_busy, int argc, char** argv, char** azColName)
+{
+    int* f_or_b = (int*) free_or_busy;
     
-    sqlite3_open("SERVER_DB.dblite", &db);
+    if(*argv != 0) //username is busy
+    {
+	*f_or_b = 1;
+	return 1;
+    }
 
+    return 0;
+}
+
+int lookup_for_username(char* user_name)
+{  
+    int free_or_busy = 0; // free
+    sqlite3* db;
+    char sql[200] = { 0 };
+    char* errmssg = 0;
+
+    sqlite3_open("SERVER_DB.dblite", &db);
+    
+    sqlite3_exec(db, "INSERT INTO USERS_AUTHORIZATION (USER_NAME, PASSWORD) values ('David','ddddddd')",0,0,0);
+    
     sprintf(sql, "SELECT USER_NAME FROM USERS_AUTHORIZATION WHERE USER_NAME = %c%s%c", '"', user_name,  '"');
-    printf("%s\n", sql);
+   // printf("%s\n", sql);
+
+    if( sqlite3_exec(db, sql, look_up_aux, &free_or_busy, &errmssg) != SQLITE_OK)
+    {	
+	fprintf(stderr, "SQL error: %s\n", errmssg);
+    }
+
+    printf("%s", free_or_busy  == 0 ? "Username was free.\n" : "Username was busy.\n");
+    
+    if( free_or_busy == 1 )
+    {
+	return 1;
+    }
+    return 0;
 }
 
 int registrate_user(SSL* ssl)
@@ -208,7 +238,14 @@ int registrate_user(SSL* ssl)
     SSL_read(ssl, user_name, 20);
     printf("Username - %s\n",user_name);
     
-    busy = lookup_for_username(user_name);
+    while ( (busy = lookup_for_username(user_name)) == 1)
+    {
+	memset(user_name, 0, 20);
+	SSL_write(ssl,"1",1);
+	SSL_read(ssl, user_name,20);
+    }
+
+    SSL_write(ssl,"0",1);
 }
 
 int authorize_client(SSL* ssl)
