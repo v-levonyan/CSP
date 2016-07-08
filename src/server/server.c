@@ -209,12 +209,9 @@ int lookup_for_username(char* user_name)
     char* errmssg = 0;
 
     sqlite3_open("SERVER_DB.dblite", &db);
-    
-//    sqlite3_exec(db, "INSERT INTO USERS_AUTHORIZATION (USER_NAME, PASSWORD) values ('David','ddddddd')",0,0,0);
-    
+   
     sprintf(sql, "SELECT USER_NAME FROM USERS_AUTHORIZATION WHERE USER_NAME = %c%s%c", '"', user_name,  '"');
-   // printf("%s\n", sql);
-
+      
     if( sqlite3_exec(db, sql, look_up_aux, &free_or_busy, &errmssg) != SQLITE_OK)
     {	
 	fprintf(stderr, "SQL error: %s\n", errmssg);

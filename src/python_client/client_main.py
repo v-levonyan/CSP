@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import os
 import socket
+import getpass
 from OpenSSL import SSL, crypto
 
 parser = argparse.ArgumentParser()
@@ -56,7 +57,7 @@ if reg_or_log == '0': # registration
 	    print 'Chosen username is busy!\n'
 	    continue
 	if int(free_or_busy) == 0: # username was free
-	    password = raw_input('Choose a password.\n>>> ')
+	    password = getpass.getpass('Choose a password.\n>>> ')
 	    clientSock.sendMessage(password)
 	    break
 
@@ -67,7 +68,7 @@ if reg_or_log == '1': # signing in
 	user_name = raw_input('Enter your username.\n>>> ')
 	clientSock.sendMessage(user_name)
     
-	password = raw_input('Enter your password.\n>>> ')
+	password = getpass.getpass('Enter your password.\n>>> ')
 	clientSock.sendMessage(password)
 	answer = clientSock.recieveMessage()
 	if answer == 'Right!':
