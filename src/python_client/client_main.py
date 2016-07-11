@@ -6,6 +6,7 @@ import hashlib
 import os
 import socket
 import getpass
+import sys
 from OpenSSL import SSL, crypto
 
 parser = argparse.ArgumentParser()
@@ -80,6 +81,10 @@ if reg_or_log == '1': # signing in
 while 1:
     clientSock.sendMessage("CSP1.0://Get Services")
     services = clientSock.recieveMessage()
+    
+    print('\nPress any button to see services.')
+    client.getchar()
+
     print services
     serviceId = input("Choose service: ")
 
