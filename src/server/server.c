@@ -249,7 +249,7 @@ void insert_username_password_to_db(const char* user_name, const char* password)
 
 }
 
-int registrate_user(SSL* ssl)
+int registrate_user(SSL* ssl, char* username)
 {
     int busy;
     char user_name [20] = { 0 };
@@ -273,6 +273,7 @@ int registrate_user(SSL* ssl)
     printf("Password received.\n");
 
     insert_username_password_to_db(user_name, password);
+    strcpy(username, user_name);
     return 0;
 }
 
@@ -326,7 +327,7 @@ int check_user_name_and_password(const char* user_name, const char* Password)
     }
 }
 
-int signin_user(SSL* ssl)
+int signin_user(SSL* ssl, char* username)
 {
     char user_name[20] = { 0 };
     char password [20] = { 0 };
@@ -339,11 +340,16 @@ int signin_user(SSL* ssl)
     int ok = check_user_name_and_password(user_name, password);
 
     printf( "%s",  ok == -1 ? "Wrong password.\n": "Right password.\n");
+    
+    if(ok == 1)
+    {
+	strcpy(username, user_name);
+    }
 
     return ok == -1 ? -1 : 1;
 }
 
-int authorize_client(SSL* ssl)
+int authorize_client(SSL* ssl, char* user_name)
 {
 	char reg_or_log[2] = { 0 };
 	SSL_write(ssl, "Authorize!", 10);
@@ -353,13 +359,13 @@ int authorize_client(SSL* ssl)
 
 	if( atoi(reg_or_log) == 0 ) // registration
 	{
-	    registrate_user( ssl );
+	    registrate_user( ssl, user_name );
 	    printf("Registration succeed.\n");
 	}
 
 	if( atoi(reg_or_log) == 1 ) // signing in
 	{
-	    while( signin_user( ssl ) == -1 )
+	    while( signin_user( ssl, user_name ) == -1 )
 	    {
 		send_buff(ssl,"Wrong!",6);
 	    }
@@ -388,15 +394,18 @@ void* connection_handler(void* cl_args)
 
 	else
 	{
+	    char user_name[20] = { 0 };
+
 	   // ShowCerts(ssl);
+	    
 	    sqlite3* db; 
 	    printf("\n%s\n","SSL connection established.");
 	    
 	    //demand authorization
-	    authorize_client(ssl);
+	    authorize_client(ssl,user_name);
 
 	    sqlite3_open("SERVER_DB.dblite", &db);
-	    fill_garbage_entry(&db, args->client_id);
+	    //fill_garbage_entry(&db, args->client_id);
 	    
 	    while ( (bytes_read = read_request(ssl, request_message)) > 0 )
 	    {
@@ -433,7 +442,7 @@ void* connection_handler(void* cl_args)
 				pthread_exit(NULL);
 			}
 
-			func(request.filesize, ssl, &(args->client_id));
+			func(request.filesize, ssl, user_name);
 
 			memset(request_message, 0, DATA_SIZE);
 	    }

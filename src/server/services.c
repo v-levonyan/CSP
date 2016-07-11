@@ -22,7 +22,7 @@
 
 #define DATA_SIZE 1024
 
-void receive_file_compute_hash_send_back(size_t filesize, SSL* ssl, int* client_id)
+void receive_file_compute_hash_send_back(size_t filesize, SSL* ssl, char* user_name)
 {
 	unsigned char hash[SHA_DIGEST_LENGTH] = { 0 };
 	ssize_t bytes_read = 0;
@@ -69,14 +69,14 @@ void print_key(const unsigned char* key, int size)
     printf("%s","\n");
 }
 
-void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
+void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
 {
     sqlite3* db;
     
     //possible memory leak
     unsigned char* key;
      
-    get_key_by_id(&db, *client_id, &key);
+//    get_key_by_id(&db, *client_id, &key);
           
     if( 4*strlen(key) != key_size) //garbage key
     {
@@ -203,10 +203,10 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, int* client_id)
 
 }
 
-void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
+void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, char* user_name)
 {
     sqlite3* db;
-    char ID_str[10] = { 0 };
+    char* key_id;
     unsigned char* key = (unsigned char*)malloc(key_size+1);
     
     memset(key, 0, key_size+1);
@@ -228,15 +228,13 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, int* client_id)
    
     printf("Key generated\n");
    
-    if (add_key_to_clients(&db, key, key_size, client_id) == 1) 
+    if (add_key_to_clients(&db, key, key_size, user_name, &key_id) == 1) 
     {
 	fprintf(stderr, "FAILURE while adding key to DB! \n");
 	pthread_exit(NULL);
     }
 
-    sprintf(ID_str, "%d", *client_id);
-
-    if( send_buff(ssl, ID_str, 10) == 1)
+    if( send_buff(ssl, key_id, SHA224_DIGEST_LENGTH+1) == 1)
     {
 	fprintf(stderr, "failure on send_buff! \n"); 
 	pthread_exit(NULL);
