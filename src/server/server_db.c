@@ -87,14 +87,15 @@ static int retrieve_key(void* key, int argc, char** argv, char** azColName)
     return 1;
 }
 
-const unsigned char* get_key_by_id(sqlite3** db, int ID, unsigned char** key)
+const unsigned char* get_key_by_id(sqlite3** db, const char* key_id, unsigned char** key)
 {
     char sql[200] = { 0 };
     char* errmssg = 0;
 
     sqlite3_open("SERVER_DB.dblite", db);
 
-    sprintf(sql, "SELECT SYMMETRIC_KEY FROM CLIENTS WHERE ID=%d", ID);
+    *key = (char*) calloc(1,0); //for error checking
+    sprintf(sql, "SELECT SYMMETRIC_KEY FROM CLIENTS WHERE KEY_ID='%s'", key_id);
 
     if( sqlite3_exec(*db, sql, retrieve_key, key, &errmssg) != SQLITE_OK)
     {
@@ -152,23 +153,19 @@ int add_key_to_clients(sqlite3** db, const unsigned char* key, int key_size, cha
 
     sqlite3_open("SERVER_DB.dblite", db);
     
-    printf("keysize %d\n", key_size);
-
     string_to_hex_string(key, key_size, &hex_key);
     string_to_hex_string(user_name, strlen(user_name), &hex_user_name);
 
     strcpy(user_name_key_concatenation, hex_user_name);
     strcat(user_name_key_concatenation, hex_key);
-    
-    printf("\n%s\n\n", user_name_key_concatenation);
+   
     SHA256(user_name_key_concatenation, strlen(user_name_key_concatenation), key_id);
     
-    string_to_hex_string(key_id, key_size, &hex_key_id);
+    string_to_hex_string(key_id, SHA256_DIGEST_LENGTH, &hex_key_id);
 
+   
     sprintf( sql, "INSERT INTO CLIENTS VALUES ('%s', '%s', '%s', %d);", user_name, hex_key_id, hex_key, key_size);
 
-    printf("%s\n", sql);
-    printf("aaaaaaaaaaaaaaaaaaaa");
     if( sqlite3_exec(*db, sql, 0, 0, &errmssg) != SQLITE_OK)	
     {
 	fprintf(stderr, "SQL error: %s\n", errmssg);
@@ -176,9 +173,9 @@ int add_key_to_clients(sqlite3** db, const unsigned char* key, int key_size, cha
 	return 1;
     }
     
-    *Key_ID = key_id;
-
-    printf("key updated.\n");
+    *Key_ID = hex_key_id;
+ 
+    printf("key inserted.\n");
 
     return 0;
 }

@@ -117,6 +117,12 @@ class clientSocket:
 	message = 'AESencr_decr:' + str(size)
 
 	self.sendMessage(message)
+
+	key_id = raw_input('Enter the key id\n>>> ')
+	
+	print 'key id: ', key_id + '\n'
+	self.sendMessage(key_id)
+
 	rec_message = self.recieveMessage();
 
 	if int(rec_message) == -1:

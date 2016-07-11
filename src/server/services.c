@@ -74,19 +74,23 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
     sqlite3* db;
     
     //possible memory leak
-    unsigned char* key;
-     
-//    get_key_by_id(&db, *client_id, &key);
-          
+    unsigned char* key = 0;
+    char key_id[SHA256_DIGEST_LENGTH * 2+1] = { 0 };
+
+    receive_buff(ssl,key_id, SHA256_DIGEST_LENGTH*2+1);
+    
+    get_key_by_id(&db, key_id, &key);
+    
     if( 4*strlen(key) != key_size) //garbage key
     {
 	send_buff(ssl, "-1",2);
-	fprintf(stderr,"%s\n", "Key didn't match chosen algorithm!\n");
+	fprintf(stderr,"%s\n", "Key didn't match to the chosen algorithm!\n");
 	return;
     }
     
+       
     else
-    {
+    {	
 	// enc/dec variables 
 	// possible memory leak
 	
@@ -219,6 +223,7 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, char* user_name)
 	    pthread_exit(NULL);
 	}
 
+	printf("sizes %d : %d\n", strlen(key), key_size);
 	if(strlen(key) == key_size)
 	{
 	    break;
@@ -234,7 +239,8 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, char* user_name)
 	pthread_exit(NULL);
     }
 
-    if( send_buff(ssl, key_id, SHA224_DIGEST_LENGTH+1) == 1)
+    printf("key_id: %s\n", key_id);
+    if( send_buff(ssl, key_id, strlen(key_id)) == 1)
     {
 	fprintf(stderr, "failure on send_buff! \n"); 
 	pthread_exit(NULL);
