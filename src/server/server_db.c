@@ -139,11 +139,11 @@ void string_to_hex_string(const unsigned char* str, size_t str_size, char** hex_
 int add_key_to_clients(sqlite3** db, const unsigned char* key, int key_size, char* user_name, char** Key_ID)
 {
     char key_id[SHA256_DIGEST_LENGTH] = { 0 }; // key_id = hash(user_name + key)
-    char* user_name_key_concatenation = (char*) malloc(strlen(user_name) + key_size + 1);
+    char* user_name_key_concatenation = (char*) malloc(200);
     char sql[200] = { 0 };
     char* errmssg = 0;
     
-    memset(user_name_key_concatenation, 0, strlen(user_name) + key_size + 1);
+    memset(user_name_key_concatenation, 0, 200);
     
     /* possible memory leak */  
     char* hex_key;
@@ -151,19 +151,24 @@ int add_key_to_clients(sqlite3** db, const unsigned char* key, int key_size, cha
     char* hex_key_id;
 
     sqlite3_open("SERVER_DB.dblite", db);
-   
+    
+    printf("keysize %d\n", key_size);
+
     string_to_hex_string(key, key_size, &hex_key);
     string_to_hex_string(user_name, strlen(user_name), &hex_user_name);
 
     strcpy(user_name_key_concatenation, hex_user_name);
     strcat(user_name_key_concatenation, hex_key);
     
+    printf("\n%s\n\n", user_name_key_concatenation);
     SHA256(user_name_key_concatenation, strlen(user_name_key_concatenation), key_id);
     
     string_to_hex_string(key_id, key_size, &hex_key_id);
 
-    sprintf( sql, "INSERT INTO CLIENTS VALUES ('%s', '%s', '%s', %d);", user_name, key_id, hex_key, key_size);
-		
+    sprintf( sql, "INSERT INTO CLIENTS VALUES ('%s', '%s', '%s', %d);", user_name, hex_key_id, hex_key, key_size);
+
+    printf("%s\n", sql);
+    printf("aaaaaaaaaaaaaaaaaaaa");
     if( sqlite3_exec(*db, sql, 0, 0, &errmssg) != SQLITE_OK)	
     {
 	fprintf(stderr, "SQL error: %s\n", errmssg);
