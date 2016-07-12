@@ -32,6 +32,46 @@ void Print_key(const unsigned char* key, int size)
     printf("%s","\n");
 }
 
+int create_table_users(sqlite3** db)
+{
+    char* sql; 
+    char* errmssg = 0;
+    int rc;
+
+    sql = "CREATE TABLE IF NOT EXISTS users(user_name TEXT PRIMARY KEY, password TEXT);";
+
+    rc = sqlite3_exec(*db, sql, 0, 0, &errmssg);
+
+    if(rc != SQLITE_OK)
+    {
+	fprintf(stderr, "SQL error: %s\n", errmssg);
+	sqlite3_free(errmssg);
+	return 1;
+    }
+
+    return 0;
+}
+
+int create_table_keys(sqlite3** db)
+{
+    char* sql;
+    char* errmssg = 0;
+    int rc;
+
+    sql = "CREATE TABLE keys(fk_user_name TEXT, key_id TEXT, symmetric_key TEXT, key_length INT, FOREIGN KEY(fk_user_name) REFERENCES users(user_name) );";
+    
+    rc = sqlite3_exec(*db, sql, 0, 0, &errmssg);
+
+    if( rc != SQLITE_OK )
+    {
+	fprintf(stderr, "SQL error: %s\n", errmssg);
+	sqlite3_free(errmssg);
+	return 1;
+    }
+
+    return 0;
+}
+
 int create_table_USERS_AUTHORIZATION(sqlite3** db)
 {
     char* sql;

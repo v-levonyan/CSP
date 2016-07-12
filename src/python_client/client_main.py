@@ -82,7 +82,7 @@ while 1:
     clientSock.sendMessage("CSP1.0://Get Services")
     services = clientSock.recieveMessage()
     
-    print('\nPress any button to see services.')
+    print('Press any button to see services.')
     client.getchar()
 
     print services
