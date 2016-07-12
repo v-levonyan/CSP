@@ -50,19 +50,19 @@ int main(int argc, char *argv[])
 
     printf("%s\n", "Database created.");
     
-    if( create_table_CLIENTS(&db) == 1)
+    if( create_table_users(&db) == 1)
     {
 	exit(EXIT_FAILURE);
     }
 
-    printf("%s\n", "Table CLIENTS created.");
+    printf("%s\n", "Table users created.");
     
-    if ( create_table_USERS_AUTHORIZATION(&db) == 1)
+    if ( create_table_keys(&db) == 1)
     {
 	exit(EXIT_FAILURE);
     }
 
-    printf("%s\n", "Table USERS_AUTHORIZATION created.");
+    printf("%s\n", "Table keys created.");
    
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));

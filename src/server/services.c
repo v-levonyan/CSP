@@ -233,7 +233,7 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, char* user_name)
    
     printf("Key generated\n");
    
-    if (add_key_to_clients(&db, key, key_size, user_name, &key_id) == 1) 
+    if (add_key_to_keys(&db, key, key_size, user_name, &key_id) == 1) 
     {
 	fprintf(stderr, "FAILURE while adding key to DB! \n");
 	pthread_exit(NULL);

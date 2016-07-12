@@ -210,7 +210,7 @@ int lookup_for_username(char* user_name)
 
     sqlite3_open("SERVER_DB.dblite", &db);
    
-    sprintf(sql, "SELECT USER_NAME FROM USERS_AUTHORIZATION WHERE USER_NAME = %c%s%c", '"', user_name,  '"');
+    sprintf(sql, "SELECT user_name FROM users WHERE USER_NAME = %c%s%c", '"', user_name,  '"');
       
     if( sqlite3_exec(db, sql, look_up_aux, &free_or_busy, &errmssg) != SQLITE_OK)
     {	
@@ -238,7 +238,7 @@ void insert_username_password_to_db(const char* user_name, const char* password)
     string_to_hex_string(sha256_of_password, SHA256_DIGEST_LENGTH, &hex_hash);
 
     sqlite3_open("SERVER_DB.dblite", &db);
-    sprintf(sql, "INSERT INTO USERS_AUTHORIZATION (USER_NAME, PASSWORD) VALUES('%s','%s')",user_name, hex_hash);
+    sprintf(sql, "INSERT INTO users (user_name, password) VALUES('%s','%s')",user_name, hex_hash);
     
     if( sqlite3_exec(db, sql, 0, 0, &errmssg) != SQLITE_OK )
     {
@@ -309,7 +309,7 @@ int check_user_name_and_password(const char* user_name, const char* Password)
     pass.ok = -1;
     pass.password = Password;
 
-    sprintf(sql, "SELECT PASSWORD FROM USERS_AUTHORIZATION WHERE USER_NAME = '%s'", user_name);
+    sprintf(sql, "SELECT password FROM users WHERE user_name = '%s'", user_name);
     
     if( sqlite3_exec(db, sql, check_user_name_and_password_AUX, &pass, &errmssg) != SQLITE_OK)
     {	

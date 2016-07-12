@@ -5,10 +5,10 @@
 /*---------------------------------------------------------------------------------------------------*/
 
 int connect_to_db(sqlite3** db, const char* name);
-int create_table_CLIENTS(sqlite3** db);
-int create_table_USERS_AUTHORIZATION(sqlite3** db);
-int add_key_to_clients(sqlite3**, const unsigned char* key, int key_size, char* user_name, char**);
-void fill_garbage_entry(sqlite3** db, int id);
+int create_table_keys(sqlite3** db);
+int create_table_users(sqlite3** db);
+int add_key_to_keys(sqlite3**, const unsigned char* key, int key_size, char* user_name, char**);
+//void fill_garbage_entry(sqlite3** db, int id);
 int retrieve_key(void* key, int argc, char** argv, char** azColName);
 void drop_table();
 const unsigned char* get_key_by_id(sqlite3** db, const char* key_id, unsigned char** key);
