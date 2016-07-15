@@ -18,7 +18,7 @@ The CSP toolkit currently includes:
 The project currently being expanded, and in near times it'll include new features. The following ara some of the feature that will be added to the product:
 
  -  Public key cryptography.                                                                                                          
- -  Eliptic key cryptography.                                                                                                         
+ -  Eliptic curve cryptography.                                                                                                         
  -  Certificates generation.                                                                                                            
 
 INSTALLATION
