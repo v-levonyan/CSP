@@ -8,42 +8,42 @@ import getpass
 import sys
 from OpenSSL import SSL, crypto
 
-def by_empty_password():
-    
-    ctx = client.context()
-    clientSock = client.clientSocket(ctx)
+SUCCESS = 777
 
-    clientSock.connect('127.0.0.1', 8888)
+def connection(clientSock, host = '127.0.0.1', port = 8888):
+
+    clientSock.connect(host, port)
     rec = clientSock.recieveMessage()
+    print 'rec ', rec, ' rec'
+    clientSock.sendMessage('0')
 
-    clientSock.sendMessage('David')
-    clientSock.sendMessage('')
-    r = clientSock.recieveMessage()#timeout = 1)
-    clientSock.shutDownAndClose()
-    return r
 
-def by_empty_login():
-    ctx = client.context()
-
-    clientSock = client.clientSocket(ctx)
-
-    clientSock.connect('127.0.0.1', 8888)
-    rec = clientSock.recieveMessage()
-
-    clientSock.sendMessage('')
-    clientSock.sendMessage('dsaf')
+def registration(clientSock, user_name = '', password = ''):
     
-    clientSock.shutDownAndClose()
+    if client.check_username(user_name) != 0:
+	return SUCCESS 
+   
+    clientSock.sendMessage(user_name)
+    free_or_busy = clientSock.recieveMessage()
+
+    return free_or_busy
+
+    if client.check_password(password) != 0:
+	return SUCCESS
+    
+    clientSock.sendMessage(password)
+   
     return clientSock.recieveMessage()#timeout = 1)
 
-def test_empty_password():
-    result = by_empty_password()
-    assert int(result) != 0
-    assert int(result) != 1
 
-def test_empty_login():
+def test_empty_login_password():
 
-    result = by_empty_login()
-    assert int(result) != 0
-    assert int(result) != 1
+    ctx = client.context() 
+    clientSock = client.clientSocket(ctx)
+    
+    connection(clientSock)
+   # registration(clientSock)
+
+    assert registration(clientSock) == SUCCESS
+ 
 

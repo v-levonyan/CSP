@@ -263,13 +263,14 @@ int registrate_user(SSL* ssl, char* username)
 	memset(user_name, 0, 20);
 	send_buff(ssl, "1", 1);
 	receive_buff(ssl,user_name,20);
-   }
+    }
     
     send_buff(ssl,"0",1);
 
     //demand password
 
     SSL_read(ssl,password,20);
+    send_buff(ssl,"0",1);
     printf("Password received.\n");
 
     insert_username_password_to_db(user_name, password);

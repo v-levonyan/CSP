@@ -285,7 +285,9 @@ def registration(clientSock):
 	    if check_password(password) != 0:
 		continue
 	    break
+	
 	clientSock.sendMessage(password)
+	password_answer = clientSock.recieveMessage()
 	return 0
 
 #if __name__ == "__main__":
