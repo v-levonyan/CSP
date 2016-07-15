@@ -2,6 +2,7 @@
 
 import socket
 import os
+import getpass
 from OpenSSL import SSL, crypto
 
 dir = os.curdir
@@ -247,7 +248,46 @@ def getchar():
 	termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 	return ch
 				          
-  
+def check_username(username):
+    if username == '':
+	print 'Empty username!\n'
+	return 1
+    if len(username) > 19:
+	print 'Long username!\n'
+	return 2
+    return 0
+
+def check_password(password):
+    if password == '':
+	print 'Empty password!\n'
+	return 1
+    if len(password) > 19:
+	print 'Long password!\n'
+	return 2
+    return 0
+
+def registration(clientSock):
+    user_name = raw_input('Choose a username.\n>>> ')
+    
+    if check_username(user_name) != 0:
+	return 1
+   
+    clientSock.sendMessage(user_name)
+    free_or_busy = clientSock.recieveMessage()
+	
+    if int(free_or_busy) == 1: # username is busy
+	print 'Chosen username is busy!\n'
+	return 1
+
+    if int(free_or_busy) == 0: # username was free    
+	while 1:
+	    password = getpass.getpass('Choose a password.\n>>> ')
+	    if check_password(password) != 0:
+		continue
+	    break
+	clientSock.sendMessage(password)
+	return 0
+
 #if __name__ == "__main__":
 #   clientSock = clientSocket()
 #    clientSock.connect("127.0.0.1", 8888)

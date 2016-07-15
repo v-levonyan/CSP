@@ -48,19 +48,8 @@ if rec_message == "Authorize!":
 if reg_or_log == '0': # registration
     clientSock.sendMessage('0')
     
-    while 1:
-	user_name = raw_input('Choose a username.\n>>> ')
-	clientSock.sendMessage(user_name)
-    
-	free_or_busy = clientSock.recieveMessage()
-	
-	if int(free_or_busy) == 1: # username is busy
-	    print 'Chosen username is busy!\n'
-	    continue
-	if int(free_or_busy) == 0: # username was free
-	    password = getpass.getpass('Choose a password.\n>>> ')
-	    clientSock.sendMessage(password)
-	    break
+    while client.registration(clientSock) == 1:
+	continue
 
 if reg_or_log == '1': # signing in
     clientSock.sendMessage('1')
