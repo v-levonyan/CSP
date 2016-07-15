@@ -231,6 +231,7 @@ class clientSocket:
     def byteToHex(self, byteStr):
 	return ''.join( [ "%01X " % ord( x ) for x in byteStr ] ).strip()
 
+
 def reg_signin():
     return raw_input ('Enter 0 for registration, 1 for sign in\n>>> ')
 
