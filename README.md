@@ -32,7 +32,7 @@ application you should have installed a few tools:
     Sqlite https://www.sqlite.org/index.html                                                                                          
     Python https://www.python.org/                                                                                                    
 
-In order to install CSP:
+In order to install CSP:                                                                                                              
 .Clone the git repository on your machine.                                                                                           
 .Change directory to the CSP directory                                                                                                
 .Type scons on your shell and run.                                                                                                   
