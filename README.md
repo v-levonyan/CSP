@@ -33,9 +33,9 @@ application you should have installed a few tools:
     Python https://www.python.org/                                                                                                    
 
 In order to install CSP:
- Clone the git repository on your machine.
- Change directory to the CSP directory  
- Type scons on your shell and run. 
+   Clone the git repository on your machine.
+   Change directory to the CSP directory  
+   Type scons on your shell and run. 
 
 If you wish to report a bug then please report to the following mail:
 david.tsaturyan.95@gmail.com
