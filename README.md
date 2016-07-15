@@ -24,7 +24,7 @@ The project currently being expanded, and in near times it'll include new featur
 INSTALLATION
 ------------
 
-The project is platform-dependent, it works only in linux platforms. Installation is quite straightforward. In order to install the 
+The project is platform-dependent, it works only on linux platforms. Installation is quite straightforward. In order to install the 
 application you should have installed a few tools:
 
     Scons http://scons.org/                                                                                                           
@@ -33,9 +33,9 @@ application you should have installed a few tools:
     Python https://www.python.org/                                                                                                    
 
 In order to install CSP:
-   Clone the git repository on your machine.
-   Change directory to the CSP directory  
-   Type scons on your shell and run. 
+.Clone the git repository on your machine.                                                                                           
+.Change directory to the CSP directory                                                                                                
+.Type scons on your shell and run.                                                                                                   
 
 If you wish to report a bug then please report to the following mail:
 david.tsaturyan.95@gmail.com
