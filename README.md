@@ -41,5 +41,6 @@ USING
 .Change directory to the src directory, and type ./server.out -c server.cfg.                                                        
 .Open new terminal, change directory to the python_client directory, and type ./client_main.py                                       
 .Use the application from the client side.                                                                          
+                                                                                                                                      
 If you wish to report a bug then please report to the following mail:
-david.tsaturyan.95@gmail.com
+    david.tsaturyan.95@gmail.com
