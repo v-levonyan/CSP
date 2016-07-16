@@ -11,6 +11,9 @@ from OpenSSL import SSL, crypto
 SUCCESS = 777
 FAILURE = -777
 
+def setup_function(function):
+    print ("Testing function: %s" % function.__name__)
+
 def connection(clientSock, host = '127.0.0.1', port = 8888):
 
     clientSock.connect(host, port)
@@ -19,7 +22,7 @@ def connection(clientSock, host = '127.0.0.1', port = 8888):
     clientSock.sendMessage('0')
 
 
-def registration(clientSock, user_name = '', password = ''):
+def registration(clientSock, user_name, password):
     
     if client.check_username(user_name) != 0:
 	clientSock.shutDownAndClose()
@@ -46,7 +49,7 @@ def test_empty_login_password():
     clientSock = client.clientSocket(ctx)
     
     connection(clientSock)
-    assert registration(clientSock) == SUCCESS
+    assert registration(clientSock, user_name = '', password = '') == SUCCESS
 
 
 def test_long_login_password():
@@ -54,7 +57,7 @@ def test_long_login_password():
     ctx = client.context() 
     clientSock = client.clientSocket(ctx)
     
-    connection(clientSock)
+    connection(clientSock) #long than 20 symbol
     assert registration(clientSock, user_name = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaa', password =
     'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb') == SUCCESS
 
@@ -100,7 +103,7 @@ def registrate_by_normal_login_password(clientSock, user_name = '', password = '
    
     clientSock.sendMessage(user_name)
     free_or_busy = clientSock.recieveMessage()
-
+    clientSock.shutDownAndClose()
     return free_or_busy
 
     if client.check_password(password) != 0:
