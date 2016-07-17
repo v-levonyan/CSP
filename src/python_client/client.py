@@ -291,6 +291,22 @@ def registration(clientSock):
 	password_answer = clientSock.recieveMessage()
 	return 0
 
+def sign_up(clientSock):
+	user_name = raw_input('Enter your username.\n>>> ')
+	clientSock.sendMessage(user_name)
+    
+	password = getpass.getpass('Enter your password.\n>>> ')
+	clientSock.sendMessage(password)
+	answer = clientSock.recieveMessage()
+	if answer == 'Right!':
+	    print 'You successfully signed up.\n'
+	    return 0
+	if answer == 'Wrong!':
+	    print 'Wrong username or password!\n'
+	    return 1
+
+
+
 #if __name__ == "__main__":
 #   clientSock = clientSocket()
 #    clientSock.connect("127.0.0.1", 8888)

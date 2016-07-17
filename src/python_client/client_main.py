@@ -54,18 +54,8 @@ if reg_or_log == '0': # registration
 if reg_or_log == '1': # signing in
     clientSock.sendMessage('1')
    
-    while 1: 
-	user_name = raw_input('Enter your username.\n>>> ')
-	clientSock.sendMessage(user_name)
-    
-	password = getpass.getpass('Enter your password.\n>>> ')
-	clientSock.sendMessage(password)
-	answer = clientSock.recieveMessage()
-	if answer == 'Right!':
-	    print 'You successfully signed up.\n'
-	    break
-	if answer == 'Wrong!':
-	    print 'Wrong password!\n'
+    while client.sign_up(clientSock) == 1:
+	continue 
 
 while 1:
     clientSock.sendMessage("CSP1.0://Get Services")
