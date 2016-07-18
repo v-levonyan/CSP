@@ -58,7 +58,6 @@ def run_program():
     return clientSock
 
 clientSock = run_program()
-#run_program()
 
 options = {
         1 : clientSock.get_sha1_file,  2 : clientSock.get_sha1_string, 3 :
@@ -86,3 +85,4 @@ def test_wrong_service_3():
 
 def test_correct_service():
     assert len(client.call_corresponding_service(7, options, clientSock)) == 64
+

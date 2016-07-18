@@ -98,13 +98,14 @@ class clientSocket:
         params = ':'.join(seq)
         
 	self.sendMessage(params)
-        if self.sendFile(f) == -2:
+
+	if self.sendFile(f) == -2:
 	    return -2
 
 	result = self.recieveMessage()
 	
 	print 'SHA1 : ',self.byteToHex(result)
-        return result
+        return self.byteToHex(result)
     
     def symmetric_key(self,num, aux = 0):
 	
@@ -223,7 +224,7 @@ class clientSocket:
 	self.sock.close()
 
     def byteToHex(self, byteStr):
-	return ''.join( [ "%01X " % ord( x ) for x in byteStr ] ).strip()
+	return ''.join( [ "%01X" % ord( x ) for x in byteStr ] ).strip()
 
 
 def reg_signin():
