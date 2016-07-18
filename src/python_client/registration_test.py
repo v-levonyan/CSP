@@ -94,8 +94,7 @@ def test_normal_login_long_password():
     assert registration(clientSock, user_name = 'david', password ='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa') == SUCCESS
 
 
-
-def registrate_by_normal_login_password(clientSock, user_name = '', password = ''):
+def registrate_by_normal_login_password(clientSock, user_name, password):
     
     if client.check_username(user_name) != 0:
 	clientSock.shutDownAndClose()

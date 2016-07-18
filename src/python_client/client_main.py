@@ -64,7 +64,7 @@ while 1:
     
     serviceId = input("Choose service: ")
 
-    if client.call_corresponding_service(serviceId, options, clientSock) == -1:
+    if client.call_corresponding_service(serviceId, options, clientSock) == -2:
 	exit()
     else:
 	continue

@@ -18,6 +18,7 @@ def verify_cb(conn, cert, errnum, depth, ok):
     print'------------------------------------------------------------------------------------------\n'
     return ok
 
+
 class context:
 
    def __init__(self, method = SSL.SSLv23_METHOD, pr_key_file = 'mycert.pem', cert_file =
@@ -200,21 +201,6 @@ class clientSocket:
 
     def recieveMessage(self, fd = -1):
 
-#        print "enter recv"
-#        chunks = []
-#        bytes_recd = 0
-#        while bytes_recd < self.MSGLEN:
-#            print "loop"
-#            chunk = self.sock.recv(min(self.MSGLEN - bytes_recd, 2048))
-#            print "chunk: ", chunk
-#            if chunk == '':
-#                raise RuntimeError(errorMessage)
-#            chunks.append(chunk)
-#            bytes_recd = bytes_recd + len(chunk)
-#            print "return message"
-#            receivedMessage = ''.join(chunks)
-#            print receivedMessage
-	             
 	try:
             receivedMessage = self.sock.recv(self.MSGLEN)
 	   # print ' Received message ', receivedMessage
@@ -293,18 +279,20 @@ def registration(clientSock):
 	return 0
 
 def sign_up(clientSock):
-	user_name = raw_input('Enter your username.\n>>> ')
-	clientSock.sendMessage(user_name)
+    user_name = raw_input('Enter your username.\n>>> ')
+    clientSock.sendMessage(user_name)
     
-	password = getpass.getpass('Enter your password.\n>>> ')
-	clientSock.sendMessage(password)
-	answer = clientSock.recieveMessage()
-	if answer == 'Right!':
-	    print 'You successfully signed up.\n'
-	    return 0
-	if answer == 'Wrong!':
-	    print 'Wrong username or password!\n'
-	    return 1
+    password = getpass.getpass('Enter your password.\n>>> ')
+    clientSock.sendMessage(password)
+    answer = clientSock.recieveMessage()
+    
+    if answer == 'Right!':
+	print 'You successfully signed up.\n'
+	return 0
+    
+    if answer == 'Wrong!':
+	print 'Wrong username or password!\n'
+	return 1
 
 def demand_services(clientSock):
     clientSock.sendMessage("CSP1.0://Get Services")
@@ -320,23 +308,18 @@ def call_corresponding_service(serviceId, options, clientSock):
      
      if serviceId < 0 or serviceId > 17:
 	print 'Wrong order'
-	return -1 #exit
+	return -2 #exit
      
      if serviceId == 2 or serviceId == 8 or serviceId == 9 or serviceId == 13 or serviceId == 14:
 	print ' Your specified order now is not available, it will be available soon\n'
-	return -1 #exit
+	return -2 #exit
 
      if serviceId > 0  and serviceId <= 12:
-	result = options.get(serviceId)(str(serviceId),0)
-	if result == -1:
-	    return 0 #continue
-     
-     if serviceId > 12 and serviceId <= 17:
-	result = options.get(serviceId)(str(serviceId),1)
-	if result == -1:
-	    return 0 #continue
-
-
+	return options.get(serviceId)(str(serviceId),0)  #continue
+     if serviceId > 12  and serviceId <= 17:
+	return options.get(serviceId)(str(serviceId),1)  #continue
+ 
+    
 #if __name__ == "__main__":
 #   clientSock = clientSocket()
 #    clientSock.connect("127.0.0.1", 8888)
