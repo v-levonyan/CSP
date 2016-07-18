@@ -64,7 +64,6 @@ class clientSocket:
             yield data
 
     def sendFile(self, inputFile, hashOrEnc = 0):
-
 	chunkSize = 100
 	if hashOrEnc == 1: #encrypt
 	   chunkSize = 15
@@ -73,8 +72,9 @@ class clientSocket:
 	try:
 	    f = open(inputFile)
 	except:
-	    print "Specified file doesn't exist\n"
-	    exit()
+	    print "Specified file doesn't exist.\n"
+	    return -2
+
 	print 'File is being sent ...\n'
         for piece in self.readInChunks(f, chunkSize):
 	    self.sendMessage(piece)
@@ -88,15 +88,22 @@ class clientSocket:
 
     def get_sha1_file(self, num, aux = 0):
         f = self.getFile()
-        fileSize = os.path.getsize(f)
-
+	try:
+	    fileSize = os.path.getsize(f)
+	except:
+	    print "Specified file doesn't exist.\n"
+	    return -2
         seq = ("1", str(fileSize))
 
         params = ':'.join(seq)
         
 	self.sendMessage(params)
-        self.sendFile(f)
-        result = self.recieveMessage()
+        if self.sendFile(f) == -2:
+	    return -2
+
+	result = self.recieveMessage()
+	
+	print 'SHA1 : ',self.byteToHex(result)
         return result
     
     def symmetric_key(self,num, aux = 0):

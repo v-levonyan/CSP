@@ -66,17 +66,4 @@ while 1:
 
     if client.call_corresponding_service(serviceId, options, clientSock) == -2:
 	exit()
-    else:
-	continue
-   
-    pretty = clientSock.byteToHex(result)
     
-    if serviceId == 1 or serviceId == 2:
-	print '\nSHA 1: ', pretty
-	print '\n'
-
-    if serviceId >=3 and serviceId <= 7:
-	print 'Symmetric key generated, ID: ', result
-	print '\n'
-    else:
-	continue
