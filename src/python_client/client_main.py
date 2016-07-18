@@ -57,33 +57,18 @@ if reg_or_log == '1': # signing in
     while client.sign_up(clientSock) == 1:
 	continue 
 
-while 1:
-    clientSock.sendMessage("CSP1.0://Get Services")
-    services = clientSock.recieveMessage()
-    
-    print('Press any button to see services.')
-    client.getchar()
 
-    print services
+while 1:
+
+    client.demand_services(clientSock)
+    
     serviceId = input("Choose service: ")
 
-    if serviceId < 0 or serviceId > 17:
-	print 'Wrong order'
-	exit(1)
-    if serviceId == 2 or serviceId == 8 or serviceId == 9 or serviceId == 13 or serviceId == 14:
-	print ' Your specified order now is not available, it will be available soon\n'
+    if client.call_corresponding_service(serviceId, options, clientSock) == -1:
 	exit()
-
-    if serviceId > 0  and serviceId <= 12:
-	result = options.get(serviceId)(str(serviceId),0)
-	if result == -1:
-	    continue
-
-    if serviceId > 12 and serviceId <= 17:
-	result = options.get(serviceId)(str(serviceId),1)
-	if result == -1:
-	    continue
-    
+    else:
+	continue
+   
     pretty = clientSock.byteToHex(result)
     
     if serviceId == 1 or serviceId == 2:

@@ -108,6 +108,7 @@ class clientSocket:
 	
 	self.sendMessage(params)
 	result = self.recieveMessage()
+	print 'Key ID: ', result
 	return result
     
     def AES_encr_decr(self, num, aux = 0):
@@ -305,6 +306,35 @@ def sign_up(clientSock):
 	    print 'Wrong username or password!\n'
 	    return 1
 
+def demand_services(clientSock):
+    clientSock.sendMessage("CSP1.0://Get Services")
+    services = clientSock.recieveMessage()
+    
+    print('Press any button to see services.')
+    getchar()
+
+    print services
+
+
+def call_corresponding_service(serviceId, options, clientSock):
+     
+     if serviceId < 0 or serviceId > 17:
+	print 'Wrong order'
+	return -1 #exit
+     
+     if serviceId == 2 or serviceId == 8 or serviceId == 9 or serviceId == 13 or serviceId == 14:
+	print ' Your specified order now is not available, it will be available soon\n'
+	return -1 #exit
+
+     if serviceId > 0  and serviceId <= 12:
+	result = options.get(serviceId)(str(serviceId),0)
+	if result == -1:
+	    return 0 #continue
+     
+     if serviceId > 12 and serviceId <= 17:
+	result = options.get(serviceId)(str(serviceId),1)
+	if result == -1:
+	    return 0 #continue
 
 
 #if __name__ == "__main__":
