@@ -322,10 +322,17 @@ RSA* RSA_generate_kay_pair()
 
 void RSA_key(size_t key_size, SSL*  ssl, char* user_name)
 {
-    SSL_write(ssl, "Hello", 5);
+    char* pub_key;
+    char* priv_key;
+
+    RSA* keypair = RSA_generate_kay_pair();
+    
+    RSA_get_public_and_private(&keypair, &pub_key, &priv_key);
+    
+    SSL_write(ssl, priv_key, strlen(priv_key));
 
 }
-void RSA_get_public_and_private(char* msg, RSA** keypair)
+void RSA_get_public_and_private(RSA** keypair, char** priv, char** publ)
 {
     BIO* pri = BIO_new(BIO_s_mem());
     BIO* pub = BIO_new(BIO_s_mem());
@@ -344,6 +351,9 @@ void RSA_get_public_and_private(char* msg, RSA** keypair)
 
     pri_key[pri_len] = '\0';
     pub_key[pub_len] = '\0';
-
+    
+    *priv = pri_key;
+    *publ = pub_key;
+    
     printf("\n%s\n%s\n", pri_key, pub_key);
 }

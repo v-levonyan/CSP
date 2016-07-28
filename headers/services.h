@@ -17,7 +17,7 @@ size_t set_enc_dec_buffers(const char* plain_text, unsigned char** enc_out, unsi
 void print_key(const unsigned char* key, int size);
 void RSA_key(size_t key_size, SSL* ssl, char* user_name);
 RSA* RSA_generate_kay_pair();
-void RSA_get_public_and_private(char* msg, RSA** keypair);
+void RSA_get_public_and_private(RSA** keypair, char** priv, char** publ);
 
 #endif
 /*----------------------------------------------------------------------------------------------*/

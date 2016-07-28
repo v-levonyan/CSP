@@ -34,7 +34,7 @@ class context:
 class clientSocket:
 
     errorMessage = "socket connection broken"
-    MSGLEN = 2024
+    MSGLEN = 1024
     
     def __init__(self, ctx, sock=None):
         if sock is None:
