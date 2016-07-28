@@ -1,5 +1,5 @@
 
-CSP 1.0 
+CSP 1.0.0
 _______________________________________________________________________
 
 Enter the corresponding number
@@ -24,4 +24,9 @@ Enter the corresponding number
 10 - AES128 encryption 				15 - AES128  decryption
 11 - AES192 encryption 				16 - AES192  decryption
 12 - AES256 encryption 				17 - AES256  decryption
+
+-------------------------RSA key generation----------------------------
+                                                                       
+18 - Generate RSA key pair and get public one
+                                                                       
 _______________________________________________________________________

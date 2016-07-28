@@ -34,7 +34,7 @@ class context:
 class clientSocket:
 
     errorMessage = "socket connection broken"
-    MSGLEN = 1024
+    MSGLEN = 2024
     
     def __init__(self, ctx, sock=None):
         if sock is None:
@@ -107,6 +107,18 @@ class clientSocket:
 	print 'SHA1 : ',self.byteToHex(result)
         return self.byteToHex(result)
     
+    def RSA_key(self, num, aux = 0):
+	
+	seq = (num, '2048')
+	params = ':'.join(seq)
+
+	self.sendMessage(params)
+	result = self.recieveMessage()
+	
+	print result
+	
+	return result
+
     def symmetric_key(self,num, aux = 0):
 	
 	CorrespondingKey = { '3' : '7', '4' : '21', '5' : '16', '6' : '24', '7' : '32' }
@@ -304,17 +316,20 @@ def sign_up(clientSock):
 
 def demand_services(clientSock):
     clientSock.sendMessage("CSP1.0://Get Services")
-    services = clientSock.recieveMessage()
     
     print('Press any button to see services.')
     getchar()
 
-    print services
-
+    while 1:
+	services = clientSock.recieveMessage()
+	if services == 'END':
+	    break
+	else:
+	    print services
 
 def call_corresponding_service(serviceId, options, clientSock):
      
-     if serviceId < 0 or serviceId > 17:
+     if serviceId < 0 or serviceId > 18:
 	print 'Wrong order'
 	return -2 #exit
      
@@ -324,7 +339,7 @@ def call_corresponding_service(serviceId, options, clientSock):
 
      if serviceId > 0  and serviceId <= 12:
 	return options.get(serviceId)(str(serviceId),0)  #continue
-     if serviceId > 12  and serviceId <= 17:
+     if serviceId > 12  and serviceId <= 18:
 	return options.get(serviceId)(str(serviceId),1)  #continue
  
     

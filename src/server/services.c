@@ -8,6 +8,12 @@
 #include <pthread.h>
 #include <openssl/rand.h>
 #include <sys/stat.h>
+#include <openssl/pem.h>
+#include <openssl/ssl.h>
+#include <openssl/rsa.h>
+#include <openssl/evp.h>
+#include <openssl/bio.h>
+#include <openssl/err.h>
 
 #include "sqlite3.h"
 #include "openssl/ssl.h"
@@ -309,3 +315,35 @@ void decrypt_AES(unsigned char* enc_out, unsigned char** dec_out, size_t encslen
     AES_cbc_encrypt(enc_out, *dec_out, encslength, *dec_key, *iv_dec, AES_DECRYPT);
 }
 
+RSA* RSA_generate_kay_pair()
+{
+    return RSA_generate_key(2048,3,NULL,NULL);
+}
+
+void RSA_key(size_t key_size, SSL*  ssl, char* user_name)
+{
+    SSL_write(ssl, "Hello", 5);
+
+}
+void RSA_get_public_and_private(char* msg, RSA** keypair)
+{
+    BIO* pri = BIO_new(BIO_s_mem());
+    BIO* pub = BIO_new(BIO_s_mem());
+
+    PEM_write_bio_RSAPrivateKey(pri, *keypair, NULL, NULL, 0, NULL, NULL);
+    PEM_write_bio_RSAPublicKey(pub, *keypair);
+
+    size_t pri_len = BIO_pending(pri);
+    size_t pub_len = BIO_pending(pub);
+
+    char* pri_key = malloc(pri_len + 1);
+    char* pub_key = malloc(pub_len + 1);
+
+    BIO_read(pri, pri_key, pri_len);
+    BIO_read(pub, pub_key, pub_len);
+
+    pri_key[pri_len] = '\0';
+    pub_key[pub_len] = '\0';
+
+    printf("\n%s\n%s\n", pri_key, pub_key);
+}

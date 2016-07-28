@@ -141,6 +141,8 @@ void set_hash_table()
 	addToHashTable(ht,"symmetric_key",add_symmetric_key_to_db_send_id);
 	addToHashTable(ht,"compute_file_hash", receive_file_compute_hash_send_back);
 	addToHashTable(ht,"AESencr_decr", AESencryption_decryption);
+	addToHashTable(ht, "RSA_key", RSA_key);
+
 }
 
 void choose_corresponding_service(int serv, struct request_t* request)
@@ -183,7 +185,9 @@ void choose_corresponding_service(int serv, struct request_t* request)
 	    case 12:
 		strcpy(request->query, "AESencr_decr");
 		break;
-
+	    case 18:
+		strcpy(request->query, "RSA_key");
+		break;
 	}
 
 }

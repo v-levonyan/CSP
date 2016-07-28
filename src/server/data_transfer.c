@@ -67,6 +67,8 @@ int send_file(int file_fd, SSL* ssl)
 		} 
 
 	}
+    
+	SSL_write(ssl, "END", 3);
 
 	return 0;
 }
