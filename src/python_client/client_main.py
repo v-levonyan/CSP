@@ -31,7 +31,8 @@ options = {
 	clientSock.symmetric_key,      8 : clientSock.DES_encr_decr, 9  : clientSock.DES_encr_decr,
 	10 : clientSock.AES_encr_decr, 11 : clientSock.AES_encr_decr, 12 :
 	clientSock.AES_encr_decr, 13 : clientSock.DES_encr_decr, 14 : clientSock.DES_encr_decr, 15 :
-	clientSock.AES_encr_decr, 16 : clientSock.AES_encr_decr, 17 : clientSock.AES_encr_decr, 18 : clientSock.RSA_key}
+	clientSock.AES_encr_decr, 16 : clientSock.AES_encr_decr, 17 : clientSock.AES_encr_decr,
+	18 : clientSock.RSA_key, 19 : clientSock.RSA_encryption}
 	
 rec_message = clientSock.recieveMessage()
 

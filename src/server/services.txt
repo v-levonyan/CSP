@@ -27,6 +27,9 @@ Enter the corresponding number
 
 -------------------------RSA key generation----------------------------
                                                                        
-18 - Generate RSA (public,private) key pair and get public one
-                                                                       
+18 - Generate RSA2048 (public,private) key pair and get public one
+
+---------------------------RSA encryption------------------------------
+                                                                                                                  
+19 - RSA encryption                            
 _______________________________________________________________________

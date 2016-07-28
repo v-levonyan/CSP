@@ -142,7 +142,7 @@ void set_hash_table()
 	addToHashTable(ht,"compute_file_hash", receive_file_compute_hash_send_back);
 	addToHashTable(ht,"AESencr_decr", AESencryption_decryption);
 	addToHashTable(ht, "RSA_key", RSA_key);
-
+	addToHashTable(ht, "RSA_encrypt", RSA_encrypt_m);
 }
 
 void choose_corresponding_service(int serv, struct request_t* request)

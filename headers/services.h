@@ -18,6 +18,8 @@ void print_key(const unsigned char* key, int size);
 void RSA_key(size_t key_size, SSL* ssl, char* user_name);
 RSA* RSA_generate_kay_pair();
 void RSA_get_public_and_private(RSA** keypair, char** priv, char** publ);
-
+RSA* createRSA(unsigned char* key, int public);
+int RSA_public_encrypt_m(char* data, int data_len, unsigned char* key, unsigned char* encrypted);
+void RSA_encrypt_m(size_t size, SSL*  ssl, char* user_name);
 #endif
 /*----------------------------------------------------------------------------------------------*/

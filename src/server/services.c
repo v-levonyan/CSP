@@ -332,6 +332,7 @@ void RSA_key(size_t key_size, SSL*  ssl, char* user_name)
     SSL_write(ssl, priv_key, strlen(priv_key));
 
 }
+
 void RSA_get_public_and_private(RSA** keypair, char** priv, char** publ)
 {
     BIO* pri = BIO_new(BIO_s_mem());
@@ -357,3 +358,44 @@ void RSA_get_public_and_private(RSA** keypair, char** priv, char** publ)
     
     printf("\n%s\n%s\n", pri_key, pub_key);
 }
+
+RSA* createRSA(unsigned char* key, int public) 
+//Create RSA variable for public/private
+//Usage for public key: createRSA(“PUBLIC_KEY_BUFFER”,1);
+//Usage for private key: createRSA(“PRIVATE_KEY_BUFFER”,0);
+{
+    RSA* rsa = NULL;
+    BIO* keybio;
+    keybio = BIO_new_mem_buf(key, -1);
+    
+    if (keybio==NULL)
+    {
+	printf( "Failed to create key BIO");
+	return 0;
+    }
+
+    if(public)
+    {
+	rsa = PEM_read_bio_RSA_PUBKEY(keybio, &rsa, NULL, NULL);
+    }
+    
+    else
+    {
+	rsa = PEM_read_bio_RSAPrivateKey(keybio, &rsa, NULL, NULL);
+    }
+							 
+    return rsa;
+}
+
+int RSA_public_encrypt_m(char* data, int data_len, unsigned char* key, unsigned char* encrypted)
+//m for mine
+{
+    RSA* rsa = createRSA(key,1);
+    int result = RSA_public_encrypt(data_len, data, encrypted, rsa, RSA_PKCS1_PADDING);
+    return result;
+}
+
+void RSA_encrypt_m(size_t size, SSL*  ssl, char* user_name)
+{
+    return; 
+} 

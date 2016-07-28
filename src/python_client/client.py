@@ -118,6 +118,12 @@ class clientSocket:
 	print result
 	
 	return result
+    
+    def RSA_encryption(self, num, aux = 0)
+	seq(num, '-1')
+	params = ':'.join(seq)
+
+	self.sendMessage(params)
 
     def symmetric_key(self,num, aux = 0):
 	
@@ -329,7 +335,7 @@ def demand_services(clientSock):
 
 def call_corresponding_service(serviceId, options, clientSock):
      
-     if serviceId < 0 or serviceId > 18:
+     if serviceId < 0 or serviceId > 19:
 	print 'Wrong order'
 	return -2 #exit
      
