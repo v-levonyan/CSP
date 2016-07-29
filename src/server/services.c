@@ -395,7 +395,13 @@ int RSA_public_encrypt_m(char* data, int data_len, unsigned char* key, unsigned 
     return result;
 }
 
-void RSA_encrypt_m(size_t size, SSL*  ssl, char* user_name)
+void RSA_encrypt_m(size_t key_size, SSL*  ssl, char* user_name)
 {
-    return; 
-} 
+    char buf[10] = { 0 };
+
+    SSL_read(ssl, buf, 8);
+
+    printf("buf: %s\n", buf);
+}
+
+

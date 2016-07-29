@@ -119,11 +119,13 @@ class clientSocket:
 	
 	return result
     
-    def RSA_encryption(self, num, aux = 0)
-	seq(num, '-1')
+    def RSA_encryption(self, num, aux = 0):
+	seq = (num, '-1')
 	params = ':'.join(seq)
-
+	
+	print '------------------------ ',params
 	self.sendMessage(params)
+	self.sendMessage('hello')
 
     def symmetric_key(self,num, aux = 0):
 	
@@ -345,7 +347,7 @@ def call_corresponding_service(serviceId, options, clientSock):
 
      if serviceId > 0  and serviceId <= 12:
 	return options.get(serviceId)(str(serviceId),0)  #continue
-     if serviceId > 12  and serviceId <= 18:
+     if serviceId > 12  and serviceId <= 19:
 	return options.get(serviceId)(str(serviceId),1)  #continue
  
     

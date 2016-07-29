@@ -142,7 +142,8 @@ void set_hash_table()
 	addToHashTable(ht,"compute_file_hash", receive_file_compute_hash_send_back);
 	addToHashTable(ht,"AESencr_decr", AESencryption_decryption);
 	addToHashTable(ht, "RSA_key", RSA_key);
-	addToHashTable(ht, "RSA_encrypt", RSA_encrypt_m);
+	addToHashTable(ht,"encryptik",RSA_encrypt_m); //##### change the name #####
+
 }
 
 void choose_corresponding_service(int serv, struct request_t* request)
@@ -188,6 +189,10 @@ void choose_corresponding_service(int serv, struct request_t* request)
 	    case 18:
 		strcpy(request->query, "RSA_key");
 		break;
+	    case 19:
+		strcpy(request->query, "encryptik"); //##### change the name #####
+		break;
+
 	}
 
 }
