@@ -178,6 +178,26 @@ void string_to_hex_string(const unsigned char* str, size_t str_size, char** hex_
 }
 */
 
+int add_RSA_key_pair_to_keys(const unsigned char* public_key, const unsigned char* private_key, const char* user_name)
+{
+    sqlite3* db;
+    char* errmssg = 0;
+    char sql[7000] = { 0 };
+    
+    sqlite3_open("SERVER_DB.dblite", &db);
+     
+    sprintf( sql, "INSERT INTO keys(fk_user_name, RSA_public_key, RSA_private_key) VALUES('%s', '%s', '%s');", user_name, public_key, private_key);
+
+    if( sqlite3_exec(db, sql, 0, 0, &errmssg) != SQLITE_OK)	
+    {
+	fprintf(stderr, "SQL error: %s\n", errmssg);
+	sqlite3_free(errmssg);
+	return 1;
+    }
+
+    return 0;
+}
+
 int add_key_to_keys(sqlite3** db, const unsigned char* key, int key_size, char* user_name, char** Key_ID)
 {
     char key_id[SHA256_DIGEST_LENGTH] = { 0 }; // key_id = hash(user_name + key)

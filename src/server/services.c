@@ -322,17 +322,21 @@ RSA* RSA_generate_kay_pair()
 
 void RSA_key(size_t key_size, SSL*  ssl, char* user_name)
 {
-    char* pub_key;
-    char* priv_key;
+    unsigned char* pub_key;
+    unsigned char* priv_key;
 
     RSA* keypair = RSA_generate_kay_pair();
     
     RSA_get_public_and_private(&keypair, &priv_key, &pub_key);
     
-    //printf("puuub: %s\n", pub_key);
-    SSL_write(ssl, pub_key, strlen(pub_key));	
+    if( add_RSA_key_pair_to_keys(pub_key, priv_key, user_name) == 1)
+    {
+	pthread_exit(NULL);
+    }
+
+    send_buff(ssl, pub_key, strlen(pub_key));	
     SSL_write(ssl,"END", 3);
-    printf("%s\n", "Generated RSA 2048 bit public/private key pair, public one sent to client.");
+    printf("%s\n", "Generated RSA 2048 bit public/private key pair and added to database, public one sent to client.");
 }
 
 void RSA_get_public_and_private(RSA** keypair, char** priv, char** publ)
