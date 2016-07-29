@@ -128,7 +128,7 @@ class clientSocket:
 		fd.write(rec_m)
 	    else:
 		fd.close()
-		print 'RSA public key file, is in your current directory with name ', public_RSA,  '\n'
+		print 'RSA public key file is in your current directory with name ', public_RSA,  '\n'
 		break   	
 
 	return 1
@@ -149,12 +149,15 @@ class clientSocket:
 
 	pub_key = raw_input('Enter the public RSA key pathname.\n>>> ')
 	
-	if self.sendFile(pub_key) == -2:
+	try:
+	    f = open(pub_key)
+	    self.sendMessage('0')
+	except:
+	    print "Specified file doesn't exist.\n"
 	    self.sendMessage('1') #Specified file doesn't exist
 	    return 
 
-	self.sendMessage('0')
-	
+	self.sendFile(pub_key)	
 	self.sendMessage('##END##')
 
     def symmetric_key(self,num, aux = 0):
