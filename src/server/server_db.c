@@ -58,7 +58,7 @@ int create_table_keys(sqlite3** db)
     char* errmssg = 0;
     int rc;
 
-    sql = "CREATE TABLE keys(fk_user_name TEXT, key_id TEXT, symmetric_key TEXT, key_length INT, FOREIGN KEY(fk_user_name) REFERENCES users(user_name) );";
+    sql = "CREATE TABLE keys(fk_user_name TEXT, key_id TEXT, symmetric_key TEXT, key_length INT, RSA_public_key TEXT, RSA_private_key TEXT,FOREIGN KEY(fk_user_name) REFERENCES users(user_name) );";
     
     rc = sqlite3_exec(*db, sql, 0, 0, &errmssg);
 
@@ -205,7 +205,7 @@ int add_key_to_keys(sqlite3** db, const unsigned char* key, int key_size, char* 
     string_to_hex_string(key_id, SHA256_DIGEST_LENGTH, &hex_key_id);
 
    
-    sprintf( sql, "INSERT INTO keys VALUES ('%s', '%s', '%s', %d);", user_name, hex_key_id, hex_key, key_size);
+    sprintf( sql, "INSERT INTO keys VALUES ('%s', '%s', '%s', %d, '%s', '%s');", user_name, hex_key_id, hex_key, key_size, "-1", "-1");
 
     if( sqlite3_exec(*db, sql, 0, 0, &errmssg) != SQLITE_OK)	
     {
