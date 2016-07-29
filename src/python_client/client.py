@@ -119,8 +119,6 @@ class clientSocket:
 
 	public_RSA = 'public_RSA' + '.txt'
 	
-#	encr_name = encrypted_file_name[0:10] + encrypted_file_name[index_of_slash+1 : len(encrypted_file_name)]
-
 	fd = open(public_RSA,'w+')
 	
 	while 1:
@@ -140,11 +138,23 @@ class clientSocket:
 	params = ':'.join(seq)
 	
 	self.sendMessage(params)
-	message = raw_input('Enter the message to encrypt(no more than 200 symbols)\n>>> ')
-	self.sendMessage(message)   
+	
+	while 1:
+	    message = raw_input('Enter the message to encrypt(no more than 200 symbols)\n>>> ')
+	    if message == '' or len(message) >= 200:
+		continue
+	    else:
+		self.sendMessage(message)   
+		break
 
-	pub_key = raw_input('Enter the public RSA key pathname (.pem format)\n>>> ')
-	self.sendFile(pub_key)
+	pub_key = raw_input('Enter the public RSA key pathname.\n>>> ')
+	
+	if self.sendFile(pub_key) == -2:
+	    self.sendMessage('1') #Specified file doesn't exist
+	    return 
+
+	self.sendMessage('0')
+	
 	self.sendMessage('##END##')
 
     def symmetric_key(self,num, aux = 0):

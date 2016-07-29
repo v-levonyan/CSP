@@ -409,12 +409,22 @@ void get_message_to_encrypt_RSA(SSL* ssl, char** message)
     *message = mssg;
 }
 
-void get_public_RSA_key(SSL* ssl, unsigned char** public_key)
+int get_public_RSA_key(SSL* ssl, unsigned char** public_key)
 {
     int bytes_read; 
     unsigned char* pub_key  = (unsigned char*) malloc(2048);
     char* tmp = pub_key;
-    
+    char ok;
+
+
+    SSL_read(ssl, &ok, 1);
+
+    if(ok == '1') //CLient's specified file didn't exist
+    {
+	fprintf(stderr,"%s","Wrong public key pathname from client.\n");
+	return 1; 
+    }
+
     memset(pub_key, 0, 2048);
 
     while(1)
@@ -435,6 +445,7 @@ void get_public_RSA_key(SSL* ssl, unsigned char** public_key)
     }
     
     *public_key = pub_key;
+    return 0;
 }
 void RSA_encrypt_m(size_t key_size, SSL*  ssl, char* user_name)
 {
@@ -444,6 +455,8 @@ void RSA_encrypt_m(size_t key_size, SSL*  ssl, char* user_name)
     get_message_to_encrypt_RSA(ssl, &message);
     printf("Message: %s\n", message);
 
-    get_public_RSA_key(ssl, &pub_key);
+    if ( get_public_RSA_key(ssl, &pub_key) == 1)
+	return;
+
     printf("\nRSA public key:\n%s\n",pub_key);
 }
