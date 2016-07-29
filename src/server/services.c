@@ -327,10 +327,12 @@ void RSA_key(size_t key_size, SSL*  ssl, char* user_name)
 
     RSA* keypair = RSA_generate_kay_pair();
     
-    RSA_get_public_and_private(&keypair, &pub_key, &priv_key);
+    RSA_get_public_and_private(&keypair, &priv_key, &pub_key);
     
-    SSL_write(ssl, priv_key, strlen(priv_key));
-
+    //printf("puuub: %s\n", pub_key);
+    SSL_write(ssl, pub_key, strlen(pub_key));	
+    SSL_write(ssl,"END", 3);
+    printf("%s\n", "Generated RSA 2048 bit public/private key pair, public one sent to client.");
 }
 
 void RSA_get_public_and_private(RSA** keypair, char** priv, char** publ)
@@ -356,7 +358,7 @@ void RSA_get_public_and_private(RSA** keypair, char** priv, char** publ)
     *priv = pri_key;
     *publ = pub_key;
     
-    printf("\n%s\n%s\n", pri_key, pub_key);
+//    printf("\n%s\n%s\n", pri_key, pub_key);
 }
 
 RSA* createRSA(unsigned char* key, int public) 
@@ -395,13 +397,53 @@ int RSA_public_encrypt_m(char* data, int data_len, unsigned char* key, unsigned 
     return result;
 }
 
-void RSA_encrypt_m(size_t key_size, SSL*  ssl, char* user_name)
+
+void get_message_to_encrypt_RSA(SSL* ssl, char** message)
 {
-    char buf[10] = { 0 };
-
-    SSL_read(ssl, buf, 8);
-
-    printf("buf: %s\n", buf);
+    char* mssg;
+    mssg = (char*) malloc(200);
+    
+    memset(mssg, 0, 200);
+    receive_buff(ssl, mssg, 200);
+    
+    *message = mssg;
 }
 
+void get_public_RSA_key(SSL* ssl, unsigned char** public_key)
+{
+    int bytes_read; 
+    unsigned char* pub_key  = (unsigned char*) malloc(2048);
+    char* tmp = pub_key;
+    
+    memset(pub_key, 0, 2048);
 
+    while(1)
+    {
+	bytes_read = SSL_read(ssl, tmp, 100);
+    
+	if(bytes_read == -1)
+	{
+	    handle_error("data wasn't read");
+	}
+
+	if(strcmp(tmp,"##END##") == 0)
+	{
+	    memset(tmp, 0, 7);
+	    break;
+	}
+	tmp += bytes_read;
+    }
+    
+    *public_key = pub_key;
+}
+void RSA_encrypt_m(size_t key_size, SSL*  ssl, char* user_name)
+{
+    char* message;
+    unsigned char* pub_key;
+
+    get_message_to_encrypt_RSA(ssl, &message);
+    printf("Message: %s\n", message);
+
+    get_public_RSA_key(ssl, &pub_key);
+    printf("\nRSA public key:\n%s\n",pub_key);
+}

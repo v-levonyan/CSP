@@ -29,7 +29,7 @@ Enter the corresponding number
                                                                        
 18 - Generate RSA2048 (public,private) key pair and get public one
 
----------------------------RSA encryption------------------------------
-                                                                                                                  
+--------------------------RSA encryption-------------------------------   
+                                                                                     
 19 - RSA encryption                            
 _______________________________________________________________________

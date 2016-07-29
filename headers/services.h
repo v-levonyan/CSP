@@ -20,6 +20,8 @@ RSA* RSA_generate_kay_pair();
 void RSA_get_public_and_private(RSA** keypair, char** priv, char** publ);
 RSA* createRSA(unsigned char* key, int public);
 int RSA_public_encrypt_m(char* data, int data_len, unsigned char* key, unsigned char* encrypted);
+void get_message_to_encrypt_RSA(SSL* ssl, char** message);
+void get_public_RSA_key(SSL* ssl, unsigned char** public_key);
 void RSA_encrypt_m(size_t filesize, SSL*  ssl, char* user_name);
 
 #endif

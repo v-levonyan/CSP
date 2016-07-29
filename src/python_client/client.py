@@ -113,19 +113,39 @@ class clientSocket:
 	params = ':'.join(seq)
 
 	self.sendMessage(params)
-	result = self.recieveMessage()
+	#result = self.recieveMessage()
 	
-	print result
+	#print result
+
+	public_RSA = 'public_RSA' + '.txt'
 	
-	return result
+#	encr_name = encrypted_file_name[0:10] + encrypted_file_name[index_of_slash+1 : len(encrypted_file_name)]
+
+	fd = open(public_RSA,'w+')
+	
+	while 1:
+	    rec_m = self.recieveMessage(-1)
+		
+	    if rec_m != "END":
+		fd.write(rec_m)
+	    else:
+		fd.close()
+		print 'RSA public key file, is in your current directory with name ', public_RSA,  '\n'
+		break   	
+
+	return 1
     
     def RSA_encryption(self, num, aux = 0):
 	seq = (num, '-1')
 	params = ':'.join(seq)
 	
-	print '------------------------ ',params
 	self.sendMessage(params)
-	self.sendMessage('hello')
+	message = raw_input('Enter the message to encrypt(no more than 200 symbols)\n>>> ')
+	self.sendMessage(message)   
+
+	pub_key = raw_input('Enter the public RSA key pathname (.pem format)\n>>> ')
+	self.sendFile(pub_key)
+	self.sendMessage('##END##')
 
     def symmetric_key(self,num, aux = 0):
 	
