@@ -367,21 +367,25 @@ def demand_services(clientSock):
 
 def call_corresponding_service(serviceId, options, clientSock):
      
-     if serviceId < 0 or serviceId > 19:
-	print 'Wrong order'
-	return -2 #exit
-     
-     if serviceId == 2 or serviceId == 8 or serviceId == 9 or serviceId == 13 or serviceId == 14:
-	print ' Your specified order now is not available, it will be available soon\n'
-	return -2 #exit
+     while 1:  
+	
+	if serviceId < 0 or serviceId > 19:
+	    print 'Wrong order'
+	    serviceId = input('Choose a service again\n')
+	    continue
 
-     if serviceId > 0  and serviceId <= 12:
-	return options.get(serviceId)(str(serviceId),0)  #continue
-     if serviceId > 12  and serviceId <= 19:
-	return options.get(serviceId)(str(serviceId),1)  #continue
- 
-    
-#if __name__ == "__main__":
-#   clientSock = clientSocket()
-#    clientSock.connect("127.0.0.1", 8888)
+	if serviceId == 2 or serviceId == 8 or serviceId == 9 or serviceId == 13 or serviceId == 14:
+	    print ' Your specified order now is not available, it will be available soon\n'
+	    serviceId = input('Choose a service again\n')
+	    continue
+
+	if serviceId > 0  and serviceId <= 12:
+	    return options.get(serviceId)(str(serviceId),0)  #continue
+	if serviceId > 12  and serviceId <= 19:
+	    return options.get(serviceId)(str(serviceId),1)  #continue
+     
+	else:
+	    print 'Wrong order'
+	    serviceId = input('Choose a service again\n')
+	    continue
 
