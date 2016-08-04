@@ -58,8 +58,8 @@ int create_table_keys(sqlite3** db)
     char* errmssg = 0;
     int rc;
 
-    sql = "CREATE TABLE keys(fk_user_name TEXT, key_id TEXT, symmetric_key TEXT, key_length INT, RSA_public_key TEXT, RSA_private_key TEXT,FOREIGN KEY(fk_user_name) REFERENCES users(user_name) );";
-    
+    sql = "CREATE TABLE keys(fk_user_name TEXT, symmetric_key_id TEXT, symmetric_key TEXT,key_length INT,RSA_public_key TEXT, RSA_private_key TEXT,RSA_private_id INTEGER PRIMARY KEY AUTOINCREMENT,FOREIGN KEY(fk_user_name) REFERENCES users(user_name) );";
+
     rc = sqlite3_exec(*db, sql, 0, 0, &errmssg);
 
     if( rc != SQLITE_OK )
@@ -136,7 +136,7 @@ const unsigned char* get_key_by_id(sqlite3** db, const char* key_id, unsigned ch
     sqlite3_open("SERVER_DB.dblite", db);
 
     *key = (char*) calloc(1,0); //for error checking
-    sprintf(sql, "SELECT SYMMETRIC_KEY FROM keys WHERE KEY_ID='%s'", key_id);
+    sprintf(sql, "SELECT SYMMETRIC_KEY FROM keys WHERE symmetric_key_id='%s'", key_id);
 
     if( sqlite3_exec(*db, sql, retrieve_key, key, &errmssg) != SQLITE_OK)
     {
@@ -202,7 +202,7 @@ int add_key_to_keys(sqlite3** db, const unsigned char* key, int key_size, char* 
 {
     char key_id[SHA256_DIGEST_LENGTH] = { 0 }; // key_id = hash(user_name + key)
     char* user_name_key_concatenation = (char*) malloc(200);
-    char sql[200] = { 0 };
+    char sql[2000] = { 0 };
     char* errmssg = 0;
     
     memset(user_name_key_concatenation, 0, 200);
@@ -224,9 +224,8 @@ int add_key_to_keys(sqlite3** db, const unsigned char* key, int key_size, char* 
     
     string_to_hex_string(key_id, SHA256_DIGEST_LENGTH, &hex_key_id);
 
-   
-    sprintf( sql, "INSERT INTO keys VALUES ('%s', '%s', '%s', %d, '%s', '%s');", user_name, hex_key_id, hex_key, key_size, "-1", "-1");
-
+   sprintf( sql, "INSERT INTO keys(fk_user_name, symmetric_key_id, symmetric_key, key_length,RSA_public_key, RSA_private_key) VALUES('%s', '%s', '%s', %d, '%s', '%s');", user_name, hex_key_id, hex_key, key_size, "-1", "-1");
+    
     if( sqlite3_exec(*db, sql, 0, 0, &errmssg) != SQLITE_OK)	
     {
 	fprintf(stderr, "SQL error: %s\n", errmssg);
