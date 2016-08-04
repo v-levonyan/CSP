@@ -324,6 +324,8 @@ void RSA_key(size_t key_size, SSL*  ssl, char* user_name)
 {
     char* pub_key;
     char* priv_key;
+    char RSA_private_ID_str[10] = { 0 };
+    int RSA_private_ID;
 
     RSA* keypair = RSA_generate_kay_pair();
     RSA_get_public_and_private(&keypair, &priv_key, &pub_key);
@@ -335,7 +337,16 @@ void RSA_key(size_t key_size, SSL*  ssl, char* user_name)
 
     send_buff(ssl, pub_key, strlen(pub_key)); //##########correct##########	
     SSL_write(ssl,"END", 3);
-    printf("%s\n", "Generated RSA 2048 bit public/private key pair and added to database, public one sent to client.");
+    
+    RSA_private_ID = get_RSA_private_ID_from_keys(pub_key); 
+    printf("RSA_private_ID = %d\n", RSA_private_ID);
+    sprintf(RSA_private_ID_str,"%d", RSA_private_ID);
+    
+    send_buff(ssl, RSA_private_ID_str, strlen(RSA_private_ID_str));
+
+    printf("%s\n", "Generated RSA 2048 bit public/private key pair and added to database, public one, and Private_key_ID sent to client.");
+    
+
 }
 
 void RSA_get_public_and_private(RSA** keypair, char** priv, char** publ)
@@ -474,8 +485,10 @@ int get_public_RSA_key(SSL* ssl, char** public_key)
 
 void RSA_encrypt_m(size_t key_size, SSL*  ssl, char* user_name)
 {
+    int RSA_private_ID;
     char* message;
     char* pub_key;
+    char RSA_private_ID_str[10] = { 0 };
     unsigned char* encrypted;
 
     get_message_to_encrypt_RSA(ssl, &message);
@@ -495,6 +508,13 @@ void RSA_encrypt_m(size_t key_size, SSL*  ssl, char* user_name)
     }
     
     send_buff(ssl, encrypted, encrypted_length);
-    printf("\n-----------------Encrypted---------------- %s\n", encrypted);
+    
+    RSA_private_ID = get_RSA_private_ID_from_keys(pub_key); 
+    printf("RSA_private_ID = %d\n", RSA_private_ID);
+    sprintf(RSA_private_ID_str,"%d", RSA_private_ID);
+    
+    send_buff(ssl, RSA_private_ID_str, strlen(RSA_private_ID_str));
+
+    printf("%s","\nRSA encryption done.\n");
    // print_key(encrypted, encrypted_length);
 }

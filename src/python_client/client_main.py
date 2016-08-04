@@ -60,9 +60,9 @@ if reg_or_log == '1': # signing in
 
 
 while 1:
-
+    print 'Demaaaaaaaaaaaaaaaaaaaand\n'
     client.demand_services(clientSock)
-    
+    print 'EEEEEEEEEEEEEEEEEEnd\n' 
     serviceId = input("Choose service: ")
 
     if client.call_corresponding_service(serviceId, options, clientSock) == -2:

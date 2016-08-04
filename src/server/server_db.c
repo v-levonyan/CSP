@@ -71,47 +71,6 @@ int create_table_keys(sqlite3** db)
 
     return 0;
 }
-/*
-int create_table_USERS_AUTHORIZATION(sqlite3** db)
-{
-    char* sql;
-    char* errmssg = 0;
-    int rc;
-
-    sql = "CREATE TABLE IF NOT EXISTS USERS_AUTHORIZATION(USER_NAME TEXT, PASSWORD TEXT)";
-
-    rc = sqlite3_exec(*db, sql, 0, 0, &errmssg);
-
-    if( rc != SQLITE_OK )
-    {
-	fprintf(stderr, "SQL error: %s\n", errmssg);
-	sqlite3_free(errmssg);
-	return 1;
-    }
-
-    return 0;
-}
-
-int create_table_CLIENTS(sqlite3** db)
-{
-    char* sql;
-    char* errmssg = 0;
-    int rc ;
-    
-    sql = "CREATE TABLE IF NOT EXISTS CLIENTS(USER_NAME TEXT, KEY_ID INT, SYMMETRIC_KEY TEXT, KEY_LENGTH INT)";
-
-    rc = sqlite3_exec(*db, sql, 0, 0, &errmssg);
-     
-    if( rc != SQLITE_OK )
-    {
-	fprintf(stderr, "SQL error: %s\n", errmssg);
-	sqlite3_free(errmssg);
-	return 1;
-    }
-	
-    return 0;
-}
-*/
 
 static int retrieve_key(void* key, int argc, char** argv, char** azColName)
 {
@@ -160,23 +119,6 @@ void string_to_hex_string(const unsigned char* str, size_t str_size, char** hex_
     
     *hex_str = hex;
 }
-
-/*void fill_garbage_entry(sqlite3** db, int id)
-{
-    char sql[200] = { 0 };
-    char* errmssg = 0;
-
-    sprintf( sql, "INSERT INTO CLIENTS VALUES (%d,%c%s%c,%d);", id, '"', "-1", '"', -1);
-    
-    if( sqlite3_exec(*db, sql, 0, 0, &errmssg) != SQLITE_OK)
-    {
-	fprintf(stderr, "SQL error: %s\n", errmssg);
-	sqlite3_free(errmssg);
-	pthread_exit(NULL);
-    }
-	
-}
-*/
 
 int add_RSA_key_pair_to_keys(const unsigned char* public_key, const unsigned char* private_key, const char* user_name)
 {
@@ -238,6 +180,38 @@ int add_key_to_keys(sqlite3** db, const unsigned char* key, int key_size, char* 
     printf("key inserted.\n");
 
     return 0;
+}
+
+static int retrieve_RSA_key_ID(void* RSA_key_ID, int argc, char** argv, char** azColName)
+{
+    int* RSA_key_ID_loc = (int*) RSA_key_ID;
+    
+    *RSA_key_ID_loc = atoi(*argv);
+
+    return 0;
+}
+
+
+int get_RSA_private_ID_from_keys(const char* pub_key)
+{
+    //////////////////////////////////////////
+    int RSA_key_ID;
+    char sql[2000];
+    char* errmssg = 0;
+    sqlite3* db;
+    
+    sqlite3_open("SERVER_DB.dblite", &db);
+
+    sprintf(sql,"SELECT RSA_private_ID FROM keys WHERE RSA_public_key='%s'", pub_key);
+    
+    if( sqlite3_exec(db, sql, retrieve_RSA_key_ID, &RSA_key_ID, &errmssg) != SQLITE_OK)
+    {
+	fprintf(stderr, "SQL error: %s\n", errmssg);
+	sqlite3_free(errmssg);
+	return -1;
+    }
+    
+    return RSA_key_ID;
 }
 
 void drop_table()

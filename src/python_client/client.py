@@ -120,14 +120,20 @@ class clientSocket:
 	fd = open(public_RSA,'w+')
 	
 	while 1:
-	    rec_m = self.recieveMessage(-1)
+	    RSA_pub_key = self.recieveMessage(-1)
 		
-	    if rec_m != "END":
-		fd.write(rec_m)
+	    if RSA_pub_key != "END":
+		fd.write(RSA_pub_key)
 	    else:
 		fd.close()
-		print 'RSA public key file is in your current directory with name ', public_RSA,  '\n'
 		break   	
+	
+	RSA_private_key_ID = self.recieveMessage(-1)
+	    
+	os.rename(public_RSA, public_RSA + str(RSA_private_key_ID))
+
+	print '\nRSA public key file is in your current directory with name ',  public_RSA +str(RSA_private_key_ID), '\n'
+	print 'RSA private key ID: ', RSA_private_key_ID, '\n'
 
 	return 1
     
@@ -157,9 +163,20 @@ class clientSocket:
 
 	self.sendFile(pub_key)	
 	self.sendMessage('##END##')
-	rec_m = self.recieveMessage(-1)
-	print rec_m
 
+	RSA_encrypted = self.recieveMessage(-1)	
+	RSA_private_ID = self.recieveMessage(-1)
+	
+	RSA_encrypted_file = 'RSA_encrypted.txt' + RSA_private_ID
+	
+	fd = open(RSA_encrypted_file,'w+')
+	fd.write(RSA_encrypted) 
+	
+	print 'RSA encryption done. Encrypted file is in your current directory with name ',RSA_encrypted_file
+	    
+	print 'You should decrypt with RSA private key ID', RSA_private_ID
+	return 1
+    
     def symmetric_key(self,num, aux = 0):
 	
 	CorrespondingKey = { '3' : '7', '4' : '21', '5' : '16', '6' : '24', '7' : '32' }

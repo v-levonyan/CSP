@@ -453,7 +453,7 @@ void* connection_handler(void* cl_args)
 			}
 
 			func(request.filesize, ssl, user_name);
-
+		    
 			memset(request_message, 0, DATA_SIZE);
 	    }
 
