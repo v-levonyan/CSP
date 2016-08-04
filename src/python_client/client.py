@@ -78,6 +78,7 @@ class clientSocket:
 	print 'File is being sent ...\n'
         for piece in self.readInChunks(f, chunkSize):
 	    self.sendMessage(piece)
+	print 'File sent.\n'
 
     def getFile(self):        
         inputFile = raw_input("Enter the path of the file: ")
@@ -113,9 +114,6 @@ class clientSocket:
 	params = ':'.join(seq)
 
 	self.sendMessage(params)
-	#result = self.recieveMessage()
-	
-	#print result
 
 	public_RSA = 'public_RSA' + '.txt'
 	
@@ -159,6 +157,8 @@ class clientSocket:
 
 	self.sendFile(pub_key)	
 	self.sendMessage('##END##')
+	rec_m = self.recieveMessage(-1)
+	print rec_m
 
     def symmetric_key(self,num, aux = 0):
 	

@@ -322,11 +322,10 @@ RSA* RSA_generate_kay_pair()
 
 void RSA_key(size_t key_size, SSL*  ssl, char* user_name)
 {
-    unsigned char* pub_key;
-    unsigned char* priv_key;
+    char* pub_key;
+    char* priv_key;
 
     RSA* keypair = RSA_generate_kay_pair();
-    
     RSA_get_public_and_private(&keypair, &priv_key, &pub_key);
     
     if( add_RSA_key_pair_to_keys(pub_key, priv_key, user_name) == 1)
@@ -334,7 +333,7 @@ void RSA_key(size_t key_size, SSL*  ssl, char* user_name)
 	pthread_exit(NULL);
     }
 
-    send_buff(ssl, pub_key, strlen(pub_key));	
+    send_buff(ssl, pub_key, strlen(pub_key)); //##########correct##########	
     SSL_write(ssl,"END", 3);
     printf("%s\n", "Generated RSA 2048 bit public/private key pair and added to database, public one sent to client.");
 }
@@ -365,7 +364,7 @@ void RSA_get_public_and_private(RSA** keypair, char** priv, char** publ)
 //    printf("\n%s\n%s\n", pri_key, pub_key);
 }
 
-RSA* createRSA(unsigned char* key, int public) 
+RSA* createRSA( char* key, int public) 
 //Create RSA variable for public/private
 //Usage for public key: createRSA(“PUBLIC_KEY_BUFFER”,1);
 //Usage for private key: createRSA(“PRIVATE_KEY_BUFFER”,0);
@@ -377,27 +376,47 @@ RSA* createRSA(unsigned char* key, int public)
     if (keybio==NULL)
     {
 	printf( "Failed to create key BIO");
-	return 0;
+	return NULL;
     }
 
     if(public)
     {
-	rsa = PEM_read_bio_RSA_PUBKEY(keybio, &rsa, NULL, NULL);
+	rsa = PEM_read_bio_RSAPublicKey(keybio, &rsa, NULL, NULL);
+
+	if (rsa == NULL)
+	{
+	    fprintf(stderr, "rsa structure is NULL\n");
+	    return NULL;
+	}
     }
     
     else
     {
 	rsa = PEM_read_bio_RSAPrivateKey(keybio, &rsa, NULL, NULL);
+	
+	if (rsa == NULL)
+	{
+	    fprintf(stderr, "rsa structure is NULL\n");
+	    return NULL;
+	}
     }
-							 
-    return rsa;
+
+      return rsa;
 }
 
-int RSA_public_encrypt_m(char* data, int data_len, unsigned char* key, unsigned char* encrypted)
+int RSA_public_encrypt_m(char* data, int data_len, char* pub_key, unsigned char** encr)
 //m for mine
-{
-    RSA* rsa = createRSA(key,1);
-    int result = RSA_public_encrypt(data_len, data, encrypted, rsa, RSA_PKCS1_PADDING);
+{ 
+    RSA* rsa = createRSA(pub_key,1);
+    if(rsa == NULL)
+    {
+	pthread_exit(NULL);	    
+    }
+    
+    unsigned char* encrypted = (unsigned char*) malloc(RSA_size(rsa));
+ 
+    int result = RSA_public_encrypt(data_len, data, *encr, rsa, RSA_PKCS1_PADDING);
+
     return result;
 }
 
@@ -413,10 +432,10 @@ void get_message_to_encrypt_RSA(SSL* ssl, char** message)
     *message = mssg;
 }
 
-int get_public_RSA_key(SSL* ssl, unsigned char** public_key)
+int get_public_RSA_key(SSL* ssl, char** public_key)
 {
     int bytes_read; 
-    unsigned char* pub_key  = (unsigned char*) malloc(2048);
+    char* pub_key  = (char*) malloc(2048);
     char* tmp = pub_key;
     char ok;
 
@@ -451,10 +470,13 @@ int get_public_RSA_key(SSL* ssl, unsigned char** public_key)
     *public_key = pub_key;
     return 0;
 }
+
+
 void RSA_encrypt_m(size_t key_size, SSL*  ssl, char* user_name)
 {
     char* message;
-    unsigned char* pub_key;
+    char* pub_key;
+    unsigned char* encrypted;
 
     get_message_to_encrypt_RSA(ssl, &message);
     printf("Message: %s\n", message);
@@ -463,4 +485,16 @@ void RSA_encrypt_m(size_t key_size, SSL*  ssl, char* user_name)
 	return;
 
     printf("\nRSA public key:\n%s\n",pub_key);
+
+    int encrypted_length = RSA_public_encrypt_m(message, strlen(message), pub_key, &encrypted);
+    
+    if(encrypted_length == -1)
+    {
+	fprintf(stderr,"\nPublic Encrypt failed.\n ");
+	pthread_exit(NULL);
+    }
+    
+    send_buff(ssl, encrypted, encrypted_length);
+    printf("\n-----------------Encrypted---------------- %s\n", encrypted);
+   // print_key(encrypted, encrypted_length);
 }
