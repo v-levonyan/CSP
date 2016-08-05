@@ -506,7 +506,7 @@ void RSA_encrypt_m(size_t key_size, SSL*  ssl, char* user_name)
     }
     
     send_buff(ssl, encrypted, encrypted_length);
-    print_key(encrypted,256);    
+     
     RSA_private_ID = get_RSA_private_ID_from_keys(pub_key); 
     printf("RSA_private_ID = %d\n", RSA_private_ID);
     sprintf(RSA_private_ID_str,"%d", RSA_private_ID);
