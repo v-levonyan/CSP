@@ -17,6 +17,8 @@ int add_RSA_key_pair_to_keys(const unsigned char* public_key, const unsigned
 char*private_key, const char* user_name);
 static int retrieve_RSA_key_ID(void* RSA_key_ID, int argc, char** argv, char** azColName);
 int get_RSA_private_ID_from_keys(const char* pub_key);
+int get_RSA_private_key_by_ID(int RSA_private_ID, const char* user_name, char* RSA_private_key);
+static int retrieve_RSA_private_key(void* RSA_private_key, int argc, char** argv, char** azColName);
 
 /*---------------------------------------------------------------------------------------------------*/
 #endif

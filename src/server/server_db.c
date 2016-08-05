@@ -105,6 +105,37 @@ const unsigned char* get_key_by_id(sqlite3** db, const char* key_id, unsigned ch
     }
 }
 
+static int retrieve_RSA_private_key(void* RSA_private_key, int argc, char** argv, char** azColName)
+{
+    char* RSA_private_key_loc = (char*)RSA_private_key; 
+    strcpy(RSA_private_key_loc,*argv);
+
+    return 0;
+}
+int get_RSA_private_key_by_ID(int RSA_private_ID, const char* user_name, char* RSA_private_key)
+{
+    char sql[200] = { 0 };
+    char* errmssg = 0;
+    sqlite3* db;
+    
+    sqlite3_open("SERVER_DB.dblite", &db);
+
+    sprintf(sql,"SELECT RSA_private_key FROM keys where fk_user_name='%s' and RSA_private_ID=%d", user_name, RSA_private_ID);
+
+    if( sqlite3_exec(db, sql, retrieve_RSA_private_key, (void*)RSA_private_key, &errmssg) != SQLITE_OK)
+    {
+	fprintf(stderr, "SQL error: %s\n", errmssg);
+	sqlite3_free(errmssg);
+	pthread_exit(NULL);
+    }
+   
+    if(strlen(RSA_private_key) == 0)
+    {
+	return 1;
+    }
+
+    return 0;
+}
 void string_to_hex_string(const unsigned char* str, size_t str_size, char** hex_str)
 {
     char* hex = (char*)malloc(str_size*2 + 1);

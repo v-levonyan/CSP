@@ -78,6 +78,7 @@ class clientSocket:
 	print 'File is being sent ...\n'
         for piece in self.readInChunks(f, chunkSize):
 	    self.sendMessage(piece)
+	
 	print 'File sent.\n'
 
     def getFile(self):        
@@ -171,7 +172,7 @@ class clientSocket:
 	
 	fd = open(RSA_encrypted_file,'w+')
 	fd.write(RSA_encrypted) 
-	
+        	
 	print 'RSA encryption done. Encrypted file is in your current directory with name ',RSA_encrypted_file
 	    
 	print 'You should decrypt with RSA private key ID', RSA_private_ID
@@ -183,8 +184,37 @@ class clientSocket:
 	params = ':'.join(seq)
 	
 	self.sendMessage(params)
-	self.sendMessage('Hello')
+	
+	while 1:
+	    RSA_private_ID = raw_input('Enter RSA private key ID: ')
+	    if len(RSA_private_ID) > 9:
+		continue
+	    else:
+		self.sendMessage(RSA_private_ID)
+		break
 
+	answer = self.recieveMessage()
+	
+	if int(answer) == -1:
+	    print 'Wrong RSA private key ID'
+	    return 1
+    
+	encrypted = raw_input('Enter the public RSA encrypted pathname.\n>>> ')
+	
+	try:
+	    f = open(encrypted)
+#	    self.sendMessage('0')
+	except:
+	    print "Specified file doesn't exist.\n"
+#	    self.sendMessage('1') #Specified file doesn't exist
+	    return 
+
+	self.sendFile(encrypted)	
+	self.sendMessage('##END##')
+	
+	decrypted = self.recieveMessage()
+	print 'decrypted: ', decrypted
+	
     def symmetric_key(self, num, aux = 0):
 	
 	CorrespondingKey = { '3' : '7', '4' : '21', '5' : '16', '6' : '24', '7' : '32' }

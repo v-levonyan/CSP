@@ -431,7 +431,6 @@ int RSA_public_encrypt_m(char* data, int data_len, char* pub_key, unsigned char*
     return result;
 }
 
-
 void get_message_to_encrypt_RSA(SSL* ssl, char** message)
 {
     char* mssg;
@@ -507,7 +506,7 @@ void RSA_encrypt_m(size_t key_size, SSL*  ssl, char* user_name)
     }
     
     send_buff(ssl, encrypted, encrypted_length);
-    
+    print_key(encrypted,256);    
     RSA_private_ID = get_RSA_private_ID_from_keys(pub_key); 
     printf("RSA_private_ID = %d\n", RSA_private_ID);
     sprintf(RSA_private_ID_str,"%d", RSA_private_ID);
@@ -515,13 +514,71 @@ void RSA_encrypt_m(size_t key_size, SSL*  ssl, char* user_name)
     send_buff(ssl, RSA_private_ID_str, strlen(RSA_private_ID_str));
 
     printf("%s","\nRSA encryption done.\n");
-   // print_key(encrypted, encrypted_length);
+ }
+
+int RSA_private_decrypt_m(const char* encrypted, int encr_length, char* RSA_private_key,char* decrypted)
+{
+    RSA* rsa = createRSA(RSA_private_key, 0);
+  
+    if(rsa == NULL)
+    {
+	pthread_exit(NULL);	    
+    }
+   
+    int result = RSA_private_decrypt(encr_length, encrypted, decrypted, rsa,RSA_PKCS1_PADDING);
+    
+    return result;
 }
 
 void RSA_decrypt_m(size_t key_size, SSL*  ssl, char* user_name)
 {
-    char mssg[10] = { 0 };
-    receive_buff(ssl, mssg, 7);
-    printf("%s\n", mssg);
+    int bytes_read;
+    char RSA_private_ID[10] = { 0 };
+    char RSA_private_key[2048] = { 0 };
+    char* RSA_encrypted = malloc(4098);
+    char* RSA_decrypted = malloc(4098);
+    char* tmp = RSA_encrypted;
+    
+    memset(RSA_encrypted, 0, 4098);
+    memset(RSA_decrypted, 0, 4098);
+
+    receive_buff(ssl, RSA_private_ID, 9);
+    printf("RSA private ID: %s\n", RSA_private_ID);
+    
+    if( get_RSA_private_key_by_ID(atoi(RSA_private_ID), user_name, RSA_private_key) == 1)
+    {
+	//wrong ID
+	send_buff(ssl, "-1", 2);
+	return;
+    }
+    
+    send_buff(ssl,"1", 1);
+
+    while(1)
+    {
+	bytes_read = SSL_read(ssl, tmp, 100);
+	if(bytes_read == -1)
+	{
+	    handle_error("data wasn't read");
+	}
+
+	if(strcmp(tmp,"##END##") == 0)
+	{
+	    memset(tmp, 0, 6);
+	    break;
+	}
+	tmp += bytes_read;
+    }
+    
+    int decrypted_length = RSA_private_decrypt_m(RSA_encrypted, 256, RSA_private_key,RSA_decrypted);
+    
+    if(decrypted_length == -1)
+    {
+	fprintf(stderr,"\nPrivate decrypt failed.\n ");
+	pthread_exit(NULL);
+    }
+    
+    send_buff(ssl, RSA_decrypted, strlen(RSA_decrypted));
+    printf("%s%s\n", "Decryption done: ",RSA_decrypted);
 }
 
