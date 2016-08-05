@@ -424,7 +424,7 @@ int RSA_public_encrypt_m(char* data, int data_len, char* pub_key, unsigned char*
 	pthread_exit(NULL);	    
     }
     
-    unsigned char* encrypted = (unsigned char*) malloc(RSA_size(rsa));
+    *encr = (unsigned char*) malloc(RSA_size(rsa));
  
     int result = RSA_public_encrypt(data_len, data, *encr, rsa, RSA_PKCS1_PADDING);
 
@@ -482,7 +482,6 @@ int get_public_RSA_key(SSL* ssl, char** public_key)
     return 0;
 }
 
-
 void RSA_encrypt_m(size_t key_size, SSL*  ssl, char* user_name)
 {
     int RSA_private_ID;
@@ -518,3 +517,11 @@ void RSA_encrypt_m(size_t key_size, SSL*  ssl, char* user_name)
     printf("%s","\nRSA encryption done.\n");
    // print_key(encrypted, encrypted_length);
 }
+
+void RSA_decrypt_m(size_t key_size, SSL*  ssl, char* user_name)
+{
+    char mssg[10] = { 0 };
+    receive_buff(ssl, mssg, 7);
+    printf("%s\n", mssg);
+}
+

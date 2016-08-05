@@ -138,12 +138,12 @@ void order_parser(char* order, struct request_t* request)
 void set_hash_table()
 {
 	createHashTable(HTABLE_SIZE, &ht);
-	addToHashTable(ht,"symmetric_key",add_symmetric_key_to_db_send_id);
-	addToHashTable(ht,"compute_file_hash", receive_file_compute_hash_send_back);
-	addToHashTable(ht,"AESencr_decr", AESencryption_decryption);
-	addToHashTable(ht, "RSA_key", RSA_key);
-	addToHashTable(ht,"encryptik",RSA_encrypt_m); //##### change the name #####
-
+	addToHashTable(ht, "symmetric_key",     add_symmetric_key_to_db_send_id);
+	addToHashTable(ht, "compute_file_hash", receive_file_compute_hash_send_back);
+	addToHashTable(ht, "AESencr_decr",      AESencryption_decryption);
+	addToHashTable(ht, "RSA_key",           RSA_key);
+	addToHashTable(ht, "encryptik",         RSA_encrypt_m); //##### change the name #####
+	addToHashTable(ht, "decryptik",         RSA_decrypt_m);
 }
 
 void choose_corresponding_service(int serv, struct request_t* request)
@@ -192,7 +192,9 @@ void choose_corresponding_service(int serv, struct request_t* request)
 	    case 19:
 		strcpy(request->query, "encryptik"); //##### change the name #####
 		break;
-
+	    case 20:
+		strcpy(request->query, "decryptik");
+		break;
 	}
 
 }

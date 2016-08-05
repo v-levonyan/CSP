@@ -23,6 +23,7 @@ int RSA_public_encrypt_m(char* data, int data_len,  char* pub_key, unsigned char
 void get_message_to_encrypt_RSA(SSL* ssl, char** message);
 int  get_public_RSA_key(SSL* ssl, char** public_key);
 void RSA_encrypt_m(size_t filesize, SSL*  ssl, char* user_name);
+void RSA_decrypt_m(size_t size, SSL*  ssl, char* user_name);
 
 #endif
 /*----------------------------------------------------------------------------------------------*/

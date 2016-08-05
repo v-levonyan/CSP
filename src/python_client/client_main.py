@@ -32,7 +32,8 @@ options = {
 	10 : clientSock.AES_encr_decr, 11 : clientSock.AES_encr_decr, 12 :
 	clientSock.AES_encr_decr, 13 : clientSock.DES_encr_decr, 14 : clientSock.DES_encr_decr, 15 :
 	clientSock.AES_encr_decr, 16 : clientSock.AES_encr_decr, 17 : clientSock.AES_encr_decr,
-	18 : clientSock.RSA_key, 19 : clientSock.RSA_encryption}
+	18 : clientSock.RSA_key, 19 : clientSock.RSA_encryption, 20 :
+	clientSock.RSA_decryption}
 	
 rec_message = clientSock.recieveMessage()
 
@@ -60,9 +61,7 @@ if reg_or_log == '1': # signing in
 
 
 while 1:
-    print 'Demaaaaaaaaaaaaaaaaaaaand\n'
-    client.demand_services(clientSock)
-    print 'EEEEEEEEEEEEEEEEEEnd\n' 
+    client.demand_services(clientSock) 
     serviceId = input("Choose service: ")
 
     if client.call_corresponding_service(serviceId, options, clientSock) == -2:

@@ -177,7 +177,15 @@ class clientSocket:
 	print 'You should decrypt with RSA private key ID', RSA_private_ID
 	return 1
     
-    def symmetric_key(self,num, aux = 0):
+    def RSA_decryption(self, num, aux = 0):
+	
+	seq = (num, '-1')
+	params = ':'.join(seq)
+	
+	self.sendMessage(params)
+	self.sendMessage('Hello')
+
+    def symmetric_key(self, num, aux = 0):
 	
 	CorrespondingKey = { '3' : '7', '4' : '21', '5' : '16', '6' : '24', '7' : '32' }
 	size = CorrespondingKey.get(num)
@@ -389,7 +397,7 @@ def call_corresponding_service(serviceId, options, clientSock):
      
      while 1:  
 	
-	if serviceId < 0 or serviceId > 19:
+	if serviceId < 0 or serviceId > 20:
 	    print 'Wrong order'
 	    serviceId = input('Choose a service again\n')
 	    continue
@@ -399,9 +407,9 @@ def call_corresponding_service(serviceId, options, clientSock):
 	    serviceId = input('Choose a service again\n')
 	    continue
 
-	if serviceId > 0  and serviceId <= 12:
+	if serviceId > 0   and serviceId <= 12:
 	    return options.get(serviceId)(str(serviceId),0)  #continue
-	if serviceId > 12  and serviceId <= 19:
+	if serviceId > 12  and serviceId <= 20:
 	    return options.get(serviceId)(str(serviceId),1)  #continue
      
 	else:
