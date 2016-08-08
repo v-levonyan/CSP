@@ -95,8 +95,8 @@ class clientSocket:
 	except:
 	    print "Specified file doesn't exist.\n"
 	    return -2
-        seq = ("1", str(fileSize))
-
+        
+	seq = (num, str(fileSize))
         params = ':'.join(seq)
         
 	self.sendMessage(params)

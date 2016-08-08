@@ -21,7 +21,7 @@ struct handler_args
 struct request_t 
 {
     char query[30];
-    int filesize;
+    int	 size;   // if it is needed, otherwise -1
 };
 
 struct password_and_ok

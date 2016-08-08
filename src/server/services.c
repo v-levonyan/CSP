@@ -93,61 +93,44 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
 	fprintf(stderr,"%s\n", "Key didn't match to the chosen algorithm!\n");
 	return;
     }
-    
-       
+     
     else
     {	
 	// enc/dec variables 
-	// possible memory leak
-	
+	// possible memory leak	
 	unsigned char* iv_enc;
     	unsigned char* iv_dec;
- 
-    	AES_KEY* enc_key;
-    	AES_KEY* dec_key;
-    
 	unsigned char* enc_out;
     	unsigned char* dec_out;
+	char encr_or_decr[3] = { 0 }; 
+	char file_size_buf[10];
+    	char data[AES_BLOCK_SIZE + 1] = { 0 };
+	int fd;
+	char name[30];
+	ssize_t bytes_read = 0;
+
+	AES_KEY* enc_key;
+    	AES_KEY* dec_key;
+	
+	send_buff(ssl,"1",1); //OK
         
 	set_initial_vectors(&iv_enc, &iv_dec);
 	set_enc_dec_keys(key, key_size/8, &enc_key, &dec_key);
-
-	send_buff(ssl,"1",1); //OK
         
-	char encr_or_decr[3] = { 0 }; 
-
-	SSL_read(ssl, encr_or_decr, 3);
-
-	char file_size_buf[10];
-	
+	receive_buff(ssl, encr_or_decr, 3);
+		
 	memset(file_size_buf,0,10);
 	
-	int read_size = SSL_read(ssl, file_size_buf, 10);
+	receive_buff(ssl, file_size_buf, 10);
 
 	if(atoi(file_size_buf) == -1) // client specified wrong file, repeat main loop
 	{
 	    fprintf(stderr, "Client specified wrong file, repeat main loop!\n");
 	    return;
 	}
-        if(read_size < 0)
-        {
-                handle_error("Could not read from socket");
-        }
-
-        if(read_size == 0)
-        {
-                fprintf(stderr, "%s\n","Client disconnected, corresponding thread exited");
-                pthread_exit(NULL);
-        }
-
-	size_t file_size = atoi(file_size_buf);
-		
-	ssize_t bytes_read = 0;
+       	size_t file_size = atoi(file_size_buf);	
 	size_t remain_data = file_size;
-	char data[AES_BLOCK_SIZE + 1] = { 0 };
-	int fd;
-	char name[30];
-
+	
 	if(atoi(encr_or_decr) == 0) 
 	{
 	    char name[] = "/tmp/encryptedXXXXXX"; // file for temporary holding
@@ -160,7 +143,7 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
 
 	fd = mkstemp(name);
 	
-	//printf("%s", "Receiving file to encrypt ... \n");
+	printf("%s", "Receiving file to encrypt ... \n");
 
 	while( remain_data > 0 && (bytes_read = SSL_read(ssl, data, AES_BLOCK_SIZE )) )
 	{
@@ -210,7 +193,6 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
 	free(enc_key);
 	free(dec_key);
     }
-
 }
 
 void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, char* user_name)
@@ -306,7 +288,7 @@ size_t set_enc_dec_buffers(const char* plain_text, unsigned char** enc_out, unsi
 
 void encrypt_AES(const char* plain_text, unsigned char** iv_enc, AES_KEY** enc_key, unsigned char** enc_out) //AES-CBC-128, AES-CBC-192, AES-CBC-256
 {
-        AES_cbc_encrypt(plain_text, *enc_out, strlen(plain_text), *enc_key, *iv_enc, AES_ENCRYPT);
+    AES_cbc_encrypt(plain_text, *enc_out, strlen(plain_text), *enc_key, *iv_enc, AES_ENCRYPT);
    
 }
 
@@ -384,9 +366,9 @@ RSA* createRSA( char* key, int public)
     BIO* keybio;
     keybio = BIO_new_mem_buf(key, -1);
     
-    if (keybio==NULL)
+    if (keybio == NULL)
     {
-	printf( "Failed to create key BIO");
+	printf("Failed to create key BIO");
 	return NULL;
     }
 

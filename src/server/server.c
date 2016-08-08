@@ -132,7 +132,7 @@ void order_parser(char* order, struct request_t* request)
 	token = strtok(order, ":");
 	strncpy(request->query, token, sizeof(request->query));
 	token = strtok(NULL, ":");
-	request->filesize = atoi(token);
+	request->size = atoi(token);
 }
 
 void set_hash_table()
@@ -383,16 +383,14 @@ int authorize_client(SSL* ssl, char* user_name)
 	    }
 
 	    send_buff(ssl,"Right!",6);
-	    
 	}
 }
 
 void* connection_handler(void* cl_args)
 {
 	struct handler_args* args = (struct handler_args*) cl_args;
-	char request_message[DATA_SIZE];
+	char request_message[DATA_SIZE] = { 0 };
 	int bytes_read;
-
 	SSL* ssl;
 
 	ssl = SSL_new(args->ctx);
@@ -402,25 +400,26 @@ void* connection_handler(void* cl_args)
 	{
 	    ERR_print_errors_fp(stderr);
 	    pthread_exit(NULL);
-	}
-
+	}	
 	else
 	{
 	    char user_name[20] = { 0 };
+	    sqlite3* db;
 
-	   // ShowCerts(ssl);
-	    
-	    sqlite3* db; 
-	    printf("\n%s\n","SSL connection established.");
-	    
+	    printf("\n%s\n","SSL connection established.");	    
+	    // ShowCerts(ssl);  	   
+	   
 	    //demand authorization
 	    authorize_client(ssl,user_name);
 
 	    sqlite3_open("SERVER_DB.dblite", &db);
-	    //fill_garbage_entry(&db, args->client_id);
-	    
+	   
 	    while ( (bytes_read = read_request(ssl, request_message)) > 0 )
 	    {
+
+			struct request_t request;
+			fptr func;
+
 			printf("Client's request : %s\n", request_message);
 			memset(request_message, 0, DATA_SIZE);
 
@@ -429,14 +428,10 @@ void* connection_handler(void* cl_args)
 				fprintf(stderr, "%s\n", strerror(errno));
 				pthread_exit(NULL);
 			}
-
-			fptr func;
-
-			struct request_t request;
-					
+				
 			bytes_read = read_request(ssl, request_message);
 			
-			if (bytes_read == 0)
+			if (bytes_read <= 0)
 			{
 				fprintf(stdout, "Client disconnected\n");
 				pthread_exit(NULL);
@@ -444,7 +439,7 @@ void* connection_handler(void* cl_args)
 			
 			order_parser(request_message, &request);
 
-			fprintf(stderr,"\nClient responsed\nquery: %s : %d\n", request.query, request.filesize);
+			fprintf(stderr,"\nClient responsed\nquery: %s : %d\n", request.query, request.size);
 
 			choose_corresponding_service(atoi(request.query), &request);
 		
@@ -454,7 +449,7 @@ void* connection_handler(void* cl_args)
 				pthread_exit(NULL);
 			}
 
-			func(request.filesize, ssl, user_name);
+			func(request.size, ssl, user_name);
 		    
 			memset(request_message, 0, DATA_SIZE);
 	    }
