@@ -72,7 +72,7 @@ class clientSocket:
 	try:
 	    f = open(inputFile)
 	except:
-	    print "Specified file doesn't exist.\n"
+	    print "Wrong file.\n"
 	    return -2
 
 	print 'File is being sent ...\n'
@@ -338,7 +338,7 @@ class clientSocket:
 
 	    return -1
 
-    def DES_encr_decr(self, key_size):
+    def DES_encr_decr(self, key_size, aux = 0):
 	return 1
 
     def recieveMessage(self, fd = -1):
@@ -449,14 +449,9 @@ def demand_services(clientSock):
 	else:
 	    print services
 
-def call_corresponding_service(serviceId, options, clientSock):
+def get_service():
      
-     while 1:  
-	
-	if serviceId < 0 or serviceId > 20:
-	    print 'Wrong order'
-	    
-	    while 1:
+     while 1:
 		try:
 		    serviceId = input("Choose service: ")
 		except NameError:
@@ -465,37 +460,21 @@ def call_corresponding_service(serviceId, options, clientSock):
 		except SyntaxError:
 		    print 'Wrong order!'
 		    continue
-	    	break
+	    	return serviceId	
+
+def call_corresponding_service(serviceId, options, clientSock):
+     
+     while 1:  
 	
+	if serviceId < 0 or serviceId > 20:
+	    print 'Wrong order'
 	if serviceId == 2 or serviceId == 8 or serviceId == 9 or serviceId == 13 or serviceId == 14:
 	    print ' Your specified order now is not available, it will be available soon\n'
-	    
-	    while 1:
-		try:
-		    serviceId = input('Choose a service again\n')
-		except NameError:
-		    print 'Wrong order!'
-		    continue	
-		except SyntaxError:
-		    print 'Wrong order!'
-		    continue
-		break
-		    
+	 
+	serviceId = get_service()
+	
 	if serviceId > 0   and serviceId <= 12:
 	    return options.get(serviceId)(str(serviceId),0)  #continue
-	if serviceId > 12  and serviceId <= 20:
+	if serviceId > 14  and serviceId <= 20:
 	    return options.get(serviceId)(str(serviceId),1)  #continue
-     
-	else:
-	    print 'Wrong order'
-	    while 1:
-		try:
-		    serviceId = input('Choose a service again\n')
-		except NameError:
-		    print 'Wrong order!'
-		    continue	
-		except SyntaxError:
-		    print 'Wrong order!'
-		    continue
-		break
- 
+    

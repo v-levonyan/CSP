@@ -61,18 +61,9 @@ if reg_or_log == '1': # signing in
 
 
 while 1:
-    client.demand_services(clientSock) 
-    while 1:
-	try:
-	    serviceId = input("Choose service: ")
-	except NameError:
-	    print 'Wrong order!'
-	    continue
-	except SyntaxError:
-	    print 'Wrong order!'
-	    continue
-	break
-
+    client.demand_services(clientSock)
+    serviceId = client.get_service()
+    
     if client.call_corresponding_service(serviceId, options, clientSock) == -2:
 	exit()
     
