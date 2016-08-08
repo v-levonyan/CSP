@@ -441,24 +441,13 @@ int get_public_RSA_key(SSL* ssl, char** public_key)
     }
 
     memset(pub_key, 0, 2048);
-
-    while(1)
+    
+    if( receive_file(ssl, pub_key) == 1) //get public key
     {
-	bytes_read = SSL_read(ssl, tmp, 100);
-    
-	if(bytes_read == -1)
-	{
-	    handle_error("data wasn't read");
-	}
-
-	if(strcmp(tmp,"##END##") == 0)
-	{
-	    memset(tmp, 0, 7);
-	    break;
-	}
-	tmp += bytes_read;
+	fprintf(stderr, "%s", "Error while receiving public key.\n");
+	pthread_exit(NULL);
     }
-    
+     
     *public_key = pub_key;
     return 0;
 }
@@ -535,23 +524,13 @@ void RSA_decrypt_m(size_t key_size, SSL*  ssl, char* user_name)
     }
     
     send_buff(ssl,"1", 1);
-
-    while(1)
-    {
-	bytes_read = SSL_read(ssl, tmp, 100);
-	if(bytes_read == -1)
-	{
-	    handle_error("data wasn't read");
-	}
-
-	if(strcmp(tmp,"##END##") == 0)
-	{
-	    memset(tmp, 0, 6);
-	    break;
-	}
-	tmp += bytes_read;
-    }
     
+    if( receive_file(ssl, RSA_encrypted) == 1) //get public key
+    {
+	fprintf(stderr, "%s", "Error while receiving encrypted file.\n");
+	pthread_exit(NULL);
+    }
+   
     int decrypted_length = RSA_private_decrypt_m(RSA_encrypted, 256, RSA_private_key,RSA_decrypted);
     
     if(decrypted_length == -1)

@@ -73,6 +73,32 @@ int send_file(int file_fd, SSL* ssl)
 	return 0;
 }
 
+int receive_file(SSL* ssl, char* buf) // reads while ##END## not occur
+{
+    int bytes_read;
+    char* tmp = buf;
+    
+     while(1)
+     {
+	    bytes_read = SSL_read(ssl, tmp, 100);
+    
+	    if(bytes_read <= 0)
+	    {
+		return 1;
+	    }
+
+	    if(strcmp(tmp,"##END##") == 0)
+	    {
+		memset(tmp, 0, 6);
+		break;
+	    }
+	    tmp += bytes_read;
+     }
+
+     return 0;
+}
+
+
 int send_buff(SSL* ssl, const char* buf, size_t buf_size)
 {
     const unsigned char* tmp = buf;
