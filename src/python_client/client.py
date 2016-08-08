@@ -455,10 +455,10 @@ def get_service():
 		try:
 		    serviceId = input("Choose service: ")
 		except NameError:
-		    print 'Wrong order!'
+		    print ' Wrong order!\n'
 		    continue	
 		except SyntaxError:
-		    print 'Wrong order!'
+		    print ' Wrong order!\n'
 		    continue
 	    	return serviceId	
 
@@ -467,14 +467,13 @@ def call_corresponding_service(serviceId, options, clientSock):
      while 1:  
 	
 	if serviceId < 0 or serviceId > 20:
-	    print 'Wrong order'
+	    print ' Wrong order!\n'
 	if serviceId == 2 or serviceId == 8 or serviceId == 9 or serviceId == 13 or serviceId == 14:
 	    print ' Your specified order now is not available, it will be available soon\n'
-	 
-	serviceId = get_service()
-	
+	 	
 	if serviceId > 0   and serviceId <= 12:
 	    return options.get(serviceId)(str(serviceId),0)  #continue
 	if serviceId > 14  and serviceId <= 20:
 	    return options.get(serviceId)(str(serviceId),1)  #continue
-    
+    	serviceId = get_service()
+
