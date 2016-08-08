@@ -89,12 +89,19 @@ class clientSocket:
 	return 1
 
     def get_sha1_file(self, num, aux = 0):
-        f = self.getFile()
-	try:
-	    fileSize = os.path.getsize(f)
-	except:
-	    print "Specified file doesn't exist.\n"
-	    return -2
+        
+	while 1:
+	    f = self.getFile()
+	    try:
+		fileSize = os.path.getsize(f)
+		
+		if not os.path.isfile(f):
+		    print 'Specified file is not a regular file!'
+		    continue
+	    except:
+		print "Specified file doesn't exist.\n"
+		continue
+	    break
         
 	seq = (num, str(fileSize))
         params = ':'.join(seq)
@@ -156,12 +163,13 @@ class clientSocket:
 	
 	try:
 	    f = open(pub_key)
-	    self.sendMessage('0')
 	except:
 	    print "Specified file doesn't exist.\n"
 	    self.sendMessage('1') #Specified file doesn't exist
 	    return 
-
+	
+	self.sendMessage('0')
+	
 	self.sendFile(pub_key)	
 	self.sendMessage('##END##')
 
@@ -203,12 +211,12 @@ class clientSocket:
 	
 	try:
 	    f = open(encrypted)
-#	    self.sendMessage('0')
 	except:
 	    print "Specified file doesn't exist.\n"
-#	    self.sendMessage('1') #Specified file doesn't exist
+	    self.sendMessage('1') #Specified file doesn't exist
 	    return 
-
+	
+	self.sendMessage('0')
 	self.sendFile(encrypted)	
 	self.sendMessage('##END##')
 	
@@ -249,14 +257,23 @@ class clientSocket:
 	    return -1
 
 	if aux == 0: ## AES encryption
-	    self.sendMessage("0") 
+	    self.sendMessage('0') 
 	    filename = raw_input("Input filename to encrypt\n... ")
+	    
+	    if not os.path.isfile(filename):
+		print 'Specified file is not a regular file!'
+		self.sendMessage('-1')
+		return
+
 	    try:
 		fileSize = os.path.getsize(filename)
-	    except OSError:
-		print "Specified file doesn't exist!\n"
+	    except:
+		print "Wrong file!\n"
 		self.sendMessage('-1')
-		return -1
+		return
+
+	    self.sendMessage('0')
+
 	    self.sendMessage(str(fileSize))
 
 	    self.sendFile(str(filename),1)
@@ -280,14 +297,23 @@ class clientSocket:
 
 	    return -1
 	if aux == 1: ## AES decryption
+	    
 	    self.sendMessage("1")
 	    filename = raw_input("Input filename to decrypt\n... ")
+	    
+	    if not os.path.isfile(filename):
+		print 'Specified file is not a regular file!'
+		self.sendMessage('-1')
+		return
+
 	    try:
 		fileSize = os.path.getsize(filename)
-	    except OSError:
-		print "Specified file doesn't exist!\n"
+	    except :
+		print "Wrong file!\n"
 		self.sendMessage('-1')
 		return -1
+	    
+	    self.sendMessage('0')
 
 	    self.sendMessage(str(fileSize))
 

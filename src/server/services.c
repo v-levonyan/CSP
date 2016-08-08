@@ -107,6 +107,7 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
     	char data[AES_BLOCK_SIZE + 1] = { 0 };
 	int fd;
 	char name[30];
+	char ok[2] = { 0 };
 	ssize_t bytes_read = 0;
 
 	AES_KEY* enc_key;
@@ -121,6 +122,14 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
 		
 	memset(file_size_buf,0,10);
 	
+	receive_buff(ssl, ok, 2);
+	
+	if(atoi(ok) == -1)
+	{
+	    fprintf(stderr, "Client specified wrong file, repeat main loop!\n");
+	    return;
+	}
+
 	receive_buff(ssl, file_size_buf, 10);
 
 	if(atoi(file_size_buf) == -1) // client specified wrong file, repeat main loop
@@ -431,7 +440,6 @@ int get_public_RSA_key(SSL* ssl, char** public_key)
     char* tmp = pub_key;
     char ok;
 
-
     SSL_read(ssl, &ok, 1);
 
     if(ok == '1') //CLient's specified file didn't exist
@@ -501,6 +509,7 @@ int RSA_private_decrypt_m(const char* encrypted, int encr_length, char* RSA_priv
     return result;
 }
 
+
 void RSA_decrypt_m(size_t key_size, SSL*  ssl, char* user_name)
 {
     int bytes_read;
@@ -509,7 +518,8 @@ void RSA_decrypt_m(size_t key_size, SSL*  ssl, char* user_name)
     char* RSA_encrypted = malloc(4098);
     char* RSA_decrypted = malloc(4098);
     char* tmp = RSA_encrypted;
-    
+    char ok;
+     
     memset(RSA_encrypted, 0, 4098);
     memset(RSA_decrypted, 0, 4098);
 
@@ -525,6 +535,14 @@ void RSA_decrypt_m(size_t key_size, SSL*  ssl, char* user_name)
     
     send_buff(ssl,"1", 1);
     
+    SSL_read(ssl, &ok, 1);
+
+    if(ok == '1') //CLient's specified file didn't exist
+    {
+	fprintf(stderr,"%s","Wrong public key pathname from client.\n");
+	return; 
+    }
+
     if( receive_file(ssl, RSA_encrypted) == 1) //get public key
     {
 	fprintf(stderr, "%s", "Error while receiving encrypted file.\n");
