@@ -129,7 +129,7 @@ int get_RSA_private_key_by_ID(int RSA_private_ID, const char* user_name, char* R
 	pthread_exit(NULL);
     }
    
-    if(strlen(RSA_private_key) == 0)
+    if(strlen(RSA_private_key) <= 2)
     {
 	return 1;
     }

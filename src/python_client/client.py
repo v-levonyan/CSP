@@ -219,6 +219,12 @@ class clientSocket:
 	self.sendMessage('0')
 	self.sendFile(encrypted)	
 	self.sendMessage('##END##')
+        
+	ok = self.recieveMessage()
+	
+	if int(ok) == -1:
+	    print ' RSA decryption failed, it may ba caused by specifing wrong RSA private key ID.\n'
+	    return 
 	
 	decrypted = self.recieveMessage()
 	print 'decrypted: ', decrypted
@@ -468,12 +474,15 @@ def call_corresponding_service(serviceId, options, clientSock):
 	
 	if serviceId < 0 or serviceId > 20:
 	    print ' Wrong order!\n'
+	    	
 	if serviceId == 2 or serviceId == 8 or serviceId == 9 or serviceId == 13 or serviceId == 14:
-	    print ' Your specified order now is not available, it will be available soon\n'
-	 	
-	if serviceId > 0   and serviceId <= 12:
+	    print ' Your specified order now is not available, it will be available soon\n'    	
+
+	if serviceId > 0 and serviceId <= 12 and serviceId != 8 and serviceId != 9:
 	    return options.get(serviceId)(str(serviceId),0)  #continue
+	
 	if serviceId > 14  and serviceId <= 20:
 	    return options.get(serviceId)(str(serviceId),1)  #continue
-    	serviceId = get_service()
+    	
+	serviceId = get_service()
 
