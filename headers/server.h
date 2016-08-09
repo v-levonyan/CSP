@@ -63,5 +63,5 @@ void sigint_handler(int signum);
 void parse_args(int argc, char *argv[]);
 
 params_t* params;
-SSL* ssl;
+
 #endif

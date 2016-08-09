@@ -11,18 +11,18 @@
 
 SSL_CTX* init_server_ctx()
 {
-    SSL_METHOD* method;
     SSL_CTX* ctx;
+    SSL_METHOD* method = SSLv23_server_method(); 
 
     OpenSSL_add_all_algorithms();
     SSL_load_error_strings();
-    ctx = SSL_CTX_new(SSLv23_server_method());
+    ctx = SSL_CTX_new(method);
 
     if ( ctx == NULL )
-	{
-		ERR_print_errors_fp(stderr);
-		exit(EXIT_FAILURE);
-	}
+    {
+	    ERR_print_errors_fp(stderr);
+	    exit(EXIT_FAILURE);
+    }
 
     return ctx;
 }

@@ -95,7 +95,7 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
     else
     {	
 	// enc/dec variables 
-	// possible memory leak	
+	// possible memory leaks	
 	unsigned char* iv_enc;
     	unsigned char* iv_dec;
 	unsigned char* enc_out;
@@ -183,7 +183,7 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
 		    decrypt_AES(data, &dec_out, bytes_read, &dec_key, &iv_dec);
 		    send_buff(ssl,dec_out, bytes_read-1);
 		    write(fd, dec_out, 15);
-		    
+		
 		    free(enc_out);
 		    free(dec_out);
 		}
@@ -195,6 +195,7 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
 
 	printf("\nEncryptedi/decrypted file sent.\n");
 
+	free(key);
 	free(iv_enc);
 	free(iv_dec);
 	free(enc_key);
@@ -406,7 +407,8 @@ RSA* createRSA( char* key, int public)
 	    return NULL;
 	}
     }
-
+	
+      BIO_free(keybio);
       return rsa;
 }
 
@@ -415,14 +417,16 @@ int RSA_public_encrypt_m(char* data, int data_len, char* pub_key, unsigned char*
 { 
     RSA* rsa = createRSA(pub_key,1);
     if(rsa == NULL)
-    {
+    {	
+	RSA_free(rsa);
 	pthread_exit(NULL);	    
     }
     
     *encr = (unsigned char*) malloc(RSA_size(rsa));
  
     int result = RSA_public_encrypt(data_len, data, *encr, rsa, RSA_PKCS1_PADDING);
-
+    
+    RSA_free(rsa);
     return result;
 }
 
@@ -511,11 +515,13 @@ int RSA_private_decrypt_m(const char* encrypted, int encr_length, char* RSA_priv
   
     if(rsa == NULL)
     {
+	RSA_free(rsa);
 	pthread_exit(NULL);	    
     }
    
     int result = RSA_private_decrypt(encr_length, encrypted, decrypted, rsa,RSA_PKCS1_PADDING);
     
+    RSA_free(rsa);
     return result;
 }
 

@@ -105,13 +105,11 @@ int main(int argc, char *argv[])
     for(; i < thread_count; ++i)
     {
 	struct handler_args args;
-
+/*
 	SSL_library_init();
 	args.ctx = init_server_ctx();
 	load_certificates(args.ctx,"mycert.pem","mycert.pem");
-
-	SSL* ssl;
-
+*/	
 	args.socket = accept(socket_desc, (struct sockaddr *)&client, &address_len);
 
 	if(args.socket == -1)

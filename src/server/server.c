@@ -307,7 +307,8 @@ int check_user_name_and_password_AUX(void* pass_ok, int argc, char** argv, char*
 	p_ok->ok = 1;
 	return 1;
     }
-
+    
+    free(hex_sha256);
     free(SHA256_of_password);
     return -1;
 }
@@ -392,6 +393,11 @@ void* connection_handler(void* cl_args)
 	char request_message[DATA_SIZE] = { 0 };
 	int bytes_read;
 	
+	SSL_library_init();
+	args->ctx = init_server_ctx();
+        load_certificates(args->ctx,"mycert.pem","mycert.pem");
+	
+	SSL* ssl;	
 	ssl = SSL_new(args->ctx);
 	SSL_set_fd(ssl,args->socket);
 
@@ -409,7 +415,7 @@ void* connection_handler(void* cl_args)
 	    //demand authorization
 	    authorize_client(ssl,user_name);
    
-	    while ( (bytes_read = read_request(request_message)) > 0 )
+	    while ( (bytes_read = read_request(ssl, request_message)) > 0 )
 	    {
 
 			struct request_t request;
@@ -425,7 +431,7 @@ void* connection_handler(void* cl_args)
 				pthread_exit(NULL);
 			}
 				
-			bytes_read = read_request(request_message);
+			bytes_read = read_request(ssl, request_message);
 			
 			if (bytes_read <= 0)
 			{

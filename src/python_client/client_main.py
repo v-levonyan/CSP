@@ -7,6 +7,8 @@ import os
 import socket
 import getpass
 import sys
+import time
+
 from OpenSSL import SSL, crypto
 
 parser = argparse.ArgumentParser()
@@ -23,6 +25,8 @@ clientSock = client.clientSocket(ctx)
 clientSock.connect(args.host, args.port)
 
 print "Secure connection established"
+
+#time.sleep(0.5) # In order to ....
 
 options = {
         1 : clientSock.get_sha1_file,  2 : clientSock.get_sha1_string, 3 :

@@ -3,6 +3,8 @@
 import socket
 import os
 import getpass
+import time 
+
 from OpenSSL import SSL, crypto
 
 dir = os.curdir
