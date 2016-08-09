@@ -30,12 +30,16 @@
 int main(int argc, char *argv[])
 {
     int i = 0;
+    struct sigaction sa;
+    int socket_desc;
+    struct sockaddr_in server, client;
+
     parse_args(argc, argv);
     set_hash_table();
 
     // let's do the main job
     
-    sqlite3* db = 0; 
+    db = 0; 
 
     if ( access("SERVER_DB.dblite", F_OK) != -1)
     {
@@ -64,15 +68,12 @@ int main(int argc, char *argv[])
 
     printf("%s\n", "Table keys created.");
    
-    struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
 
     sa.sa_handler = &handler;
     sigaction(SIGPIPE, &sa, NULL);
 
-    int socket_desc;
-    struct sockaddr_in server, client;
-    
+       
     create_socket(&socket_desc);
     
     if( !configure(conf_file) )
@@ -131,6 +132,6 @@ int main(int argc, char *argv[])
     }
 
     close(socket_desc);
-
+    sqlite3_close(db);
     return 0;
 }

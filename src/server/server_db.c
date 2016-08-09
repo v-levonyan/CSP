@@ -5,6 +5,7 @@
 #include <openssl/sha.h>
 
 #include "sqlite3.h"
+#include "server_db.h"
 
 int connect_to_db(sqlite3** db, const char* name)
 {
@@ -92,8 +93,6 @@ const unsigned char* get_key_by_id(sqlite3** db, const char* key_id, unsigned ch
     char sql[200] = { 0 };
     char* errmssg = 0;
 
-    sqlite3_open("SERVER_DB.dblite", db);
-
     *key = (char*) calloc(1,0); //for error checking
     sprintf(sql, "SELECT SYMMETRIC_KEY FROM keys WHERE symmetric_key_id='%s'", key_id);
 
@@ -116,10 +115,7 @@ int get_RSA_private_key_by_ID(int RSA_private_ID, const char* user_name, char* R
 {
     char sql[200] = { 0 };
     char* errmssg = 0;
-    sqlite3* db;
     
-    sqlite3_open("SERVER_DB.dblite", &db);
-
     sprintf(sql,"SELECT RSA_private_key FROM keys where fk_user_name='%s' and RSA_private_ID=%d", user_name, RSA_private_ID);
 
     if( sqlite3_exec(db, sql, retrieve_RSA_private_key, (void*)RSA_private_key, &errmssg) != SQLITE_OK)
@@ -153,11 +149,8 @@ void string_to_hex_string(const unsigned char* str, size_t str_size, char** hex_
 
 int add_RSA_key_pair_to_keys(const unsigned char* public_key, const unsigned char* private_key, const char* user_name)
 {
-    sqlite3* db;
     char* errmssg = 0;
     char sql[7000] = { 0 };
-    
-    sqlite3_open("SERVER_DB.dblite", &db);
      
     sprintf( sql, "INSERT INTO keys(fk_user_name, RSA_public_key, RSA_private_key) VALUES('%s', '%s', '%s');", user_name, public_key, private_key);
 
@@ -185,8 +178,6 @@ int add_key_to_keys(sqlite3** db, const unsigned char* key, int key_size, char* 
     char* hex_user_name;
     char* hex_key_id;
 
-    sqlite3_open("SERVER_DB.dblite", db);
-    
     string_to_hex_string(key, key_size, &hex_key);
     string_to_hex_string(user_name, strlen(user_name), &hex_user_name);
 
@@ -229,10 +220,6 @@ int get_RSA_private_ID_from_keys(const char* pub_key)
     int RSA_key_ID;
     char sql[2000];
     char* errmssg = 0;
-    sqlite3* db;
-    
-    sqlite3_open("SERVER_DB.dblite", &db);
-
     sprintf(sql,"SELECT RSA_private_ID FROM keys WHERE RSA_public_key='%s'", pub_key);
     
     if( sqlite3_exec(db, sql, retrieve_RSA_key_ID, &RSA_key_ID, &errmssg) != SQLITE_OK)

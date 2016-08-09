@@ -221,12 +221,9 @@ int look_up_aux(void* free_or_busy, int argc, char** argv, char** azColName)
 int lookup_for_username(char* user_name)
 {  
     int free_or_busy = 0; // free
-    sqlite3* db;
     char sql[200] = { 0 };
     char* errmssg = 0;
-
-    sqlite3_open("SERVER_DB.dblite", &db);
-   
+  
     sprintf(sql, "SELECT user_name FROM users WHERE USER_NAME = %c%s%c", '"', user_name,  '"');
       
     if( sqlite3_exec(db, sql, look_up_aux, &free_or_busy, &errmssg) != SQLITE_OK)
@@ -249,12 +246,10 @@ void insert_username_password_to_db(const char* user_name, const char* password)
     char* hex_hash;
     char sql[200] = { 0 };
     char* errmssg = 0;
-    sqlite3* db;
-    
+   
     SHA256(password, strlen(password), sha256_of_password);
     string_to_hex_string(sha256_of_password, SHA256_DIGEST_LENGTH, &hex_hash);
 
-    sqlite3_open("SERVER_DB.dblite", &db);
     sprintf(sql, "INSERT INTO users (user_name, password) VALUES('%s','%s')",user_name, hex_hash);
     
     if( sqlite3_exec(db, sql, 0, 0, &errmssg) != SQLITE_OK )
@@ -317,13 +312,10 @@ int check_user_name_and_password_AUX(void* pass_ok, int argc, char** argv, char*
 
 int check_user_name_and_password(const char* user_name, const char* Password)
 {
-    sqlite3* db;
     char sql[200] = { 0 };
     struct password_and_ok pass;
     char* errmssg = 0;
     
-    sqlite3_open("SERVER_DB.dblite", &db);
-
     pass.ok = -1;
     pass.password = Password;
 
@@ -410,16 +402,12 @@ void* connection_handler(void* cl_args)
 	else
 	{
 	    char user_name[20] = { 0 };
-	    sqlite3* db;
-
 	    printf("\n%s\n","SSL connection established.");	    
 	    // ShowCerts(ssl);  	   
 	   
 	    //demand authorization
 	    authorize_client(ssl,user_name);
-
-	    sqlite3_open("SERVER_DB.dblite", &db);
-	   
+   
 	    while ( (bytes_read = read_request(ssl, request_message)) > 0 )
 	    {
 

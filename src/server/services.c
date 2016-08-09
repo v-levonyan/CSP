@@ -76,9 +76,7 @@ void print_key(const unsigned char* key, int size)
 }
 
 void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
-{
-    sqlite3* db;
-    
+{ 
     //possible memory leak
     unsigned char* key = 0;
     char key_id[SHA256_DIGEST_LENGTH * 2+1] = { 0 };
@@ -206,7 +204,6 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
 
 void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, char* user_name)
 {
-    sqlite3* db;
     char* key_id;
     unsigned char* key = (unsigned char*)malloc(key_size+1);
     
@@ -574,4 +571,3 @@ void RSA_decrypt_m(size_t key_size, SSL*  ssl, char* user_name)
     free(RSA_encrypted);
     free(RSA_decrypted);
 }
-
