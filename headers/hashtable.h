@@ -13,12 +13,12 @@
 //  Created by Blake Caldwell on 12/15/13.
 //  Copyright (c) 2013 Blake Caldwell. All rights reserved.
 //
+#ifndef Practice_MyHashTable_h
+#define Practice_MyHashTable_h
 
 #include <stdbool.h>
 #include "openssl/ssl.h"
 #include "openssl/err.h"
-#ifndef Practice_MyHashTable_h
-#define Practice_MyHashTable_h
 
 // linked list
 

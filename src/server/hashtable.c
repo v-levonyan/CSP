@@ -42,14 +42,14 @@ int createHashTable(unsigned int size, struct hashTable **hashTable)
     }
     
     // create the hashtable
-    if(!(ht = (struct hashTable*)malloc(sizeof(struct hashTable))))
+    if(!(ht = (struct hashTable*)calloc(1,sizeof(struct hashTable))))
     {
         *hashTable = NULL;
         return(0);
     }
     
     // create the linked lists
-    if(!(lists = (struct hLinkedList**)malloc(sizeof(struct hLinkedList *) * size)))
+    if(!(lists = (struct hLinkedList**)calloc(sizeof(struct hLinkedList *), size)))
     {
         free(ht);
         *hashTable = NULL;

@@ -137,7 +137,13 @@ void order_parser(char* order, struct request_t* request)
 
 void set_hash_table()
 {
+	ht = NULL;
 	createHashTable(HTABLE_SIZE, &ht);
+	if(ht == NULL)
+	{
+	    fprintf(stderr, "Error while creating hashtable.\n");
+	    pthread_exit(NULL);
+	}
 	addToHashTable(ht, "symmetric_key",     add_symmetric_key_to_db_send_id);
 	addToHashTable(ht, "compute_file_hash", receive_file_compute_hash_send_back);
 	addToHashTable(ht, "AESencr_decr",      AESencryption_decryption);
