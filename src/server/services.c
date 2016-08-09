@@ -336,6 +336,7 @@ void RSA_key(size_t key_size, SSL*  ssl, char* user_name)
 
     printf("%s\n", "Generated RSA 2048 bit public/private key pair and added to database, public one, and Private_key_ID sent to client.");
     
+    RSA_free(keypair);
     free(pub_key);
     free(priv_key);
 }
@@ -360,6 +361,9 @@ void RSA_get_public_and_private(RSA** keypair, char** priv, char** publ)
     pri_key[pri_len] = '\0';
     pub_key[pub_len] = '\0';
     
+    BIO_free(pri);
+    BIO_free(pub);
+
     *priv = pri_key;
     *publ = pub_key;
     

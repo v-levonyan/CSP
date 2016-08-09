@@ -85,7 +85,7 @@ class clientSocket:
         inputFile = raw_input("Enter the path of the file: ")
         return inputFile
     
-    def get_sha1_string(self):
+    def get_sha1_string(self, num, aux = 0):
 	return 1
 
     def get_sha1_file(self, num, aux = 0):
@@ -478,7 +478,7 @@ def call_corresponding_service(serviceId, options, clientSock):
 	if serviceId == 2 or serviceId == 8 or serviceId == 9 or serviceId == 13 or serviceId == 14:
 	    print ' Your specified order now is not available, it will be available soon\n'    	
 
-	if serviceId > 0 and serviceId <= 12 and serviceId != 8 and serviceId != 9:
+	if serviceId > 0 and serviceId <= 12 and serviceId != 2 and serviceId != 8 and serviceId != 9:
 	    return options.get(serviceId)(str(serviceId),0)  #continue
 	
 	if serviceId > 14  and serviceId <= 20:

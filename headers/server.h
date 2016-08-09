@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include "hashtable.h"
+#include <openssl/ssl.h>
 
 #define handle_error(msg) \
     do { perror(msg); exit(EXIT_FAILURE); } while (0)
@@ -62,5 +63,5 @@ void sigint_handler(int signum);
 void parse_args(int argc, char *argv[]);
 
 params_t* params;
-
+SSL* ssl;
 #endif

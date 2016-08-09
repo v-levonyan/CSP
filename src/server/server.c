@@ -391,8 +391,7 @@ void* connection_handler(void* cl_args)
 	struct handler_args* args = (struct handler_args*) cl_args;
 	char request_message[DATA_SIZE] = { 0 };
 	int bytes_read;
-	SSL* ssl;
-
+	
 	ssl = SSL_new(args->ctx);
 	SSL_set_fd(ssl,args->socket);
 
@@ -410,7 +409,7 @@ void* connection_handler(void* cl_args)
 	    //demand authorization
 	    authorize_client(ssl,user_name);
    
-	    while ( (bytes_read = read_request(ssl, request_message)) > 0 )
+	    while ( (bytes_read = read_request(request_message)) > 0 )
 	    {
 
 			struct request_t request;
@@ -421,17 +420,17 @@ void* connection_handler(void* cl_args)
 
 			if( send_services(ssl) == 1 )
 			{
+				SSL_free(ssl);
 				fprintf(stderr, "%s\n", strerror(errno));
 				pthread_exit(NULL);
 			}
 				
-			bytes_read = read_request(ssl, request_message);
+			bytes_read = read_request(request_message);
 			
 			if (bytes_read <= 0)
 			{
-				fprintf(stdout, "Client disconnected\n");
-				pthread_exit(NULL);
-			}	
+				break;
+			}   	
 			
 			order_parser(request_message, &request);
 
@@ -449,9 +448,11 @@ void* connection_handler(void* cl_args)
 		    
 			memset(request_message, 0, DATA_SIZE);
 	    }
-
-	    fprintf(stdout, "Client disconnected\n");
-
+	    
+	    SSL_free(ssl);
+	    close(args->socket);
+	    SSL_CTX_free(args->ctx);
+	    fprintf(stdout, "Client disconnected. All resources freed\n");
 	    pthread_exit(NULL);
 
 	}

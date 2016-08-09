@@ -19,15 +19,18 @@ int send_services(SSL* ssl)
 	int file_fd = open("server/services.txt", O_RDONLY);
 
 	if ( file_fd < 0 )
-	{
-		fprintf(stderr, "%s", "couldn't open services.txt file");
+	{   
+		SSL_free(ssl);
+		fprintf(stderr, "%s", "couldn't open services.txt file");	
 		strerror(errno);
+		pthread_exit(NULL);
 		return 1;
 	}
 
 	if( 1 == send_file(file_fd, ssl) )
+	{
 		return 1;
-
+	}
 	return 0;
 }
 
@@ -84,6 +87,7 @@ int receive_file(SSL* ssl, char* buf) // reads while ##END## not occur
     
 	    if(bytes_read <= 0)
 	    {
+		SSL_free(ssl);
 		return 1;
 	    }
 
@@ -134,14 +138,15 @@ int receive_buff(SSL* ssl, char* buff, int buff_size)
 
     if(read_size == 0)
     {
-	fprintf(stderr, "%s\n","Client disconnected, corresponding thread exited");
+	SSL_free(ssl);
+	fprintf(stderr, "%s\n","Client disconnected, corresponding thread exited. SSL structures freed.");
 	pthread_exit(NULL);
     }
 	    
     return read_size;
 
 }
-int read_request(SSL* ssl, char request[DATA_SIZE])
+int read_request(char request[DATA_SIZE])
 {
 	memset(request, 0, DATA_SIZE);
 	int read_size = SSL_read(ssl, request, DATA_SIZE);
@@ -153,8 +158,7 @@ int read_request(SSL* ssl, char request[DATA_SIZE])
 
 	if(read_size == 0)
 	{
-		fprintf(stderr, "%s\n","Client disconnected, corresponding thread exited");
-		pthread_exit(NULL);
+	    return 0;
 	}
 	    
 	return read_size;
