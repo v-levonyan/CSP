@@ -258,7 +258,7 @@ void insert_username_password_to_db(const char* user_name, const char* password)
     }
 
     printf("%s\n", "SHA256 of the password was added to database.");
-
+    free(hex_hash);
 }
 
 int registrate_user(SSL* ssl, char* username)
@@ -307,6 +307,8 @@ int check_user_name_and_password_AUX(void* pass_ok, int argc, char** argv, char*
 	p_ok->ok = 1;
 	return 1;
     }
+
+    free(SHA256_of_password);
     return -1;
 }
 
@@ -465,8 +467,15 @@ void print_usage(FILE* stream, int exit_code)
 	exit (exit_code);
 }
 
-void handler(int signum)
+void sigpipe_handler(int signum)
 {
-	printf("%s\n","Recevied SIGPIPE signal from a client, the thread exits");
+	fprintf(stderr, "%s\n","Recevied SIGPIPE signal from a client, the thread exits.");
 	pthread_exit(NULL);
+}
+
+void sigint_handler(int signum)
+{
+	sqlite3_close(db);
+	fprintf(stderr, "%s\n", "Received SIGINT. All resources freed.");
+	exit(EXIT_FAILURE);
 }

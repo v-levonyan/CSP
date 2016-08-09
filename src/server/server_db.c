@@ -200,7 +200,10 @@ int add_key_to_keys(sqlite3** db, const unsigned char* key, int key_size, char* 
     *Key_ID = hex_key_id;
  
     printf("key inserted.\n");
-
+    
+    free(hex_key);
+    free(hex_user_name);
+    free(user_name_key_concatenation);
     return 0;
 }
 

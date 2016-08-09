@@ -56,7 +56,9 @@ struct params_t
 
 typedef struct params_t params_t;
 
-void handler(int );
+void sigpipe_handler(int );
+void sigint_handler(int signum);
+
 void parse_args(int argc, char *argv[]);
 
 params_t* params;

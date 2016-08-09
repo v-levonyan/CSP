@@ -30,7 +30,7 @@
 int main(int argc, char *argv[])
 {
     int i = 0;
-    struct sigaction sa;
+    struct sigaction sPipe, sInt;
     int socket_desc;
     struct sockaddr_in server, client;
 
@@ -68,11 +68,14 @@ int main(int argc, char *argv[])
 
     printf("%s\n", "Table keys created.");
    
-    memset(&sa, 0, sizeof(sa));
-
-    sa.sa_handler = &handler;
-    sigaction(SIGPIPE, &sa, NULL);
-
+    memset(&sPipe, 0, sizeof(sPipe));
+    memset(&sInt,  0, sizeof(sInt)); 
+    
+    sPipe.sa_handler = &sigpipe_handler;
+    sigaction(SIGPIPE, &sPipe, NULL);
+    
+    sInt.sa_handler = &sigint_handler;
+    sigaction(SIGINT, &sInt, NULL);
        
     create_socket(&socket_desc);
     

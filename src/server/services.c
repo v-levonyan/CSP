@@ -241,6 +241,7 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, char* user_name)
     } 
 
     free(key);
+    free(key_id);
 }
 
 void set_initial_vectors( unsigned char** iv_enc, unsigned char** iv_dec)
