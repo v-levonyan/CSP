@@ -304,12 +304,12 @@ int check_user_name_and_password_AUX(void* pass_ok, int argc, char** argv, char*
     
     if(strcmp(hex_sha256, SHA256_of_password) == 0) //passwordes match
     {
+	free(hex_sha256);
 	p_ok->ok = 1;
 	return 1;
     }
     
     free(hex_sha256);
-    free(SHA256_of_password);
     return -1;
 }
 
@@ -457,7 +457,7 @@ void* connection_handler(void* cl_args)
 	    
 	    SSL_free(ssl);
 	    close(args->socket);
-	    SSL_CTX_free(args->ctx);
+//	    SSL_CTX_free(args->ctx); // a little problem here, this also frees ciphers
 	    fprintf(stdout, "Client disconnected. All resources freed\n");
 	    pthread_exit(NULL);
 

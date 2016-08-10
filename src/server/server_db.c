@@ -79,8 +79,8 @@ static int retrieve_key(void* key, int argc, char** argv, char** azColName)
     char** key_loc = (char**)key;
     int key_size = strlen(*argv);
  
-    key_buf = (char*) malloc(key_size);
-    memset(key_buf, 0, key_size);
+    key_buf = (char*) malloc(key_size+1);
+    memset(key_buf, 0, key_size+1);
     
     strcpy(key_buf,*argv);
     *key_loc = key_buf;

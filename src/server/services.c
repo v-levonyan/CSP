@@ -452,6 +452,7 @@ int get_public_RSA_key(SSL* ssl, char** public_key)
 
     if(ok == '1') //CLient's specified file didn't exist
     {
+	free(pub_key);
 	fprintf(stderr,"%s","Wrong public key pathname from client.\n");
 	return 1; 
     }
@@ -481,6 +482,7 @@ void RSA_encrypt_m(size_t key_size, SSL*  ssl, char* user_name)
 
     if ( get_public_RSA_key(ssl, &pub_key) == 1)
     {
+	free(message);
 	return;
     }
 
@@ -545,6 +547,8 @@ void RSA_decrypt_m(size_t key_size, SSL*  ssl, char* user_name)
     if( get_RSA_private_key_by_ID(atoi(RSA_private_ID), user_name, RSA_private_key) == 1)
     {
 	//wrong ID
+	free(RSA_encrypted);
+	free(RSA_decrypted);
 	send_buff(ssl, "-1", 2);
 	return;
     }
@@ -555,6 +559,8 @@ void RSA_decrypt_m(size_t key_size, SSL*  ssl, char* user_name)
 
     if(ok == '1') //CLient's specified file didn't exist
     {
+	free(RSA_encrypted);
+	free(RSA_decrypted);
 	fprintf(stderr,"%s","Wrong public key pathname from client.\n");
 	return; 
     }
@@ -569,6 +575,8 @@ void RSA_decrypt_m(size_t key_size, SSL*  ssl, char* user_name)
     
     if(decrypted_length == -1)
     {
+	free(RSA_encrypted);
+	free(RSA_decrypted);
 	fprintf(stderr,"\nPrivate decrypt failed.\n ");
 	send_buff(ssl, "-1", 2);
 	return;
