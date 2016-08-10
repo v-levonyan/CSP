@@ -146,7 +146,14 @@ class clientSocket:
 	print 'RSA private key ID: ', RSA_private_key_ID, '\n'
 
 	return 1
-    
+   
+    def check_RSA_encrypted_file(self, filename):
+	f = open(filename)
+	
+	if os.path.getsize(filename) != 426 or f.readline() != '-----BEGIN RSA PUBLIC KEY-----\n':
+	    return -1
+	return 0
+    	
     def RSA_encryption(self, num, aux = 0):
 	seq = (num, '-1')
 	params = ':'.join(seq)
@@ -163,13 +170,19 @@ class clientSocket:
 
 	pub_key = raw_input('Enter the public RSA key pathname.\n>>> ')
 	
-	try:
-	    f = open(pub_key)
-	except:
-	    print "Specified file doesn't exist.\n"
-	    self.sendMessage('1') #Specified file doesn't exist
-	    return 
-	
+	while 1:
+	    try:
+		f = open(pub_key)
+	    except:
+		print "Specified file doesn't exist.\n"
+		self.sendMessage('1') #Specified file doesn't exist
+		return 
+	    if self.check_RSA_encrypted_file(pub_key) == -1:
+		self.sendMessage('1') 
+		print 'Wrong file.\n'
+		return
+	    break
+
 	self.sendMessage('0')
 	
 	self.sendFile(pub_key)	
@@ -184,8 +197,11 @@ class clientSocket:
 	fd.write(RSA_encrypted) 
         	
 	print 'RSA encryption done. Encrypted file is in your current directory with name ',RSA_encrypted_file
+	
+	if RSA_private_ID != '0':
 	    
-	print 'You should decrypt with RSA private key ID', RSA_private_ID
+	    print 'You should decrypt with RSA private key ID', RSA_private_ID
+	
 	return 1
     
     def RSA_decryption(self, num, aux = 0):

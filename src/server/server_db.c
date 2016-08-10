@@ -220,7 +220,7 @@ static int retrieve_RSA_key_ID(void* RSA_key_ID, int argc, char** argv, char** a
 int get_RSA_private_ID_from_keys(const char* pub_key)
 {
     //////////////////////////////////////////
-    int RSA_key_ID;
+    int RSA_key_ID = 0;
     char sql[2000];
     char* errmssg = 0;
     sprintf(sql,"SELECT RSA_private_ID FROM keys WHERE RSA_public_key='%s'", pub_key);

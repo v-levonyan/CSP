@@ -267,21 +267,31 @@ int registrate_user(SSL* ssl, char* username)
     char user_name [20] = { 0 };
     char password  [20] = { 0 };
 
-    SSL_read(ssl, user_name, 20);
+    if ( SSL_read(ssl, user_name, 20) <= 0)
+    {	
+	return -1;
+    }
     printf("Username - %s\n",user_name);
     
     while ( (busy = lookup_for_username(user_name)) == 1)
     {
 	memset(user_name, 0, 20);
 	send_buff(ssl, "1", 1);
-	receive_buff(ssl,user_name,20);
+	if ( SSL_read(ssl,user_name,20) <= 0)
+	{
+	    return -1;
+	}
     }
     
     send_buff(ssl,"0",1);
 
     //demand password
 
-    SSL_read(ssl,password,20);
+    if ( SSL_read(ssl,password,20) <= 0 )
+    {
+	return -1;
+    }
+
     send_buff(ssl,"0",1);
     printf("Password received.\n");
 
@@ -345,8 +355,15 @@ int signin_user(SSL* ssl, char* username)
     char user_name[20] = { 0 };
     char password [20] = { 0 };
 
-    receive_buff(ssl, user_name, 20);
-    receive_buff(ssl, password, 20);
+    if ( SSL_read(ssl, user_name, 20) <= 0 )
+    {
+	return -2;
+    }
+
+    if ( SSL_read(ssl, password, 20) <= 0 )
+    {
+	return -2;
+    }
 
     printf("username: %s, password: %s\n", user_name, password);
     
@@ -364,27 +381,42 @@ int signin_user(SSL* ssl, char* username)
 
 int authorize_client(SSL* ssl, char* user_name)
 {
+	int busy_username;
 	char reg_or_log[2] = { 0 };
 	SSL_write(ssl, "Authorize!", 10);
 	
-	SSL_read(ssl, reg_or_log, 2);
+	if ( SSL_read(ssl, reg_or_log, 2) <= 0 )
+	{
+	    return -1;
+	}
+
 	printf("%s\n", atoi(reg_or_log) == 0 ? "registration" : "sign in" );
 
 	if( atoi(reg_or_log) == 0 ) // registration
 	{
-	    registrate_user( ssl, user_name );
+	    if( registrate_user( ssl, user_name ) == -1)
+	    {
+		return -1;
+	    }
+
 	    printf("Registration succeed.\n");
 	}
 
 	if( atoi(reg_or_log) == 1 ) // signing in
 	{
-	    while( signin_user( ssl, user_name ) == -1 )
+	    while( (busy_username = signin_user( ssl, user_name )) == -1 )
 	    {
 		send_buff(ssl,"Wrong!",6);
 	    }
 
+	    if( busy_username == -2)
+	    {
+		return -1;
+	    }
+
 	    send_buff(ssl,"Right!",6);
 	}
+	return 0;
 }
 
 void* connection_handler(void* cl_args)
@@ -413,7 +445,13 @@ void* connection_handler(void* cl_args)
 	    // ShowCerts(ssl);  	   
 	   
 	    //demand authorization
-	    authorize_client(ssl,user_name);
+	    if ( authorize_client(ssl,user_name) == -1)
+	    {
+			SSL_free(ssl);
+			close(args->socket);
+			fprintf(stdout, "Client disconnected. All resources freed\n");
+			pthread_exit(NULL);
+	    }
    
 	    while ( (bytes_read = read_request(ssl, request_message)) > 0 )
 	    {
