@@ -31,5 +31,10 @@ Enter the corresponding number
                                                                        
 ----------------------RSA encryption/decryption------------------------ 
                                                                                      
-19 - RSA encryption                             20 - RSA decryption                          
+19 - RSA encryption                             20 - RSA decryption    
+
+---------------------Elliptic curve cryptography-----------------------                      
+
+21 - Elliptic Curve Diffie-Hellman
+
 _______________________________________________________________________

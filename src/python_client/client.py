@@ -246,7 +246,16 @@ class clientSocket:
 	
 	decrypted = self.recieveMessage()
 	print 'decrypted: ', decrypted
+    
+    def EC_Diffie_Hellman(self, num, aux = 0):
 	
+	seq = (num, '-1')
+	params = ':'.join(seq)
+	
+	self.sendMessage(params)
+
+	return
+
     def symmetric_key(self, num, aux = 0):
 	
 	CorrespondingKey = { '3' : '7', '4' : '21', '5' : '16', '6' : '24', '7' : '32' }
@@ -490,7 +499,7 @@ def call_corresponding_service(serviceId, options, clientSock):
      
      while 1:  
 	
-	if serviceId < 0 or serviceId > 20:
+	if serviceId < 0 or serviceId > 21:
 	    print ' Wrong order!\n'
 	    	
 	if serviceId == 2 or serviceId == 8 or serviceId == 9 or serviceId == 13 or serviceId == 14:
@@ -499,7 +508,7 @@ def call_corresponding_service(serviceId, options, clientSock):
 	if serviceId > 0 and serviceId <= 12 and serviceId != 2 and serviceId != 8 and serviceId != 9:
 	    return options.get(serviceId)(str(serviceId),0)  #continue
 	
-	if serviceId > 14  and serviceId <= 20:
+	if serviceId > 14  and serviceId <= 21:
 	    return options.get(serviceId)(str(serviceId),1)  #continue
     	
 	serviceId = get_service()

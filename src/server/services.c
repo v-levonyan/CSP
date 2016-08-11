@@ -14,6 +14,8 @@
 #include <openssl/evp.h>
 #include <openssl/bio.h>
 #include <openssl/err.h>
+#include <openssl/ec.h>
+#include <openssl/obj_mac.h>
 
 #include "sqlite3.h"
 #include "openssl/ssl.h"
@@ -590,3 +592,53 @@ void RSA_decrypt_m(size_t key_size, SSL*  ssl, char* user_name)
     free(RSA_encrypted);
     free(RSA_decrypted);
 }
+
+
+void EC_Diffie_Hellman(size_t key_size, SSL*  ssl, char* user_name)
+{ 
+    EC_GROUP* curve;
+    EC_KEY* key;
+    BIGNUM* prv;
+    EC_POINT* pub;
+
+    if( (curve = EC_GROUP_new_by_curve_name(NID_secp224r1)) == NULL )
+    {
+	fprintf(stderr, "Error while generating EC group.\n");
+	pthread_exit(NULL);
+    }
+    
+    if( (key = EC_KEY_new_by_curve_name(NID_secp224r1)) == NULL )
+    {
+	fprintf(stderr, "Error while setting up EC_KEY object.\n");
+	pthread_exit(NULL);
+    }
+
+    if( EC_KEY_generate_key(key) != 1) //generates a public and private key pair
+    {
+	fprintf(stderr, "Error while generating EC keys.\n");
+	pthread_exit(NULL);
+    }
+    
+    /* Set up private key in prv */
+    /* Set up public key in pub */
+
+    if( EC_KEY_set_private_key(key, prv) != 1)
+    {	
+	fprintf(stderr, "Error while setting EC private key.\n");
+	pthread_exit(NULL);
+    }
+    if( EC_KEY_set_public_key(key, pub) != 1)
+    {	
+	fprintf(stderr, "Error while generating EC public key.\n");
+	pthread_exit(NULL);
+    }
+    
+   // EC_KEY_oct2key();
+    
+}
+
+/*void EC_Diffie_Hellman(size_t key_size, SSL*  ssl, char* user_name)
+{
+    
+}*/
+

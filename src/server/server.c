@@ -150,6 +150,7 @@ void set_hash_table()
 	addToHashTable(ht, "RSA_key",           RSA_key);
 	addToHashTable(ht, "encryptik",         RSA_encrypt_m); //##### change the name #####
 	addToHashTable(ht, "decryptik",         RSA_decrypt_m);
+	addToHashTable(ht, "EC_Diffie_Hellman", EC_Diffie_Hellman);
 }
 
 void choose_corresponding_service(int serv, struct request_t* request)
@@ -200,6 +201,9 @@ void choose_corresponding_service(int serv, struct request_t* request)
 		break;
 	    case 20:
 		strcpy(request->query, "decryptik");
+		break;
+	    case 21:
+		strcpy(request->query, "EC_Diffie_Hellman");
 		break;
 	}
 

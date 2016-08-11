@@ -25,6 +25,7 @@ int  get_public_RSA_key(SSL* ssl, char** public_key);
 void RSA_encrypt_m(size_t filesize, SSL*  ssl, char* user_name);
 void RSA_decrypt_m(size_t size, SSL*  ssl, char* user_name);
 int RSA_private_decrypt_m(const char* encrypted, int encr_length, char* RSA_private_key,char*decrypted);
+void EC_Diffie_Hellman(size_t key_size, SSL*  ssl, char* user_name);
 
 #endif
 /*----------------------------------------------------------------------------------------------*/
