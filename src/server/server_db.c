@@ -59,7 +59,7 @@ int create_table_keys(sqlite3** db)
     char* errmssg = 0;
     int rc;
 
-    sql = "CREATE TABLE keys(fk_user_name TEXT, symmetric_key_id TEXT, symmetric_key TEXT,key_length INT,RSA_public_key TEXT, RSA_private_key TEXT,RSA_private_id INTEGER PRIMARY KEY AUTOINCREMENT,FOREIGN KEY(fk_user_name) REFERENCES users(user_name) );";
+    sql = "CREATE TABLE keys(fk_user_name TEXT, symmetric_key_id TEXT, symmetric_key TEXT,key_length INT,RSA_public_key TEXT, RSA_private_key TEXT, EC_public_key VARBINARY, EC_private_key TEXT, RSA_private_id INTEGER PRIMARY KEY AUTOINCREMENT,FOREIGN KEY(fk_user_name) REFERENCES users(user_name) );";
 
     rc = sqlite3_exec(*db, sql, 0, 0, &errmssg);
 
@@ -134,8 +134,8 @@ int get_RSA_private_key_by_ID(int RSA_private_ID, const char* user_name, char* R
 }
 void string_to_hex_string(const unsigned char* str, size_t str_size, char** hex_str)
 {
-    char* hex = (char*)malloc(str_size*2 + 1);
-    memset(hex, 0, str_size*2 + 1);
+    char* hex = (char*)malloc(str_size*2);
+    memset(hex, 0, str_size*2);
 
     int i;
 
@@ -162,6 +162,24 @@ int add_RSA_key_pair_to_keys(const unsigned char* public_key, const unsigned cha
     }
 
     return 0;
+}
+
+int add_EC_key_pair_to_keys(const char* user_name, const unsigned char* EC_public_key, const unsigned char* EC_private_key)
+{
+    char* errmssg = 0;
+    char sql [5000] = { 0 };
+    
+    sprintf( sql, "INSERT INTO keys(fk_user_name, EC_public_key, EC_private_key) VALUES('%s', '%s', '%s');", user_name, EC_public_key, EC_private_key);
+
+    if( sqlite3_exec(db, sql, 0, 0, &errmssg) != SQLITE_OK)	
+    {
+	fprintf(stderr, "SQL error: %s\n", errmssg);
+	sqlite3_free(errmssg);
+	return 1;
+    }
+
+    return 0;
+
 }
 
 int add_key_to_keys(sqlite3** db, const unsigned char* key, int key_size, char* user_name, char** Key_ID)

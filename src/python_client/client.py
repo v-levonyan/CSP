@@ -253,7 +253,14 @@ class clientSocket:
 	params = ':'.join(seq)
 	
 	self.sendMessage(params)
+	
+	if int(self.recieveMessage()) == -1:
+	    print 'Error occured while EC processing, try order again' 
+	    return
 
+	EC_pub = self.recieveMessage()
+	
+	print 'Elliptic curve public point: ', self.byteToHex(EC_pub)
 	return
 
     def symmetric_key(self, num, aux = 0):

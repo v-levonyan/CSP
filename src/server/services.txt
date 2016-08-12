@@ -35,6 +35,6 @@ Enter the corresponding number
 
 ---------------------Elliptic curve cryptography-----------------------                      
 
-21 - Elliptic Curve Diffie-Hellman
+21 - Generate Elliptic Curve keys and get public one
 
 _______________________________________________________________________

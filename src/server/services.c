@@ -16,6 +16,7 @@
 #include <openssl/err.h>
 #include <openssl/ec.h>
 #include <openssl/obj_mac.h>
+#include <openssl/bn.h>
 
 #include "sqlite3.h"
 #include "openssl/ssl.h"
@@ -29,6 +30,8 @@
 #include "services.h"
 
 #define DATA_SIZE 1024
+#define EC_PUB_KEY_BUF_LENGTH 58
+#define EC_PRIVATE_KEY_BUF_LENGTH 29
 
 void receive_file_compute_hash_send_back(size_t filesize, SSL* ssl, char* user_name)
 {
@@ -593,52 +596,251 @@ void RSA_decrypt_m(size_t key_size, SSL*  ssl, char* user_name)
     free(RSA_decrypted);
 }
 
-
-void EC_Diffie_Hellman(size_t key_size, SSL*  ssl, char* user_name)
+int EC_generate_keys_by_curve_name(EC_KEY** key, EC_GROUP** curve)
 { 
+    if( (*curve = EC_GROUP_new_by_curve_name(NID_secp224r1)) == NULL )
+    {
+	fprintf(stderr, "Error while generating EC group.\n");
+	return 1;
+    }
+   
+    if( (*key = EC_KEY_new_by_curve_name(NID_secp224r1)) == NULL )
+    {
+	fprintf(stderr, "Error while setting up EC_KEY object.\n");
+	return 1;
+    }
+    
+    if( EC_KEY_generate_key(*key) != 1) //generates a public and private key pair
+    {
+	fprintf(stderr, "Error while generating EC keys.\n");
+	return 1;
+    }
+    
+    return 0;
+}
+
+int EC_keys2_oct(const EC_GROUP* curve, const EC_POINT* pub, const BIGNUM* prv, const EC_KEY* key, unsigned char**pub_buf, unsigned char** prv_buf)
+{
+    *pub_buf = malloc(EC_PUB_KEY_BUF_LENGTH);
+    *prv_buf = malloc(EC_PRIVATE_KEY_BUF_LENGTH);
+    
+    memset(*pub_buf, 0, EC_PUB_KEY_BUF_LENGTH);
+    memset(*prv_buf, 0, EC_PRIVATE_KEY_BUF_LENGTH);
+
+    if( EC_POINT_point2oct(curve, pub, EC_KEY_get_conv_form(key), *pub_buf, EC_PUB_KEY_BUF_LENGTH, 0) == 0  )
+    {
+	fprintf(stderr, "Error while converting EC_POINT to octal string.\n");
+	return 1;
+    }
+
+    if ( BN_bn2bin(prv, *prv_buf) == 0)
+    {
+	fprintf(stderr, "Error while converting BIG_NUM to bin string.\n");
+	return 1;
+    }
+
+    return 0;
+}
+
+void hex_string_to_byte_string(const char* hex_str, unsigned char* byte_str) 
+{
+    int count;
+    char* pos = hex_str;
+
+    for(count = 0; count < strlen(hex_str); count++) 
+    {
+	sscanf(pos, "%2hhx", &byte_str[count]);
+	pos += 2;
+    }
+}
+void EC_key_transmission(size_t key_size, SSL*  ssl, char* user_name)
+{
+    unsigned char* pub_buf;
+    unsigned char* prv_buf;
+       
+    EC_GROUP* curve;
+    EC_KEY* key;
+    
+    EC_POINT* pub;   
+    BIGNUM* prv;
+
+    if ( EC_generate_keys_by_curve_name(&key, &curve) == 1 )
+    {	
+	EC_KEY_free(key);
+	pthread_exit(NULL);
+    }
+    
+    printf("%s", "EC keys generated.\n");
+
+    pub = EC_KEY_get0_public_key(key);
+    prv = EC_KEY_get0_private_key(key);
+    
+    if ( EC_keys2_oct(curve, pub, prv, key, &pub_buf, &prv_buf) == 1)
+    {
+	send_buff(ssl, "-1", 2);
+	EC_KEY_free(key);
+	free(pub_buf);
+	free(prv_buf);
+	return;
+    }
+    
+    /* remove */
+
+    printf("EC public key: ");
+    print_key(pub_buf, EC_PUB_KEY_BUF_LENGTH - 1);
+
+    printf("\nEC private key: ");
+    print_key(prv_buf, EC_PRIVATE_KEY_BUF_LENGTH - 1);   
+      
+    char* hex_pub;
+
+    string_to_hex_string(pub_buf, EC_PUB_KEY_BUF_LENGTH-1, &hex_pub);
+    
+    printf("hex pub:  %s\n", hex_pub);
+    
+    char byte_pub[29] = 0;
+
+    hex_string_to_byte_string(hex_pub, byte_pub)
+    
+    
+
+
+    if ( add_EC_key_pair_to_keys(user_name, pub_buf, prv_buf)  == 1)
+    {
+	send_buff(ssl, "-1", 2);
+	EC_KEY_free(key);
+	free(pub_buf);
+	free(prv_buf);
+	fprintf(stderr, "Error while adding EC keys to database.\n");
+	return;
+    }
+
+    printf("%s\n", "EC keys added to database.");
+
+    send_buff(ssl, "1", 1); //Ok
+
+    if( SSL_write(ssl, pub_buf, EC_PUB_KEY_BUF_LENGTH - 1) <= 0)
+    {
+	EC_KEY_free(key);
+	pthread_exit(NULL);
+	/* handle */
+    }
+
+    EC_KEY_free(key);
+    free(pub_buf);
+    free(prv_buf);
+}
+
+/*void EC_Diffie_Hellman(size_t key_size, SSL*  ssl, char* user_name)
+{
+    int field_size, secret_len;
+    unsigned char* prv_buf;
+    unsigned char* pub_buf;
+    unsigned char* shared_secret_buf;
+    unsigned char* secret;
+
     EC_GROUP* curve;
     EC_KEY* key;
     BIGNUM* prv;
     EC_POINT* pub;
+    EC_POINT* Shared_secret;
+    BIGNUM* pub_BN;
 
     if( (curve = EC_GROUP_new_by_curve_name(NID_secp224r1)) == NULL )
     {
 	fprintf(stderr, "Error while generating EC group.\n");
 	pthread_exit(NULL);
     }
-    
+   
     if( (key = EC_KEY_new_by_curve_name(NID_secp224r1)) == NULL )
     {
 	fprintf(stderr, "Error while setting up EC_KEY object.\n");
 	pthread_exit(NULL);
     }
+    
+    if( EC_KEY_generate_key(key) != 1) //generates a public and private key pair
+    {
+	fprintf(stderr, "Error while generating EC keys.\n");
+	pthread_exit(NULL);
+    }
+
+    pub = EC_KEY_get0_public_key(key);
+    prv = EC_KEY_get0_private_key(key);
+
+    pub_buf = malloc(EC_PUB_KEY_BUF_LENGTH);
+    memset(pub_buf, 0, EC_PUB_KEY_BUF_LENGTH);
+    EC_POINT_point2oct(curve, pub, EC_KEY_get_conv_form(key), pub_buf, EC_PUB_KEY_BUF_LENGTH, 0);
+
+    printf("%s\n", pub_buf);
+    print_key(pub_buf, EC_PUB_KEY_BUF_LENGTH);
+    printf("%d\n", strlen(pub_buf));
+    
+
+    field_size = EC_GROUP_get_degree(EC_KEY_get0_group(key));
+
+    secret_len = (field_size + 7)/8;
+
+    secret = OPENSSL_malloc(secret_len);
+    
+    secret_len = ECDH_compute_key(secret, secret_len, pub, key, NULL);
+
+    printf("secret:   %s\n", secret);
+
+    
+   
+    int sz = EC_POINT_mul(curve, Shared_secret, 0, pub, prv, 0);
+    
+    printf("size: %d\n", sz);
+    
+    shared_secret_buf = malloc(15*EC_PUB_KEY_BUF_LENGTH);
+    memset(shared_secret_buf, 0, 15*EC_PUB_KEY_BUF_LENGTH);
+    EC_POINT_point2oct(curve, Shared_secret, EC_KEY_get_conv_form(key), shared_secret_buf,15*EC_PUB_KEY_BUF_LENGTH, 0);
+
+    printf("%s\n", shared_secret_buf);
+    print_key(shared_secret_buf, 15*EC_PUB_KEY_BUF_LENGTH);
+    
+    printf("%d\n", strlen(shared_secret_buf));
+
+
+    length = BN_num_bytes(pub_BN);
+
+    pub_buf = malloc(length+1);
+    memset(pub_buf, 0, length+1);
+
+    BN_bn2bin(pub_BN, pub_buf);
+    */
+
+    
+    /*length = BN_num_bytes(prv);
+
+    prv_buf = malloc(length+1);
+    memset(prv_buf, 0, length+1);
+    BN_bn2bin(prv, prv_buf); */
+  /* 
+    EC_KEY_set_asn1_flag(key, OPENSSL_EC_NAMED_CURVE);
 
     if( EC_KEY_generate_key(key) != 1) //generates a public and private key pair
     {
 	fprintf(stderr, "Error while generating EC keys.\n");
 	pthread_exit(NULL);
     }
-    
+   */
     /* Set up private key in prv */
     /* Set up public key in pub */
-
+/*    
+    if( EC_KEY_set_public_key(key, pub) != 1)
+    {	
+	fprintf(stderr, "Error while generating EC public key.\n");
+	pthread_exit(NULL);
+    } */
+   /* 
     if( EC_KEY_set_private_key(key, prv) != 1)
     {	
 	fprintf(stderr, "Error while setting EC private key.\n");
 	pthread_exit(NULL);
     }
-    if( EC_KEY_set_public_key(key, pub) != 1)
-    {	
-	fprintf(stderr, "Error while generating EC public key.\n");
-	pthread_exit(NULL);
-    }
-    
-   // EC_KEY_oct2key();
-    
-}
+   */
+  //  EC_KEY_oct2key();
 
-/*void EC_Diffie_Hellman(size_t key_size, SSL*  ssl, char* user_name)
-{
-    
-}*/
+//}
 
