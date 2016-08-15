@@ -20,6 +20,6 @@ int get_RSA_private_ID_from_keys(const char* pub_key);
 int get_RSA_private_key_by_ID(int RSA_private_ID, const char* user_name, char* RSA_private_key);
 static int retrieve_RSA_private_key(void* RSA_private_key, int argc, char** argv, char** azColName);
 sqlite3* db;
-
+static int check_EC_keys(void* check, int argc, char** argv, char** azColName);
 /*---------------------------------------------------------------------------------------------------*/
 #endif

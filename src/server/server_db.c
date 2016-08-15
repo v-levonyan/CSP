@@ -134,8 +134,8 @@ int get_RSA_private_key_by_ID(int RSA_private_ID, const char* user_name, char* R
 }
 void string_to_hex_string(const unsigned char* str, size_t str_size, char** hex_str)
 {
-    char* hex = (char*)malloc(str_size*2);
-    memset(hex, 0, str_size*2);
+    char* hex = (char*)malloc(str_size*2 + 1);
+    memset(hex, 0, str_size*2 + 1);
 
     int i;
 
@@ -163,7 +163,14 @@ int add_RSA_key_pair_to_keys(const unsigned char* public_key, const unsigned cha
 
     return 0;
 }
-
+/*
+static int check_EC_keys(void* check, int argc, char** argv, char** azColName)
+{
+    fprintf(stderr, "hereeee\n");
+//    fprintf(stderr, "%s\n%s",*argv,*(argv + 1));
+//    fprintf(stderr, "lengths: %d %d\n", strlen(*argv), strlen(*(argv + 1)));
+}
+*/
 int add_EC_key_pair_to_keys(const char* user_name, const unsigned char* EC_public_key, const unsigned char* EC_private_key)
 {
     char* errmssg = 0;
@@ -171,7 +178,7 @@ int add_EC_key_pair_to_keys(const char* user_name, const unsigned char* EC_publi
     
     sprintf( sql, "INSERT INTO keys(fk_user_name, EC_public_key, EC_private_key) VALUES('%s', '%s', '%s');", user_name, EC_public_key, EC_private_key);
 
-    if( sqlite3_exec(db, sql, 0, 0, &errmssg) != SQLITE_OK)	
+    if( sqlite3_exec(db, sql, 0, /* check_EC_keys, */ 0, &errmssg) != SQLITE_OK)	
     {
 	fprintf(stderr, "SQL error: %s\n", errmssg);
 	sqlite3_free(errmssg);
@@ -253,11 +260,3 @@ int get_RSA_private_ID_from_keys(const char* pub_key)
     return RSA_key_ID;
 }
 
-void drop_table()
-{
-    char* sql = "DROP TABLE users";
-    sqlite3* db;
-
-    sqlite3_open("SERVER_DB.dblite", &db);
-    sqlite3_exec(db, sql, 0, 0, 0);
-}
