@@ -802,22 +802,21 @@ void EC_key_transmission(size_t key_size, SSL*  ssl, char* user_name)
 
 void EC_get_shared_secret(size_t key_size, SSL*  ssl, char* user_name)
 {
-    char	   EC_public_key_buf[2*EC_PUB_KEY_BUF_LENGTH]       = { 0 };
-    char	   EC_peer_public_key_buf[2*EC_PUB_KEY_BUF_LENGTH]  = { 0 };
-    char	   EC_private_key_buf[2*EC_PRIVATE_KEY_BUF_LENGTH]  = { 0 };
+    int		    field_size, secret_len;
+    
+    char	    EC_public_key_buf[2*EC_PUB_KEY_BUF_LENGTH]       = { 0 };
+    char	    EC_peer_public_key_buf[2*EC_PUB_KEY_BUF_LENGTH]  = { 0 };
+    char	    EC_private_key_buf[2*EC_PRIVATE_KEY_BUF_LENGTH]  = { 0 };
 
-    unsigned char  EC_byte_pub[EC_PUB_KEY_BUF_LENGTH]		    = { 0 };
-    unsigned char  EC_byte_peer_pub[EC_PUB_KEY_BUF_LENGTH]	    = { 0 };
-    unsigned char  EC_byte_prv[EC_PRIVATE_KEY_BUF_LENGTH]           = { 0 };
-
+    unsigned char*  secret;  
+    unsigned char   EC_byte_pub[EC_PUB_KEY_BUF_LENGTH]		    = { 0 };
+    unsigned char   EC_byte_peer_pub[EC_PUB_KEY_BUF_LENGTH]	    = { 0 };
+    unsigned char   EC_byte_prv[EC_PRIVATE_KEY_BUF_LENGTH]           = { 0 };
+       
     EC_KEY* key;
     EC_KEY* peer_key;
    
-    if( (key = EC_KEY_new_by_curve_name(NID_secp224r1)) == NULL)
-    {
-	/* handle */
-    }
-
+   
     receive_buff(ssl, EC_public_key_buf, 2*EC_PUB_KEY_BUF_LENGTH);
     printf("%s\n", EC_public_key_buf);
 
@@ -831,21 +830,79 @@ void EC_get_shared_secret(size_t key_size, SSL*  ssl, char* user_name)
     printf("EC private key got %s\n", EC_private_key_buf);
     
     hex_string_to_byte_string(EC_public_key_buf, EC_byte_pub);
-    print_key(EC_byte_pub, strlen(EC_byte_pub));
+    print_key(EC_byte_pub, EC_PUB_KEY_BUF_LENGTH - 1);
 
     hex_string_to_byte_string(EC_private_key_buf, EC_byte_prv);
-    print_key(EC_byte_prv, strlen(EC_byte_prv));
+    print_key(EC_byte_prv, EC_PRIVATE_KEY_BUF_LENGTH - 1);
 
     receive_buff(ssl, EC_peer_public_key_buf, 2*EC_PUB_KEY_BUF_LENGTH);
-    printf("%s\n", EC_peer_public_key_buf);
- 
-
-	    
-	    
-		    /* remove */
+    
+    printf("peer public key %s\n", EC_peer_public_key_buf);
+ 		    /* remove */
+    
     hex_string_to_byte_string(EC_peer_public_key_buf, EC_byte_peer_pub);
-    print_key(EC_byte_peer_pub, strlen(EC_byte_peer_pub));
+    print_key(EC_byte_peer_pub, EC_PUB_KEY_BUF_LENGTH -1 );
 
+    
+    if( (key = EC_KEY_new_by_curve_name(NID_secp224r1)) == NULL)
+    {
+	fprintf(stderr,"ERROR1\n");
+	/* handle */
+    }
+    
+    if( (peer_key = EC_KEY_new_by_curve_name(NID_secp224r1)) == NULL)
+    {
+	fprintf(stderr,"ERROR1\n");
+	/* handle */
+
+    }
+    BIGNUM*   BN_EC_byte_prv       = NULL;
+    EC_POINT* EC_POINT_peer_public = NULL;
+
+    BN_hex2bn( &BN_EC_byte_prv, EC_private_key_buf);
+    fprintf(stderr, "BN print\n");
+    BN_print_fp(stderr, BN_EC_byte_prv);
+    fprintf(stderr, "\n");
+
+    if( EC_KEY_set_private_key(key, BN_EC_byte_prv) != 1)
+    {
+	fprintf(stderr,"ERROR2\n");
+	/* handle */
+    }
+
+    if( EC_POINT_hex2point(EC_KEY_get0_group(key), EC_peer_public_key_buf, EC_POINT_peer_public, 0) == NULL)
+    {
+	fprintf(stderr, "ERROR4\n");
+    }
+
+/*
+    field_size = EC_GROUP_get_degree(EC_KEY_get0_group(key));
+    secret_len = (field_size+7)/8;
+    
+    fprintf(stderr, "secret_len %d\n", secret_len);
+    if((secret = OPENSSL_malloc(secret_len)) == NULL)
+    {
+	fprintf(stderr, "ERROR5\n");
+    }
+    
+    fprintf(stderr, "secret_len2 %d\n", secret_len);
+
+    secret_len = ECDH_compute_key(secret, secret_len, EC_POINT_peer_public, key, NULL);
+    
+    fprintf(stderr, "secret_len3 %d\n", secret_len);
+
+    printf("secret: %d \n%s", secret_len, secret);
+    print_key(secret, secret_len);
+*/
+    EC_POINT* EC_POINT_shared_secret = NULL;
+
+    printf("res: %d\n", EC_POINT_mul(EC_KEY_get0_group(key), EC_POINT_shared_secret, 0, EC_POINT_peer_public, BN_EC_byte_prv, 0));
+
+//       if( EC_KEY_set_public_key(peer_key, EC_POINT_peer_public) != 1)
+//    {
+//	fprintf(stderr,"ERROR5\n");
+	/* handle */
+//    }
 
 }
 /*void EC_Diffie_Hellman(size_t key_size, SSL*  ssl, char* user_name)
