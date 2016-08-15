@@ -29,6 +29,7 @@ void EC_Diffie_Hellman(size_t key_size, SSL*  ssl, char* user_name);
 int EC_keys2_oct(const EC_GROUP* curve, const EC_POINT* pub, const BIGNUM* prv, const EC_KEY* key, unsigned char**pub_buf, unsigned char** prv_buf);
 int EC_generate_keys_by_curve_name(EC_KEY** keyi, EC_GROUP** curve);
 void EC_key_transmission(size_t key_size, SSL*  ssl, char* user_name);
+void EC_get_shared_secret(size_t key_size, SSL*  ssl, char* user_name);
 
 #endif
 /*----------------------------------------------------------------------------------------------*/

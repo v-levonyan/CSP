@@ -163,30 +163,51 @@ int add_RSA_key_pair_to_keys(const unsigned char* public_key, const unsigned cha
 
     return 0;
 }
-/*
-static int check_EC_keys(void* check, int argc, char** argv, char** azColName)
+
+static int EC_retrieve_private_key(void* EC_private_key, int argc, char** argv, char** azColName)
 {
-    fprintf(stderr, "hereeee\n");
-//    fprintf(stderr, "%s\n%s",*argv,*(argv + 1));
-//    fprintf(stderr, "lengths: %d %d\n", strlen(*argv), strlen(*(argv + 1)));
+    char* EC_private_key_loc = (char*) EC_private_key;
+    
+    strcpy(EC_private_key, *argv);
 }
-*/
+
+int EC_get_private_key_by_public( const char* user_name, const unsigned char* EC_public_key, unsigned char* EC_private_key)
+{
+     char* errmssg = 0;
+     char sql [5000] = { 0 };
+     
+     sprintf(sql, "SELECT EC_private_key from KEYS WHERE EC_public_key='%s' and fk_user_name='%s'", EC_public_key, user_name);
+    
+     if( sqlite3_exec(db, sql, EC_retrieve_private_key, EC_private_key, &errmssg) != SQLITE_OK)	
+     {
+	 fprintf(stderr, "SQL error: %s\n", errmssg);
+	 sqlite3_free(errmssg);
+//	 return 1;
+     }
+     
+     if (strlen(EC_private_key) != 56)
+     {
+	 return 1;    //wrong public name
+     }
+     
+     return 0;
+}
+
 int add_EC_key_pair_to_keys(const char* user_name, const unsigned char* EC_public_key, const unsigned char* EC_private_key)
 {
-    char* errmssg = 0;
-    char sql [5000] = { 0 };
-    
+    char* errmssg    =   0;
+    char  sql [5000] = { 0 };
+        
     sprintf( sql, "INSERT INTO keys(fk_user_name, EC_public_key, EC_private_key) VALUES('%s', '%s', '%s');", user_name, EC_public_key, EC_private_key);
 
-    if( sqlite3_exec(db, sql, 0, /* check_EC_keys, */ 0, &errmssg) != SQLITE_OK)	
+    if( sqlite3_exec(db, sql, 0, 0, &errmssg) != SQLITE_OK)	
     {
 	fprintf(stderr, "SQL error: %s\n", errmssg);
 	sqlite3_free(errmssg);
 	return 1;
     }
-
+     
     return 0;
-
 }
 
 int add_key_to_keys(sqlite3** db, const unsigned char* key, int key_size, char* user_name, char** Key_ID)

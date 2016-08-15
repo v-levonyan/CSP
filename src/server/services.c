@@ -644,32 +644,39 @@ int EC_keys2_oct(const EC_GROUP* curve, const EC_POINT* pub, const BIGNUM* prv, 
 
 void hex_string_to_byte_string(const char* hex_str, unsigned char* byte_str) 
 {
-    int count;
+    int i, count, n;
     char* pos = hex_str;
-
-    for(count = 0; count < strlen(hex_str)/2; count++) 
+/*
+    for(count = 0; count < strlen(hex_str)/2+1; count++) 
     {
 	sscanf(pos, "%2hhx", &byte_str[count]);
 	pos += 2;
-    }
-}
+    } */
 
+     for(i = 0; i < strlen(hex_str)/2; i++) 
+     {
+	 sscanf(hex_str+2*i, "%2X", &n);
+	 byte_str[i] = (char)n;
+     }
+}
+                /* bad function, need to be removed */
 void byte_string_to_hex_string(const unsigned char* byte_string, char* hex_string, int size) //hex_string buffer must be large enough
 {
-    int i = 0;
-
-    for (; i < size*2; ++i)
+    int i;
+    
+    for(i = 0; i < size/2; i++)
     {
-//	sprintf( &hex[i*2], "%02X", str[i]);
-	sprintf(&hex_string[i*2], "%02X", byte_string[i]);
+	sprintf(hex_string+2*i, "%02X", byte_string[i]);
     }
-
 }
+
 void EC_key_transmission(size_t key_size, SSL*  ssl, char* user_name)
 {
     unsigned char* pub_buf;
     unsigned char* prv_buf;
-       
+    char* hex_pub; 
+    char* hex_prv;
+  
     EC_GROUP* curve;
     EC_KEY* key;
     
@@ -691,28 +698,54 @@ void EC_key_transmission(size_t key_size, SSL*  ssl, char* user_name)
     {
 	send_buff(ssl, "-1", 2);
 	EC_KEY_free(key);
+	EC_GROUP_free(curve);
 	free(pub_buf);
 	free(prv_buf);
 	return;
     }
     
-    /* remove */
-
-    printf("EC public key: ");
+    printf("EC public key: \n");
     print_key(pub_buf, EC_PUB_KEY_BUF_LENGTH-1);
+    
+    printf("EC private key: \n");
+    print_key(prv_buf, EC_PRIVATE_KEY_BUF_LENGTH-1);
+/*
+    char* hex_pub_m = calloc(2*EC_PUB_KEY_BUF_LENGTH,1);
+    
+    byte_string_to_hex_string(pub_buf,  hex_pub_m, EC_PUB_KEY_BUF_LENGTH*2 - 1);
+    printf("Hex_pub_m : \n%s\n", hex_pub_m);
+*/
+    string_to_hex_string(pub_buf, EC_PUB_KEY_BUF_LENGTH - 1,     &hex_pub);
+    string_to_hex_string(prv_buf, EC_PRIVATE_KEY_BUF_LENGTH - 1, &hex_prv);
+    
 
+//    printf("hex pub: \n%s\nhex prv: \n%s\n", hex_pub, hex_prv);
+	    /* remove */
+/*
+    char byte_pub[EC_PUB_KEY_BUF_LENGTH] = { 0 };
+    char byte_prv[EC_PRIVATE_KEY_BUF_LENGTH] = { 0 };
+
+    hex_string_to_byte_string(hex_pub, byte_pub);
+    hex_string_to_byte_string(hex_prv, byte_prv);
+
+    printf("puuuub\n");
+    print_key(byte_pub, EC_PUB_KEY_BUF_LENGTH - 1);
+     
+    printf("prv\n");
+    print_key(byte_prv, EC_PRIVATE_KEY_BUF_LENGTH - 1);
+ */
+/*
     printf("\nEC private key: ");
     print_key(prv_buf, EC_PRIVATE_KEY_BUF_LENGTH-1);   
       
     char* hex_pub ;//= calloc(EC_PUB_KEY_BUF_LENGTH*2, 1);
     char* hex_prv ;//= calloc(EC_PRIVATE_KEY_BUF_LENGTH*2, 1);
-/*
     byte_string_to_hex_string(pub_buf, hex_pub, EC_PUB_KEY_BUF_LENGTH-1);
     byte_string_to_hex_string(prv_buf, hex_prv, EC_PRIVATE_KEY_BUF_LENGTH-1);
 
     printf("hex pub: %s\n", hex_pub);
     printf("hex_prv: %s\n", hex_prv);
-*/
+
 
     string_to_hex_string(pub_buf, EC_PUB_KEY_BUF_LENGTH - 1,     &hex_pub);
     string_to_hex_string(prv_buf, EC_PRIVATE_KEY_BUF_LENGTH - 1, &hex_prv);
@@ -731,7 +764,8 @@ void EC_key_transmission(size_t key_size, SSL*  ssl, char* user_name)
     
     printf("prv\n");
     print_key(byte_prv, EC_PRIVATE_KEY_BUF_LENGTH - 1);
-
+*/
+    
     if ( add_EC_key_pair_to_keys(user_name, hex_pub, hex_prv)  == 1)
     {
 	send_buff(ssl, "-1", 2);
@@ -750,7 +784,7 @@ void EC_key_transmission(size_t key_size, SSL*  ssl, char* user_name)
 
     send_buff(ssl, "1", 1); //Ok
 
-    if( SSL_write(ssl, pub_buf, EC_PUB_KEY_BUF_LENGTH - 1) <= 0)
+    if( SSL_write(ssl, hex_pub, EC_PUB_KEY_BUF_LENGTH*2 - 1) <= 0)
     {
 	EC_KEY_free(key);
 	pthread_exit(NULL);
@@ -766,6 +800,54 @@ void EC_key_transmission(size_t key_size, SSL*  ssl, char* user_name)
     free(prv_buf);
 }
 
+void EC_get_shared_secret(size_t key_size, SSL*  ssl, char* user_name)
+{
+    char	   EC_public_key_buf[2*EC_PUB_KEY_BUF_LENGTH]       = { 0 };
+    char	   EC_peer_public_key_buf[2*EC_PUB_KEY_BUF_LENGTH]  = { 0 };
+    char	   EC_private_key_buf[2*EC_PRIVATE_KEY_BUF_LENGTH]  = { 0 };
+
+    unsigned char  EC_byte_pub[EC_PUB_KEY_BUF_LENGTH]		    = { 0 };
+    unsigned char  EC_byte_peer_pub[EC_PUB_KEY_BUF_LENGTH]	    = { 0 };
+    unsigned char  EC_byte_prv[EC_PRIVATE_KEY_BUF_LENGTH]           = { 0 };
+
+    EC_KEY* key;
+    EC_KEY* peer_key;
+   
+    if( (key = EC_KEY_new_by_curve_name(NID_secp224r1)) == NULL)
+    {
+	/* handle */
+    }
+
+    receive_buff(ssl, EC_public_key_buf, 2*EC_PUB_KEY_BUF_LENGTH);
+    printf("%s\n", EC_public_key_buf);
+
+    if ( EC_get_private_key_by_public(user_name, EC_public_key_buf, EC_private_key_buf) == 1)
+    {
+	send_buff(ssl, "-1", 2);
+	return;
+    }
+    
+    send_buff(ssl, "1", 1);
+    printf("EC private key got %s\n", EC_private_key_buf);
+    
+    hex_string_to_byte_string(EC_public_key_buf, EC_byte_pub);
+    print_key(EC_byte_pub, strlen(EC_byte_pub));
+
+    hex_string_to_byte_string(EC_private_key_buf, EC_byte_prv);
+    print_key(EC_byte_prv, strlen(EC_byte_prv));
+
+    receive_buff(ssl, EC_peer_public_key_buf, 2*EC_PUB_KEY_BUF_LENGTH);
+    printf("%s\n", EC_peer_public_key_buf);
+ 
+
+	    
+	    
+		    /* remove */
+    hex_string_to_byte_string(EC_peer_public_key_buf, EC_byte_peer_pub);
+    print_key(EC_byte_peer_pub, strlen(EC_byte_peer_pub));
+
+
+}
 /*void EC_Diffie_Hellman(size_t key_size, SSL*  ssl, char* user_name)
 {
     int field_size, secret_len;

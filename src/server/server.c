@@ -144,13 +144,14 @@ void set_hash_table()
 	    fprintf(stderr, "Error while creating hashtable.\n");
 	    pthread_exit(NULL);
 	}
-	addToHashTable(ht, "symmetric_key",     add_symmetric_key_to_db_send_id);
-	addToHashTable(ht, "compute_file_hash", receive_file_compute_hash_send_back);
-	addToHashTable(ht, "AESencr_decr",      AESencryption_decryption);
-	addToHashTable(ht, "RSA_key",           RSA_key);
-	addToHashTable(ht, "encryptik",         RSA_encrypt_m); //##### change the name #####
-	addToHashTable(ht, "decryptik",         RSA_decrypt_m);
-	addToHashTable(ht, "EC_key_transmission", EC_key_transmission);
+	addToHashTable(ht, "symmetric_key",        add_symmetric_key_to_db_send_id);
+	addToHashTable(ht, "compute_file_hash",    receive_file_compute_hash_send_back);
+	addToHashTable(ht, "AESencr_decr",         AESencryption_decryption);
+	addToHashTable(ht, "RSA_key",              RSA_key);
+	addToHashTable(ht, "encryptik",            RSA_encrypt_m); //##### change the name #####
+	addToHashTable(ht, "decryptik",            RSA_decrypt_m);
+	addToHashTable(ht, "EC_key_transmission",  EC_key_transmission);
+	addToHashTable(ht, "EC_get_shared_secret", EC_get_shared_secret);
 }
 
 void choose_corresponding_service(int serv, struct request_t* request)
@@ -204,6 +205,9 @@ void choose_corresponding_service(int serv, struct request_t* request)
 		break;
 	    case 21:
 		strcpy(request->query, "EC_key_transmission");
+		break;
+	    case 22:
+		strcpy(request->query, "EC_get_shared_secret");
 		break;
 	}
 

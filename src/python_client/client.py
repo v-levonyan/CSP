@@ -247,7 +247,7 @@ class clientSocket:
 	decrypted = self.recieveMessage()
 	print 'decrypted: ', decrypted
     
-    def EC_Diffie_Hellman(self, num, aux = 0):
+    def EC_key_transmission(self, num, aux = 0):
 	
 	seq = (num, '-1')
 	params = ':'.join(seq)
@@ -260,8 +260,27 @@ class clientSocket:
 
 	EC_pub = self.recieveMessage()
 	
-	print 'Elliptic curve public point: ', self.byteToHex(EC_pub)
+	print 'Elliptic curve public point: ', EC_pub
 	return
+
+    def EC_get_shared_secret(self, num, aux = 0):
+	
+	seq = (num, '-1')
+	params = ':'.join(seq)
+	
+	self.sendMessage(params)
+
+
+
+	EC_pub_key = raw_input("Provide your EC public key: ")
+	self.sendMessage(EC_pub_key)
+
+	if int(self.recieveMessage()) == -1:
+	    print 'Wrong EC public key!'
+	    return 
+
+	EC_peer_pub_key = raw_input("Provide your peer's EC public key: ")
+	self.sendMessage(EC_peer_pub_key)
 
     def symmetric_key(self, num, aux = 0):
 	
@@ -506,7 +525,7 @@ def call_corresponding_service(serviceId, options, clientSock):
      
      while 1:  
 	
-	if serviceId < 0 or serviceId > 21:
+	if serviceId < 0 or serviceId > 22:
 	    print ' Wrong order!\n'
 	    	
 	if serviceId == 2 or serviceId == 8 or serviceId == 9 or serviceId == 13 or serviceId == 14:
@@ -515,7 +534,7 @@ def call_corresponding_service(serviceId, options, clientSock):
 	if serviceId > 0 and serviceId <= 12 and serviceId != 2 and serviceId != 8 and serviceId != 9:
 	    return options.get(serviceId)(str(serviceId),0)  #continue
 	
-	if serviceId > 14  and serviceId <= 21:
+	if serviceId > 14  and serviceId <= 22:
 	    return options.get(serviceId)(str(serviceId),1)  #continue
     	
 	serviceId = get_service()

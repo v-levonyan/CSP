@@ -37,4 +37,5 @@ Enter the corresponding number
 
 21 - Generate Elliptic Curve keys and get public one
 
+22 - Get Shared Secret
 _______________________________________________________________________
