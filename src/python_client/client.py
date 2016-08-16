@@ -270,8 +270,6 @@ class clientSocket:
 	
 	self.sendMessage(params)
 
-
-
 	EC_pub_key = raw_input("Provide your EC public key: ")
 	self.sendMessage(EC_pub_key)
 
@@ -281,7 +279,15 @@ class clientSocket:
 
 	EC_peer_pub_key = raw_input("Provide your peer's EC public key: ")
 	self.sendMessage(EC_peer_pub_key)
-
+    	
+	if int(self.recieveMessage()) == -1:
+	    print "\nShared secret couldn't be set, it may be caused by providing wrong peer's public point!"
+	    return 
+	
+	shared_secret = self.recieveMessage()
+	
+	print '\n\nNow you can use mutual shared secret as a symmetric secret key for further encryption/decryption.\nShared secret: ', self.byteToHex(shared_secret), '\n\n'
+    
     def symmetric_key(self, num, aux = 0):
 	
 	CorrespondingKey = { '3' : '7', '4' : '21', '5' : '16', '6' : '24', '7' : '32' }
