@@ -621,8 +621,8 @@ int EC_generate_keys_by_curve_name(EC_KEY** key, EC_GROUP** curve)
 
 int EC_keys2_oct(const EC_GROUP* curve, const EC_POINT* pub, const BIGNUM* prv, const EC_KEY* key, unsigned char**pub_buf, unsigned char** prv_buf)
 {
-    *pub_buf = malloc(EC_PUB_KEY_BUF_LENGTH);
-    *prv_buf = malloc(EC_PRIVATE_KEY_BUF_LENGTH);
+    *pub_buf = (unsigned char*) malloc(EC_PUB_KEY_BUF_LENGTH);
+    *prv_buf = (unsigned char*) malloc(EC_PRIVATE_KEY_BUF_LENGTH);
     
     memset(*pub_buf, 0, EC_PUB_KEY_BUF_LENGTH);
     memset(*prv_buf, 0, EC_PRIVATE_KEY_BUF_LENGTH);
@@ -719,7 +719,7 @@ void EC_key_transmission(size_t key_size, SSL*  ssl, char* user_name)
     string_to_hex_string(prv_buf, EC_PRIVATE_KEY_BUF_LENGTH - 1, &hex_prv);
     
 
-//    printf("hex pub: \n%s\nhex prv: \n%s\n", hex_pub, hex_prv);
+    printf("hex pub: \n%s\nhex prv: \n%s\n", hex_pub, hex_prv);
 	    /* remove */
 /*
     char byte_pub[EC_PUB_KEY_BUF_LENGTH] = { 0 };
@@ -765,7 +765,10 @@ void EC_key_transmission(size_t key_size, SSL*  ssl, char* user_name)
     printf("prv\n");
     print_key(byte_prv, EC_PRIVATE_KEY_BUF_LENGTH - 1);
 */
-    
+   
+    SSL_library_init();
+    SSL_load_error_strings();
+
     if ( add_EC_key_pair_to_keys(user_name, hex_pub, hex_prv)  == 1)
     {
 	send_buff(ssl, "-1", 2);
@@ -791,6 +794,45 @@ void EC_key_transmission(size_t key_size, SSL*  ssl, char* user_name)
 	/* handle */
     }
 
+    char* secret;
+    int field_size = EC_GROUP_get_degree(EC_KEY_get0_group(key));
+    int secret_len = (field_size+7)/8;
+    
+    fprintf(stderr, "secret_len %d\n", secret_len);
+    if((secret = OPENSSL_malloc(secret_len)) == NULL)
+    {
+	fprintf(stderr, "ERROR5\n");
+    }
+    memset(secret, 0, secret_len);    
+    fprintf(stderr, "secret_len2 %d\n", secret_len);
+
+    EC_POINT* new_pub = NULL;
+
+    unsigned char   EC_byte_pub[EC_PUB_KEY_BUF_LENGTH]		     =  { 0 };
+
+
+    hex_string_to_byte_string(hex_pub, EC_byte_pub);
+    print_key(EC_byte_pub, EC_PUB_KEY_BUF_LENGTH - 1);
+
+
+    printf("key\n");
+    print_key(pub_buf, EC_PUB_KEY_BUF_LENGTH-1);
+    int p;
+
+    if ( (new_pub = EC_POINT_hex2point(EC_KEY_get0_group(key), hex_pub, new_pub, 0)) == NULL)
+    {
+	printf("ERR: %s\n",ERR_error_string(ERR_get_error(),NULL));
+    }
+
+    secret_len = ECDH_compute_key(secret, secret_len, new_pub, key, NULL);
+    
+    fprintf(stderr, "secret_len3 %d\n", secret_len);
+
+    printf("secret: %d \n%s\n", secret_len, secret);
+
+    print_key(secret, 28);
+
+
     EC_KEY_free(key);
    // EC_POINT_free(pub);
     EC_GROUP_free(curve);
@@ -804,19 +846,26 @@ void EC_get_shared_secret(size_t key_size, SSL*  ssl, char* user_name)
 {
     int		    field_size, secret_len;
     
-    char	    EC_public_key_buf[2*EC_PUB_KEY_BUF_LENGTH]       = { 0 };
-    char	    EC_peer_public_key_buf[2*EC_PUB_KEY_BUF_LENGTH]  = { 0 };
-    char	    EC_private_key_buf[2*EC_PRIVATE_KEY_BUF_LENGTH]  = { 0 };
+    char	    EC_public_key_buf[2*EC_PUB_KEY_BUF_LENGTH]       =  { 0 };
+    char	    EC_peer_public_key_buf[2*EC_PUB_KEY_BUF_LENGTH]  =  { 0 };
+    char	    EC_private_key_buf[2*EC_PRIVATE_KEY_BUF_LENGTH]  =  { 0 };
 
     unsigned char*  secret;  
-    unsigned char   EC_byte_pub[EC_PUB_KEY_BUF_LENGTH]		    = { 0 };
-    unsigned char   EC_byte_peer_pub[EC_PUB_KEY_BUF_LENGTH]	    = { 0 };
-    unsigned char   EC_byte_prv[EC_PRIVATE_KEY_BUF_LENGTH]           = { 0 };
+    unsigned char   EC_byte_pub[EC_PUB_KEY_BUF_LENGTH]		     =  { 0 };
+    unsigned char   EC_byte_peer_pub[EC_PUB_KEY_BUF_LENGTH]	     =  { 0 };
+    unsigned char   EC_byte_prv[EC_PRIVATE_KEY_BUF_LENGTH]           =  { 0 };
        
+    BIGNUM*	    BN_EC_byte_prv				     =	NULL;
+    EC_POINT*	    EC_POINT_peer_public			     =  NULL;
+
     EC_KEY* key;
     EC_KEY* peer_key;
-   
-   
+
+    SSL_library_init();
+    SSL_load_error_strings();
+
+
+
     receive_buff(ssl, EC_public_key_buf, 2*EC_PUB_KEY_BUF_LENGTH);
     printf("%s\n", EC_public_key_buf);
 
@@ -828,21 +877,21 @@ void EC_get_shared_secret(size_t key_size, SSL*  ssl, char* user_name)
     
     send_buff(ssl, "1", 1);
     printf("EC private key got %s\n", EC_private_key_buf);
-    
+ /*   
     hex_string_to_byte_string(EC_public_key_buf, EC_byte_pub);
     print_key(EC_byte_pub, EC_PUB_KEY_BUF_LENGTH - 1);
 
     hex_string_to_byte_string(EC_private_key_buf, EC_byte_prv);
     print_key(EC_byte_prv, EC_PRIVATE_KEY_BUF_LENGTH - 1);
-
+*/
     receive_buff(ssl, EC_peer_public_key_buf, 2*EC_PUB_KEY_BUF_LENGTH);
     
     printf("peer public key %s\n", EC_peer_public_key_buf);
  		    /* remove */
-    
+ /*   
     hex_string_to_byte_string(EC_peer_public_key_buf, EC_byte_peer_pub);
     print_key(EC_byte_peer_pub, EC_PUB_KEY_BUF_LENGTH -1 );
-
+ */
     
     if( (key = EC_KEY_new_by_curve_name(NID_secp224r1)) == NULL)
     {
@@ -854,11 +903,9 @@ void EC_get_shared_secret(size_t key_size, SSL*  ssl, char* user_name)
     {
 	fprintf(stderr,"ERROR1\n");
 	/* handle */
-
     }
-    BIGNUM*   BN_EC_byte_prv       = NULL;
-    EC_POINT* EC_POINT_peer_public = NULL;
 
+   
     BN_hex2bn( &BN_EC_byte_prv, EC_private_key_buf);
     fprintf(stderr, "BN print\n");
     BN_print_fp(stderr, BN_EC_byte_prv);
@@ -870,20 +917,23 @@ void EC_get_shared_secret(size_t key_size, SSL*  ssl, char* user_name)
 	/* handle */
     }
 
-    if( EC_POINT_hex2point(EC_KEY_get0_group(key), EC_peer_public_key_buf, EC_POINT_peer_public, 0) == NULL)
+    
+    if ( (EC_POINT_peer_public = EC_POINT_hex2point(EC_KEY_get0_group(key), EC_peer_public_key_buf, EC_POINT_peer_public, 0)) == NULL)
     {
-	fprintf(stderr, "ERROR4\n");
+	printf("ERR: %s\n",ERR_error_string(ERR_get_error(),NULL));
     }
 
-/*
     field_size = EC_GROUP_get_degree(EC_KEY_get0_group(key));
     secret_len = (field_size+7)/8;
     
     fprintf(stderr, "secret_len %d\n", secret_len);
+    
     if((secret = OPENSSL_malloc(secret_len)) == NULL)
     {
 	fprintf(stderr, "ERROR5\n");
     }
+    
+    memset(secret, 0, secret_len);    
     
     fprintf(stderr, "secret_len2 %d\n", secret_len);
 
@@ -891,13 +941,13 @@ void EC_get_shared_secret(size_t key_size, SSL*  ssl, char* user_name)
     
     fprintf(stderr, "secret_len3 %d\n", secret_len);
 
-    printf("secret: %d \n%s", secret_len, secret);
+    printf("secret: %d \n%s\n", secret_len, secret);
     print_key(secret, secret_len);
-*/
-    EC_POINT* EC_POINT_shared_secret = NULL;
+
+ /*   EC_POINT* EC_POINT_shared_secret = NULL;
 
     printf("res: %d\n", EC_POINT_mul(EC_KEY_get0_group(key), EC_POINT_shared_secret, 0, EC_POINT_peer_public, BN_EC_byte_prv, 0));
-
+*/
 //       if( EC_KEY_set_public_key(peer_key, EC_POINT_peer_public) != 1)
 //    {
 //	fprintf(stderr,"ERROR5\n");
