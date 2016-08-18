@@ -4,7 +4,9 @@ Cryptographic Service Provider
 DESCRIPTION
 -----------
 
-The CSP project is a client/server command line application, for general purpose software cryptographic services. CSP was implemented in C and python. CSP uses secure socket layer(SSL) protocol. It's the first version of the project.
+The CSP project is a client/server command line application, for general purpose software cryptographic services. CSP was implemented in C and python. CSP uses secure socket layer(SSL) protocol.
+The application generates roughly 15 AES256 key per second, and gets back their ID's
+It's the first version of the project.
 
 OVERVIEW
 --------
