@@ -108,7 +108,6 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
 	char encr_or_decr[3] = { 0 }; 
 	char file_size_buf[10];
     	char data[AES_BLOCK_SIZE + 1] = { 0 };
-	int fd;
 	char name[30];
 	char ok[2] = { 0 };
 	ssize_t bytes_read = 0;
@@ -143,18 +142,6 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
        	size_t file_size = atoi(file_size_buf);	
 	size_t remain_data = file_size;
 	
-	if(atoi(encr_or_decr) == 0) 
-	{
-	    char name[] = "/tmp/encryptedXXXXXX"; // file for temporary holding
-	}
-
-	else
-	{
-	    char name[] = "/tmp/decryptedXXXXXX"; 
-	}
-
-	fd = mkstemp(name);
-	
 	printf("%s", "Receiving file to encrypt ... \n");
 
 	while( remain_data > 0 && (bytes_read = SSL_read(ssl, data, AES_BLOCK_SIZE )) )
@@ -177,7 +164,6 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
 		{
 		    encrypt_AES(data, &iv_enc, &enc_key, &enc_out);
 		    send_buff(ssl,enc_out,encslength);
-		    write(fd, enc_out, encslength);
 		    
 		    free(enc_out);
 		    free(dec_out);
@@ -187,7 +173,6 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
 		{
 		    decrypt_AES(data, &dec_out, bytes_read, &dec_key, &iv_dec);
 		    send_buff(ssl,dec_out, bytes_read-1);
-		    write(fd, dec_out, 15);
 		
 		    free(enc_out);
 		    free(dec_out);
