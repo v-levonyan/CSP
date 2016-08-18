@@ -67,7 +67,7 @@ def test_key_generation():
        
 #    assert registration(clientSock, user_name = 'David', password = 'david') == SUCCESS
     
-    assert registration(clientSock, user_name = 'David', password = 'david') == SUCCESS
+    registration(clientSock, user_name = 'David', password = 'david') 
     
     for i in range(0,100):
 	
