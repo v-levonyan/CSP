@@ -214,23 +214,9 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, char* user_name)
     unsigned char* key = (unsigned char*)malloc(key_size+1);
     
     memset(key, 0, key_size+1);
-
-    while(1)
-    {
-	if( !RAND_bytes(key, key_size) )
-	{
-	    fprintf(stderr, "OpenSSL reports a failure on RAND_bytes! \n");
-	    pthread_exit(NULL);
-	}
-
-	printf("sizes %d : %d\n", strlen(key), key_size);
-	if(strlen(key) == key_size)
-	{
-	    break;
-	}
-	fprintf(stderr, "Generated key was short, now generating new one! \n");
-    } 
-   
+    
+    RAND_bytes(key, key_size);
+  
     printf("Key generated\n");
    
     if (add_key_to_keys(&db, key, key_size, user_name, &key_id) == 1) 
