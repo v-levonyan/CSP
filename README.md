@@ -5,8 +5,9 @@ DESCRIPTION
 -----------
 
 The CSP project is a client/server command line application, for general purpose software cryptographic services. CSP was implemented in C and python. CSP uses secure socket layer(SSL) protocol.                                                                          
-The application generates roughly 25 AES256 keys per second, and gets back their ID's.                                                
-It's the first version of the project.                                                                                               
+Roughly 25 AES256 key generation per second, and gets back their ID's.                                                                
+Roughly 160 AES256 encryption per 10 seconds, in comparison with 90 RSA2048 encryption per 10 seconds.                                
+                                                                                              
 
 OVERVIEW
 --------
@@ -45,5 +46,6 @@ USING
 .Open new terminal, change directory to the python_client directory, and type ./client_main.py                                       
                                                                           
                                                                                                                                       
+It is the first version of the product, and currently is being expanded.                                                              
 If you wish to report a bug then please report to the following mail:
     david.tsaturyan.95@gmail.com
