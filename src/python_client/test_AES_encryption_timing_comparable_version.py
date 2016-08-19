@@ -6,6 +6,7 @@ import os
 import socket
 import getpass
 import sys
+import time
 from OpenSSL import SSL, crypto
 
 SUCCESS = 777
@@ -77,33 +78,19 @@ def send_file(clientSock, file_name):
 	    clientSock.sendMessage(piece)
 
 
-def AES_encryption(clientSock, key_ID, filename):
+def AES_encryption(clientSock, filename):
     
     clientSock.sendMessage('AESencr_decr:256')
-    clientSock.sendMessage(key_ID)
+    
     clientSock.recieveMessage()
-    clientSock.sendMessage('0')
-    clientSock.sendMessage('0')
-    
-    fileSize = os.path.getsize(filename)
-    clientSock.sendMessage(str(fileSize))
-    
+   
     send_file(clientSock, filename)
-
-    encrypted_file_name = 'encrypted_' + filename  + '.txt'
-    index_of_slash = encrypted_file_name.rfind('/')
-
-    encr_name = encrypted_file_name[0:10] + encrypted_file_name[index_of_slash+1 : len(encrypted_file_name)]
-
-    fd = open(encr_name,'w+')
-
+   
     while 1:
 	rec_m = clientSock.recieveMessage(-1)
 	if rec_m != "END":
-	    fd.write(rec_m)
+	    continue
 	else:
-	    fd.close()
-	    print 'Encrypted file received, it is in your current directory with name ', encr_name,  '\n' 
 	    break 
     
     return -1     
@@ -124,10 +111,13 @@ def test_AES_encryption():
     print key_ID
     
     demand_services(clientSock)
+    
+    t0 = time.time()
 
-    for i in range(1,100):
-	res = AES_encryption( clientSock, key_ID, '/home/davidt/workspace/CSP/src/python_client/AES_test_file')   
+    for i in range(1,160):
+	res = AES_encryption( clientSock, '/home/davidt/workspace/CSP/src/python_client/AES_test_file')   
 	demand_services(clientSock)
-
-	assert  res == -1
+    
+    print time.time() - t0
+    assert  res == 0#-1
 
