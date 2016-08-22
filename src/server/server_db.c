@@ -212,18 +212,18 @@ int add_EC_key_pair_to_keys(const char* user_name, const unsigned char* EC_publi
 
 int add_key_to_keys(sqlite3** db, const unsigned char* key, int key_size, char* user_name, char** Key_ID)
 {
-    char key_id[SHA256_DIGEST_LENGTH] = { 0 }; // key_id = hash(user_name + key)
-    char* user_name_key_concatenation = (char*) malloc(200);
-    char sql[2000] = { 0 };
-    char* errmssg = 0;
-    
-    memset(user_name_key_concatenation, 0, 200);
-    
+    char* errmssg			    =	0;
+    char  key_id[SHA256_DIGEST_LENGTH]	    = { 0 }; // key_id = hash(user_name + key)
+    char  sql[2000]			    = { 0 };
+    char* user_name_key_concatenation	    = (char*) malloc(200);
+
     /* possible memory leak */  
     char* hex_key;
     char* hex_user_name;
     char* hex_key_id;
 
+    memset(user_name_key_concatenation, 0, 200);
+     
     string_to_hex_string(key, key_size, &hex_key);
     string_to_hex_string(user_name, strlen(user_name), &hex_user_name);
 

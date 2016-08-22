@@ -83,8 +83,8 @@ void print_key(const unsigned char* key, int size)
 void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
 { 
     //possible memory leak
-    unsigned char* key = 0;
-    char key_id[SHA256_DIGEST_LENGTH * 2+1] = { 0 };
+    unsigned char*  key				       =   0;
+    char	    key_id[SHA256_DIGEST_LENGTH * 2+1] = { 0 };
 
     receive_buff(ssl,key_id, SHA256_DIGEST_LENGTH*2+1);
     
@@ -101,16 +101,18 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
     {	
 	// enc/dec variables 
 	// possible memory leaks	
-	unsigned char* iv_enc;
-    	unsigned char* iv_dec;
-	unsigned char* enc_out;
-    	unsigned char* dec_out;
-	char encr_or_decr[3] = { 0 }; 
-	char file_size_buf[10];
-    	char data[AES_BLOCK_SIZE + 1] = { 0 };
-	char name[30];
-	char ok[2] = { 0 };
-	ssize_t bytes_read = 0;
+	unsigned char*	iv_enc;
+    	unsigned char*	iv_dec;
+	unsigned char*	enc_out;
+    	unsigned char*	dec_out;
+	
+	char		name[30];
+	char		file_size_buf[10];
+	char		ok[2]			 = { 0 };
+	char		encr_or_decr[3]		 = { 0 }; 
+    	char		data[AES_BLOCK_SIZE + 1] = { 0 };
+			
+	ssize_t		bytes_read		 =   0;
 
 	AES_KEY* enc_key;
     	AES_KEY* dec_key;
@@ -195,8 +197,8 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
 
 void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, char* user_name)
 {
-    char* key_id;
-    unsigned char* key = (unsigned char*)malloc(key_size+1);
+    char*	    key_id;
+    unsigned char*  key = (unsigned char*)malloc(key_size+1);
     
     memset(key, 0, key_size+1);
     
@@ -257,10 +259,10 @@ void set_enc_dec_keys(const unsigned char* aes_key, int key_size, AES_KEY** enc_
 
 size_t set_enc_dec_buffers(const char* plain_text, unsigned char** enc_out, unsigned char** dec_out)
 {
-    const size_t encslength = (( strlen(plain_text) + AES_BLOCK_SIZE)/ AES_BLOCK_SIZE)*   AES_BLOCK_SIZE;
+    const size_t    encslength	= (( strlen(plain_text) + AES_BLOCK_SIZE)/ AES_BLOCK_SIZE)*   AES_BLOCK_SIZE;
     
-    unsigned char* enc_out_l = (unsigned char*) malloc(encslength + 1);
-    unsigned char* dec_out_l = (unsigned char*) malloc(encslength /*strlen(plain_text)*/);
+    unsigned char*  enc_out_l	= (unsigned char*) malloc(encslength + 1);
+    unsigned char*  dec_out_l	= (unsigned char*) malloc(encslength /*strlen(plain_text)*/);
     
     memset(enc_out_l, 0, encslength);
     memset(dec_out_l, 0, encslength -1 /*strlen(plain_text)*/);
@@ -273,8 +275,7 @@ size_t set_enc_dec_buffers(const char* plain_text, unsigned char** enc_out, unsi
 
 void encrypt_AES(const char* plain_text, unsigned char** iv_enc, AES_KEY** enc_key, unsigned char** enc_out) //AES-CBC-128, AES-CBC-192, AES-CBC-256
 {
-    AES_cbc_encrypt(plain_text, *enc_out, strlen(plain_text), *enc_key, *iv_enc, AES_ENCRYPT);
-   
+    AES_cbc_encrypt(plain_text, *enc_out, strlen(plain_text), *enc_key, *iv_enc, AES_ENCRYPT); 
 }
 
 void decrypt_AES(unsigned char* enc_out, unsigned char** dec_out, size_t encslength, AES_KEY** dec_key, unsigned char** iv_dec )
@@ -289,11 +290,11 @@ RSA* RSA_generate_kay_pair()
 
 void RSA_key(size_t key_size, SSL*  ssl, char* user_name)
 {
+    int   RSA_private_ID;
     char* pub_key;  //free
     char* priv_key; //free
-    char RSA_private_ID_str[10] = { 0 };
-    int RSA_private_ID;
-
+    char  RSA_private_ID_str[10] = { 0 };
+   
     RSA* keypair = RSA_generate_kay_pair();
     RSA_get_public_and_private(&keypair, &priv_key, &pub_key);
     
@@ -352,9 +353,8 @@ RSA* createRSA( char* key, int public)
 //Usage for public key: createRSA(“PUBLIC_KEY_BUFFER”,1);
 //Usage for private key: createRSA(“PRIVATE_KEY_BUFFER”,0);
 {
-    RSA* rsa = NULL;
-    BIO* keybio;
-    keybio = BIO_new_mem_buf(key, -1);
+    RSA* rsa	= NULL;
+    BIO* keybio = BIO_new_mem_buf(key, -1);
     
     if (keybio == NULL)
     {
@@ -408,8 +408,7 @@ int RSA_public_encrypt_m(char* data, int data_len, char* pub_key, unsigned char*
 
 void get_message_to_encrypt_RSA(SSL* ssl, char** message)
 {
-    char* mssg;
-    mssg = (char*) malloc(200);
+    char* mssg = (char*) malloc(200);
     
     memset(mssg, 0, 200);
     receive_buff(ssl, mssg, 200);
@@ -419,11 +418,11 @@ void get_message_to_encrypt_RSA(SSL* ssl, char** message)
 
 int get_public_RSA_key(SSL* ssl, char** public_key)
 {
-    int bytes_read; 
-    char* pub_key  = (char*) malloc(2048);
-    char* tmp = pub_key;
-    char ok;
-
+    int	    bytes_read; 
+    char    ok;
+    char*   pub_key  = (char*) malloc(2048);
+    char*   tmp = pub_key;
+    
     SSL_read(ssl, &ok, 1);
 
     if(ok == '1') //CLient's specified file didn't exist
@@ -447,11 +446,11 @@ int get_public_RSA_key(SSL* ssl, char** public_key)
 
 void RSA_encrypt_m(size_t key_size, SSL*  ssl, char* user_name)
 {
-    int RSA_private_ID;
-    char* message;  //free
-    char* pub_key;  //free
-    char RSA_private_ID_str[10] = { 0 };
-    unsigned char* encrypted; //free
+    int		    RSA_private_ID;
+    char*	    message;  //free
+    char*	    pub_key;  //free
+    char	    RSA_private_ID_str[10] = { 0 };
+    unsigned char*  encrypted; //free
 
     get_message_to_encrypt_RSA(ssl, &message);
     printf("Message: %s\n", message);
@@ -507,12 +506,12 @@ int RSA_private_decrypt_m(const char* encrypted, int encr_length, char* RSA_priv
 void RSA_decrypt_m(size_t key_size, SSL*  ssl, char* user_name)
 {
     int   bytes_read;
-    char  RSA_private_ID[10] = { 0 };
-    char  RSA_private_key[2048] = { 0 };
-    char* RSA_encrypted = malloc(4098);
-    char* RSA_decrypted = malloc(4098);
-    char* tmp = RSA_encrypted;
     char  ok;
+    char  RSA_private_ID[10]	= { 0 };
+    char  RSA_private_key[2048] = { 0 };
+    char* RSA_encrypted		= malloc(4098);
+    char* RSA_decrypted		= malloc(4098);
+    char* tmp			= RSA_encrypted;
      
     memset(RSA_encrypted, 0, 4098);
     memset(RSA_decrypted, 0, 4098);
@@ -643,16 +642,16 @@ void byte_string_to_hex_string(const unsigned char* byte_string, char* hex_strin
 
 void EC_key_transmission(size_t key_size, SSL*  ssl, char* user_name)
 {
-    unsigned char* pub_buf;
-    unsigned char* prv_buf;
-    char* hex_pub; 
-    char* hex_prv;
-  
-    EC_GROUP* curve;
-    EC_KEY* key;
+    char*	    hex_pub; 
+    char*	    hex_prv;
+    unsigned char*  pub_buf;
+    unsigned char*  prv_buf;
+      
+    EC_GROUP*	    curve;
+    EC_KEY*	    key;
     
-    EC_POINT* pub;   
-    BIGNUM* prv;
+    EC_POINT*	    pub;   
+    BIGNUM*	    prv;
 
     if ( EC_generate_keys_by_curve_name(&key, &curve) == 1 )
     {	
@@ -727,9 +726,10 @@ void EC_get_shared_secret(size_t key_size, SSL*  ssl, char* user_name)
     BIGNUM*	    BN_EC_byte_prv				     =	NULL;
     EC_POINT*	    EC_POINT_peer_public			     =  NULL;
 
-    EC_KEY* key;
-    EC_KEY* peer_key;
+    EC_KEY*	    key;
+    EC_KEY*	    peer_key;
 
+    
     SSL_library_init();
     SSL_load_error_strings();
 
