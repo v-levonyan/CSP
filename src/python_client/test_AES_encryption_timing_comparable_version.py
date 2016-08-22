@@ -48,8 +48,6 @@ def demand_services(clientSock):
           else:
 	      continue
 
-
-
 def symmetric_key(clientSock, num):
  
          CorrespondingKey = { '3' : '7', '4' : '21', '5' : '16', '6' : '24', '7' : '32' }
@@ -78,44 +76,51 @@ def send_file(clientSock, file_name):
 	    clientSock.sendMessage(piece)
 
 
-def AES_encryption(clientSock, filename):
+def AES_encryption(clientSock, key_ID, filename):
     
+    chunkSize = 15
+
     clientSock.sendMessage('AESencr_decr:256')
-    
+    clientSock.sendMessage(key_ID)
     clientSock.recieveMessage()
-   
-    send_file(clientSock, filename)
-   
-    while 1:
-	rec_m = clientSock.recieveMessage(-1)
-	if rec_m != "END":
-	    continue
-	else:
-	    break 
+    clientSock.sendMessage('0')
+    clientSock.sendMessage('0')
     
-    return -1     
+    AES_file = open(filename)
+
+    while 1:
+	piece = AES_file.read(chunkSize)
+    
+        if not piece:
+            clientSock.sendMessage('##END##')
+        else:
+            clientSock.sendMessage(piece)
+	
+	rec_m = clientSock.recieveMessage(-1)
+        if rec_m != "END":
+           continue 
+        else:
+            break 
+    return 0     
 
 def test_AES_encryption():
-    
+   
     ctx = client.context() 
     clientSock = client.clientSocket(ctx)
     
     connection(clientSock)
    
-    registration(clientSock, 'David', 'david')
+    registration(clientSock, 'David2', 'david')
     
     demand_services(clientSock)
     
-    key_ID = get_key_ID(clientSock)
-    
-    print key_ID
-    
-    demand_services(clientSock)
-    
+       
     t0 = time.time()
 
-    for i in range(1,160):
-	res = AES_encryption( clientSock, '/home/davidt/workspace/CSP/src/python_client/AES_test_file')   
+    for i in range(1,500):
+	key_ID = get_key_ID(clientSock)
+	demand_services(clientSock)
+	res = AES_encryption( clientSock, key_ID, '/home/davidt/workspace/CSP/src/python_client/AES_test_file')   
 	demand_services(clientSock)
     
     print time.time() - t0

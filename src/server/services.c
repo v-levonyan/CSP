@@ -79,12 +79,32 @@ void print_key(const unsigned char* key, int size)
 
     printf("%s","\n");
 }
-
 void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
 { 
     //possible memory leak
     unsigned char*  key				       =   0;
     char	    key_id[SHA256_DIGEST_LENGTH * 2+1] = { 0 };
+    
+    // enc/dec variables 
+    // possible memory leaks	
+    unsigned char*	iv_enc;
+    unsigned char*	iv_dec;
+    unsigned char*	enc_out;
+    unsigned char*	dec_out;
+
+    int			file_size;
+    int			encr_or_decr_int;
+    size_t		remain_data;
+    size_t		bytes_read  =	0;
+    
+    char		right_file[2]		 = { 0 };
+    char		encr_or_decr[2]		 = { 0 };
+    char		file_size_buf[10]        = { 0 };
+    char		data[AES_BLOCK_SIZE + 1] = { 0 };
+    
+    AES_KEY*		enc_key;
+    AES_KEY*		dec_key;
+
 
     receive_buff(ssl,key_id, SHA256_DIGEST_LENGTH*2+1);
     
@@ -96,101 +116,84 @@ void AESencryption_decryption(size_t key_size, SSL*  ssl, char* user_name)
 	fprintf(stderr,"%s\n", "Key didn't match to the chosen algorithm!\n");
 	return;
     }
-     
+		
+    send_buff(ssl,"1",1); //OK
+            
+    receive_buff(ssl, right_file, 2);
+    
+    if(atoi(right_file) == -1)
+    {
+	fprintf(stderr, "Wrong file from client.\n");
+	return;
+    }
+
+    receive_buff(ssl, encr_or_decr, 2);
+   
+    encr_or_decr_int = atoi(encr_or_decr);
+    
+    if (encr_or_decr_int == 0) //encrypt
+    {
+	set_initial_vectors(&iv_enc, NULL);
+	set_enc_dec_keys(key, key_size/8, &enc_key, NULL);
+    }
+    
     else
-    {	
-	// enc/dec variables 
-	// possible memory leaks	
-	unsigned char*	iv_enc;
-    	unsigned char*	iv_dec;
-	unsigned char*	enc_out;
-    	unsigned char*	dec_out;
-	
-	char		name[30];
-	char		file_size_buf[10];
-	char		ok[2]			 = { 0 };
-	char		encr_or_decr[3]		 = { 0 }; 
-    	char		data[AES_BLOCK_SIZE + 1] = { 0 };
-			
-	ssize_t		bytes_read		 =   0;
+    {
+	set_initial_vectors(NULL, &iv_dec);
+	set_enc_dec_keys(key, key_size/8, NULL, &dec_key);
+    }
 
-	AES_KEY* enc_key;
-    	AES_KEY* dec_key;
+    printf("%s", "Receiving file to encrypt ... \n");
+
+    for(;;)
+    {
+	bytes_read = SSL_read(ssl, data, AES_BLOCK_SIZE );
+	//receiving file ...	
 	
-	send_buff(ssl,"1",1); //OK
-        
-	set_initial_vectors(&iv_enc, &iv_dec);
-	set_enc_dec_keys(key, key_size/8, &enc_key, &dec_key);
-        
-	receive_buff(ssl, encr_or_decr, 3);
-		
-	memset(file_size_buf,0,10);
-	
-	receive_buff(ssl, ok, 2);
-	
-	if(atoi(ok) == -1)
+	if( strcmp(data, "##END##") == 0 )
 	{
-	    fprintf(stderr, "Client specified wrong file, repeat main loop!\n");
-	    return;
+	    break;
 	}
-
-	receive_buff(ssl, file_size_buf, 10);
-
-	if(atoi(file_size_buf) == -1) // client specified wrong file, repeat main loop
-	{
-	    fprintf(stderr, "Client specified wrong file, repeat main loop!\n");
-	    return;
-	}
-       	size_t file_size = atoi(file_size_buf);	
-	size_t remain_data = file_size;
-	
-	printf("%s", "Receiving file to encrypt ... \n");
-
-	while( remain_data > 0 && (bytes_read = SSL_read(ssl, data, AES_BLOCK_SIZE )) )
-	{
-		//receiving file ...	
-		remain_data -= bytes_read;
-
-		if(bytes_read == -1)
-		{
-			handle_error("data wasn't read");
-		}
-		if(bytes_read == 0 )
-		{
-		    return;
-		}
-
-		size_t encslength = set_enc_dec_buffers(data, &enc_out, &dec_out);
 		
-		if (atoi(encr_or_decr) == 0) //encrypt
-		{
-		    encrypt_AES(data, &iv_enc, &enc_key, &enc_out);
-		    send_buff(ssl,enc_out,encslength);
+	if (encr_or_decr_int == 0) //encrypt
+	{
+	    size_t encslength = set_enc_dec_buffers(data, &enc_out, NULL);
+
+	    encrypt_AES(data, &iv_enc, &enc_key, &enc_out);
+	    send_buff(ssl,enc_out,encslength);
 		    
-		    free(enc_out);
-		    free(dec_out);
-		}
-
-		else //decrypt
-		{
-		    decrypt_AES(data, &dec_out, bytes_read, &dec_key, &iv_dec);
-		    send_buff(ssl,dec_out, bytes_read-1);
-		
-		    free(enc_out);
-		    free(dec_out);
-		}
-		
-		memset(data, 0, AES_BLOCK_SIZE);
+	    free(enc_out);
 	}
+
+	else //decrypt
+	{
+	    size_t encslength = set_enc_dec_buffers(data, NULL, &dec_out);
+
+	    decrypt_AES(data, &dec_out, bytes_read, &dec_key, &iv_dec);
+	    send_buff(ssl,dec_out, bytes_read-1);
+	    	
+	    free(dec_out);
+	}
+		
+	memset(data, 0, AES_BLOCK_SIZE);
+    }
 	
-	SSL_write(ssl, "END", 3);
+    SSL_write(ssl, "END", 3);
 
-	printf("\nEncryptedi/decrypted file sent.\n");
+    printf("\nEncrypted/decrypted file sent.\n");
 
-	free(key);
+    
+    free(key);
+
+    if(encr_or_decr_int == NULL)
+    {
 	free(iv_enc);
-	free(iv_dec);
 	free(enc_key);
+    }
+
+    else 
+    {
+	free(iv_dec);
 	free(dec_key);
     }
 }
@@ -225,51 +228,63 @@ void add_symmetric_key_to_db_send_id(size_t key_size, SSL* ssl, char* user_name)
 
 void set_initial_vectors( unsigned char** iv_enc, unsigned char** iv_dec)
 {
-     // Init vector
-     
-    unsigned char* iv_enc_l = (unsigned char*) malloc(AES_BLOCK_SIZE);
-    unsigned char* iv_dec_l = (unsigned char*) malloc(AES_BLOCK_SIZE);
-
-    memset(iv_enc_l, 0, AES_BLOCK_SIZE);
+    // Init vector
     //RAND_bytes(iv_enc_l, AES_BLOCK_SIZE);
-    memcpy(iv_dec_l, iv_enc_l, AES_BLOCK_SIZE);
-    
-    *iv_enc = iv_enc_l;
-    *iv_dec = iv_dec_l;
 
+    if(iv_dec == NULL)
+    {
+	unsigned char* iv_enc_l = (unsigned char*) malloc(AES_BLOCK_SIZE);
+	memset(iv_enc_l, 0, AES_BLOCK_SIZE);
+	*iv_enc = iv_enc_l;
+    }
+    
+    if(iv_enc == NULL)
+    {
+	unsigned char* iv_dec_l = (unsigned char*) malloc(AES_BLOCK_SIZE);
+	memset(iv_dec_l, 0, AES_BLOCK_SIZE);
+	*iv_dec = iv_dec_l;
+    }
 }
 
 void set_enc_dec_keys(const unsigned char* aes_key, int key_size, AES_KEY** enc_key, AES_KEY** dec_key)
 {
-    AES_KEY* enc_key_l;
-    AES_KEY* dec_key_l;
- 
-    enc_key_l = (AES_KEY*)malloc(sizeof(AES_KEY));    
-    dec_key_l = (AES_KEY*)malloc(sizeof(AES_KEY));    
+    if(dec_key == NULL)
+    {
+	AES_KEY*    enc_key_l;
+	enc_key_l = (AES_KEY*)malloc(sizeof(AES_KEY));
+	memset(enc_key_l, 0, sizeof(AES_KEY));
+	AES_set_encrypt_key(aes_key, key_size*8, enc_key_l);
+	*enc_key = enc_key_l;
+    }
     
-    memset(enc_key_l, 0, sizeof(AES_KEY));
-    memset(dec_key_l, 0, sizeof(AES_KEY)); 
-   
-    AES_set_encrypt_key(aes_key, key_size*8, enc_key_l);
-    AES_set_decrypt_key(aes_key, key_size*8, dec_key_l);
+    if(enc_key == NULL)
+    {
+	AES_KEY*    dec_key_l; 
+	dec_key_l = (AES_KEY*)malloc(sizeof(AES_KEY));    
+	memset(dec_key_l, 0, sizeof(AES_KEY)); 
+	*dec_key = dec_key_l;
+	AES_set_decrypt_key(aes_key, key_size*8, dec_key_l);
 
-    *enc_key = enc_key_l;
-    *dec_key = dec_key_l;
+    }
 }
 
 size_t set_enc_dec_buffers(const char* plain_text, unsigned char** enc_out, unsigned char** dec_out)
 {
     const size_t    encslength	= (( strlen(plain_text) + AES_BLOCK_SIZE)/ AES_BLOCK_SIZE)*   AES_BLOCK_SIZE;
     
-    unsigned char*  enc_out_l	= (unsigned char*) malloc(encslength + 1);
-    unsigned char*  dec_out_l	= (unsigned char*) malloc(encslength /*strlen(plain_text)*/);
-    
-    memset(enc_out_l, 0, encslength);
-    memset(dec_out_l, 0, encslength -1 /*strlen(plain_text)*/);
-    
-    *enc_out = enc_out_l;
-    *dec_out = dec_out_l;
+    if(dec_out == NULL)
+    {
+	unsigned char*  enc_out_l	= (unsigned char*) malloc(encslength + 1);
+	memset(enc_out_l, 0, encslength);
+	*enc_out = enc_out_l;
+    }
 
+    if(enc_out == NULL)
+    {
+	unsigned char*  dec_out_l	= (unsigned char*) malloc(encslength /*strlen(plain_text)*/);
+       memset(dec_out_l, 0, encslength  /*strlen(plain_text)*/);
+       *dec_out = dec_out_l;
+    } 
     return encslength;
 }
 
@@ -616,13 +631,6 @@ void hex_string_to_byte_string(const char* hex_str, unsigned char* byte_str)
 {
     int i, count, n;
     char* pos = hex_str;
-/*
-    for(count = 0; count < strlen(hex_str)/2+1; count++) 
-    {
-	sscanf(pos, "%2hhx", &byte_str[count]);
-	pos += 2;
-    } */
-
      for(i = 0; i < strlen(hex_str)/2; i++) 
      {
 	 sscanf(hex_str+2*i, "%2X", &n);

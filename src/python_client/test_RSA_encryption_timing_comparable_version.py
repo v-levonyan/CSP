@@ -113,14 +113,12 @@ def test_RSA_encryption():
     registration(clientSock, 'David', 'david')
     
     demand_services(clientSock)
-    
-    RSA_key(clientSock)
-    
-    demand_services(clientSock)
-    
+
     t0 = time.time()
     
-    for i in range(1,90):
+    for i in range(1,500):
+	RSA_key(clientSock)
+	demand_services(clientSock)
 	RSA_encryption(clientSock)
 	demand_services(clientSock)
 

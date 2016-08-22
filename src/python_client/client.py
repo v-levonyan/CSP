@@ -301,6 +301,59 @@ class clientSocket:
 	print 'Key ID: ', result
 	return result
     
+    def AES_encryption(self, AES_file, filename):
+	chunkSize = 15
+	self.sendMessage('0') 
+
+	encrypted_file_name = 'encrypted_' + filename + '.txt'
+	index_of_slash = encrypted_file_name.rfind('/')
+        
+	encr_name = encrypted_file_name[0:10] + encrypted_file_name[index_of_slash+1 : len(encrypted_file_name)]
+
+	fd = open(encr_name,'w+')
+	
+	while 1:
+	    piece = AES_file.read(chunkSize)
+	
+	    if not piece:
+		self.sendMessage('##END##')
+	    else:
+		self.sendMessage(piece)
+		
+	    rec_m = self.recieveMessage(-1)
+	    if rec_m != "END":
+		fd.write(rec_m)
+	    else:
+		fd.close()
+		return encr_name
+
+    def AES_decryption(self, AES_file, filename):
+	chunkSize = 16 
+	self.sendMessage("1")
+	    
+	decrypted_file_name = 'decrypted_' + filename
+	index_of_slash = decrypted_file_name.rfind('/')
+        
+	decr_name = decrypted_file_name[0:10] + decrypted_file_name[index_of_slash+1 :len(decrypted_file_name)]
+
+	fd = open(decr_name,'w+')
+	
+	while 1:
+	    piece = AES_file.read(chunkSize)
+	
+	    if not piece:
+		self.sendMessage('##END##')
+	    else:
+		self.sendMessage(piece)
+		
+	    rec_m = self.recieveMessage(-1)
+	    
+	    if rec_m != "END":
+		fd.write(rec_m)
+	    else:
+		fd.close()
+		return decr_name 
+
     def AES_encr_decr(self, num, aux = 0):
 		
 	CorrespondingKey = { '10' : '128', '11' : '192', '12' : '256',  '15' : '128', '16' : '192', '17' : '256' }
@@ -321,87 +374,28 @@ class clientSocket:
 	    print "First order corresponding key\n"	
 	    return -1
 
+	filename = raw_input("Input filename to encrypt/decrypt\n... ")
+	    
+	try:
+	    AES_file = open(filename)
+	except:
+	    print 'Wrongfile!'
+	    self.sendMessage('-1')
+	    return
+	
+	self.sendMessage('0')
+	
 	if aux == 0: ## AES encryption
-	    self.sendMessage('0') 
-	    filename = raw_input("Input filename to encrypt\n... ")
-	    
-	    if not os.path.isfile(filename):
-		print 'Specified file is not a regular file!'
-		self.sendMessage('-1')
-		return
+	    encr_name = self.AES_encryption(AES_file, filename) 
+	    print 'Encrypted file received, it is in your current directory with name ', encr_name,  '\n'
+	    return 0     	
 
-	    try:
-		fileSize = os.path.getsize(filename)
-	    except:
-		print "Wrong file!\n"
-		self.sendMessage('-1')
-		return
-
-	    self.sendMessage('0')
-
-	    self.sendMessage(str(fileSize))
-
-	    self.sendFile(str(filename),1)
-        
-	    encrypted_file_name = 'encrypted_' + filename + '.txt'
-	    index_of_slash = encrypted_file_name.rfind('/')
-        
-	    encr_name = encrypted_file_name[0:10] + encrypted_file_name[index_of_slash+1 : len(encrypted_file_name)]
-
-	    fd = open(encr_name,'w+')
-	
-	    while 1:
-		rec_m = self.recieveMessage(-1)
-		
-		if rec_m != "END":
-		    fd.write(rec_m)
-		else:
-		    fd.close()
-		    print 'Encrypted file received, it is in your current directory with name ', encr_name,  '\n'
-		    return -1     	
-
-	    return -1
 	if aux == 1: ## AES decryption
-	    
-	    self.sendMessage("1")
-	    filename = raw_input("Input filename to decrypt\n... ")
-	    
-	    if not os.path.isfile(filename):
-		print 'Specified file is not a regular file!'
-		self.sendMessage('-1')
-		return
+	    decr_name = self.AES_decryption(AES_file, filename)
+	    print 'Decrypted file received, it is in your current directory with name ',
+	    decr_name,  '\n'
+	    return 0     	
 
-	    try:
-		fileSize = os.path.getsize(filename)
-	    except :
-		print "Wrong file!\n"
-		self.sendMessage('-1')
-		return -1
-	    
-	    self.sendMessage('0')
-
-	    self.sendMessage(str(fileSize))
-
-	    self.sendFile(str(filename),2)
-        
-	    decrypted_file_name = 'decrypted_' + filename
-	    index_of_slash = decrypted_file_name.rfind('/')
-        
-	    decr_name = decrypted_file_name[0:10] + decrypted_file_name[index_of_slash+1 :len(decrypted_file_name)]
-
-	    fd = open(decr_name,'w+')
-	
-	    while 1:
-		rec_m = self.recieveMessage(-1)
-	 
-		if rec_m != "END":
-		    fd.write(rec_m)
-		else:
-		    fd.close()
-		    print 'Decrypted file received, it is in your current directory with name ', decr_name,  '\n'
-		    return -1     	
-
-	    return -1
 
     def DES_encr_decr(self, key_size, aux = 0):
 	return 1
