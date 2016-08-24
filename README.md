@@ -41,7 +41,7 @@ In order to install CSP:
    - Change directory to the CSP directory                                                                                          
    - Type scons on your terminal and run.                                                                                                                                                                                                                                
 USING                                                                                             
------
+---------------
    - Change directory to the src directory, and type ./server.out -c server.cfg.                                                   
    - Open new terminal, change directory to the python_client directory, and type ./client_main.py                                       
                                                                           
