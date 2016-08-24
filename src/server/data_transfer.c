@@ -119,7 +119,7 @@ int send_buff(SSL* ssl, const char* buf, size_t buf_size)
 
     if( num_write < 0)
     {
-	fprintf(stderr, "%s\n", strerror(errno));
+	fprintf(stderr, "send_buff: %s\n", strerror(errno));
 	pthread_exit(NULL);
     }
     return 0;

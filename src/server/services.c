@@ -311,6 +311,9 @@ void RSA_key(size_t key_size, SSL*  ssl, char* user_name)
     char  RSA_private_ID_str[10] = { 0 };
    
     RSA* keypair = RSA_generate_kay_pair();
+    
+    printf("%s\n", "RSA key pair generated.");
+
     RSA_get_public_and_private(&keypair, &priv_key, &pub_key);
     
     if( add_RSA_key_pair_to_keys(pub_key, priv_key, user_name) == 1)

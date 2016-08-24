@@ -455,53 +455,54 @@ void* connection_handler(void* cl_args)
 	    //demand authorization
 	    if ( authorize_client(ssl,user_name) == -1)
 	    {
-			SSL_free(ssl);
-			close(args->socket);
-			fprintf(stdout, "Client disconnected. All resources freed\n");
-			pthread_exit(NULL);
+		    SSL_free(ssl);
+		    close(args->socket);
+		    fprintf(stdout, "Client disconnected. All resources freed\n");
+		    pthread_exit(NULL);
 	    }
    
 	    while ( (bytes_read = read_request(ssl, request_message)) > 0 )
 	    {
 
-			struct request_t request;
-			fptr func;
+		    struct request_t request;
+		    fptr func;
 
-			printf("Client's request : %s\n", request_message);
-			memset(request_message, 0, DATA_SIZE);
+		    printf("Client's request : %s\n", request_message);
+		    memset(request_message, 0, DATA_SIZE);
 
-			if( send_services(ssl) == 1 )
-			{
-				SSL_free(ssl);
-				fprintf(stderr, "%s\n", strerror(errno));
-				pthread_exit(NULL);
-			}
+		    if( send_services(ssl) == 1 )
+		    {
+			    SSL_free(ssl);
+			    fprintf(stderr, "%s\n", strerror(errno));
+			    pthread_exit(NULL);
+		    }
 				
-			bytes_read = read_request(ssl, request_message);
+		    bytes_read = read_request(ssl, request_message);
 			
-			if (bytes_read <= 0)
-			{
-				break;
-			}   	
+		    if (bytes_read <= 0)
+		    {
+			    break;
+		    }   	
 			
-			order_parser(request_message, &request);
+		    order_parser(request_message, &request);
 
-			fprintf(stderr,"\nClient responsed\nquery: %s : %d\n", request.query, request.size);
+		    fprintf(stderr,"\nClient responsed\nquery: %s : %d\n", request.query, request.size);
 
-			choose_corresponding_service(atoi(request.query), &request);
+		    choose_corresponding_service(atoi(request.query), &request);
 		
-			if( valueForKeyInHashTable(ht, request.query, &func) == 0)
-			{
-				fprintf(stdout, "Could not find request: %s\n", request.query);
-				pthread_exit(NULL);
-			}
+		    if( valueForKeyInHashTable(ht, request.query, &func) == 0)
+		    {
+			    fprintf(stdout, "Could not find request: %s\n", request.query);
+			    pthread_exit(NULL);
+		    }
 
-			func(request.size, ssl, user_name);
+		    func(request.size, ssl, user_name);
 		    
-			memset(request_message, 0, DATA_SIZE);
+		    memset(request_message, 0, DATA_SIZE);
 	    }
 	    
 	    SSL_free(ssl);
+	    free(args);
 	    close(args->socket);
 //	    SSL_CTX_free(args->ctx); // a little problem here, this also frees ciphers
 	    fprintf(stdout, "Client disconnected. All resources freed\n");

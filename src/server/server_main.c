@@ -24,7 +24,7 @@
 #include "services.h"
 #include "server_db.h"
 
-#define listen_backlog 50
+#define LISTEN_BACKLOG 50
 #define thread_count 100
 
 int main(int argc, char *argv[])
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 	handle_error("bind failed");
     }
 
-    if (listen(socket_desc, listen_backlog) == -1)
+    if (listen(socket_desc, LISTEN_BACKLOG) == -1)
     {
 	handle_error("listen failed");
     }
@@ -104,27 +104,28 @@ int main(int argc, char *argv[])
 
     for(; i < thread_count; ++i)
     {
-	struct handler_args args;
+	struct handler_args* args = calloc(sizeof(struct handler_args), 1);
 /*
 	SSL_library_init();
 	args.ctx = init_server_ctx();
 	load_certificates(args.ctx,"mycert.pem","mycert.pem");
 */	
-	args.socket = accept(socket_desc, (struct sockaddr *)&client, &address_len);
-
-	if(args.socket == -1)
+	args->socket = accept(socket_desc, (struct sockaddr *)&client, &address_len);
+	printf("Args socket: %d\n", args->socket);
+	if(args->socket == -1)
 	{
 	    handle_error("accept failed");
 	}
 
 	printf("connection accepted: %s:%d\n",inet_ntoa(client.sin_addr), ntohs(client.sin_port));
 
-	args.client_id = i;
+	args->client_id = i;
     
-	if(pthread_create(&helper_thread[i], NULL, connection_handler, (void*)&args) != 0)
+	if(pthread_create(&helper_thread[i], NULL, connection_handler, (void*)args) != 0)
 	{
 	    handle_error("could not create thread");
 	}
+	
     }
  
     for(i = 0; i < thread_count; ++i)

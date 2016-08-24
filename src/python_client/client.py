@@ -320,7 +320,7 @@ class clientSocket:
 	    else:
 		self.sendMessage(piece)
 		
-	    rec_m = self.recieveMessage(-1)
+	    rec_m = self.recieveMessage()
 	    if rec_m != "END":
 		fd.write(rec_m)
 	    else:
@@ -346,7 +346,7 @@ class clientSocket:
 	    else:
 		self.sendMessage(piece)
 		
-	    rec_m = self.recieveMessage(-1)
+	    rec_m = self.recieveMessage()
 	    
 	    if rec_m != "END":
 		fd.write(rec_m)
