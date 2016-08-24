@@ -39,9 +39,10 @@ application you should have installed several tools:
 In order to install CSP:                                                                                                              
    - Clone the git repository on your machine.                                                                                      
    - Change directory to the CSP directory                                                                                          
-   - Type scons on your terminal and run.                                                                                                                                                                                                                                
+   - Type scons on your terminal and run.                                                                                            
+                                                                                                                                     
 USING                                                                                             
----------------
+------
    - Change directory to the src directory, and type ./server.out -c server.cfg.                                                   
    - Open new terminal, change directory to the python_client directory, and type ./client_main.py                                       
                                                                           
