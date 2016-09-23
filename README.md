@@ -4,7 +4,7 @@ Cryptographic Service Provider
 DESCRIPTION
 -----------
 
-CSP is a client/server command line application, for general purpose cryptographic services. CSP was implemented in C and Python. CSP uses secure socket layer(SSL) protocol.                                                                          
+CSP is a client/server command line application, for general purpose cryptographic services. CSP was implemented in C and Python. CSP uses secure socket layer(SSL) protocol, so every information that is transmitted between your application and server, is encrypted.                                                                          
    Roughly 115 AES256 key generation per 10 second.                                                  
    Roughly 33 RSA2048 key pair generation per 10 second.                                                                                                                                                                                               
                                                                                               
