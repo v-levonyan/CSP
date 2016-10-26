@@ -15,9 +15,11 @@ OVERVIEW
 The CSP toolkit currently includes:
 
   - Hash functions (SHA1, ... ).                                                                                                    
-  - Private key generation(for DES, 3DES, AES128, AES192, AES256).                                                                    
-  - Private key encryption/decryption(AES128, AES192, AES256).                                                                    
-  - Public  key encryption/decryption(RSA 2048 ).                                                                                                   
+  - Symmetric key generation(for DES, 3DES, AES128, AES192, AES256).                                                                    
+  - Public/Private RSA2048 key pair generation.
+  - Elliptic curve key pair generation.
+  - Symmetric encryption/decryption(AES128, AES192, AES256).                                                                    
+  - Asymmetric encryption/decryption(RSA 2048 ).                                                                                                   
   - Elliptic Curve Diffie Hellman.                                                                                                     
                                                                                                                                      
 The project is currently being expanded, and in near time it'll include new features. The followings ara some of the features that will be added to the product:
